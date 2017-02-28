@@ -176,7 +176,7 @@ class VentricularImage:
         points                      = None;
 
         try:
-            pointVector             = (self.polyData).GetPoints();
+            pointVector             = self.polyData.GetPoints();
         except:
             raise RuntimeError("Tried to call function 'extract_points' with a "   \
                                + "variable with no 'GetPoints()' method.");
