@@ -67,40 +67,46 @@ import time;
 import vtk;
 
 
+start = time.time();
+
 class VentricularImage:
     """ DOCSTRING """
 
-    imageType                   = None;
+    imageType                       = None;
 
-    path                        = None;
-    polyData                    = None;
+    path                            = None;
+    polyData                        = None;
 
-    pointData                   = None;
-    polygonData                 = None;
-    normalData                  = None;
+    pointData                       = None;
+    polygonData                     = None;
 
-    nPoints                     = None;
-    nPolygons                   = None;
+    scalarData                      = None;
+    normalData                      = None;
 
-    laplacianMatrix             = None;
+    nPoints                         = None;
+    nPolygons                       = None;
 
-    boundary                    = None;
-    boundaryPoints              = None;
+    laplacianMatrix                 = None;
+
+    boundary                        = None;
+    boundaryPoints                  = None;
 
     def __init__(self):
-        self.imageType          = None;
+        self.imageType              = None;
 
-        self.path               = None;
-        self.polyData           = None;
+        self.path                   = None;
+        self.polyData               = None;
 
-        self.pointData          = None;
-        self.polygonData        = None;
-        self.normalData         = None;
+        self.pointData              = None;
+        self.polygonData            = None;
 
-        self.laplacianMatrix    = None;
+        self.normalData             = None;
+        self.scalarData             = None;
 
-        self.boundary           = None;
-        self.boundaryPoints     = None;
+        self.laplacianMatrix        = None;
+
+        self.boundary               = None;
+        self.boundaryPoints         = None;
 
     def __init__(self, path=None):
         if path is None:
@@ -111,7 +117,9 @@ class VentricularImage:
 
             self.pointData          = None;
             self.polygonData        = None;
+
             self.normalData         = None;
+            self.scalarData         = None;
 
             self.laplacianMatrix    = None;
 
@@ -130,6 +138,7 @@ class VentricularImage:
             self.__ReadPointData();
             self.__ReadPolygonData();
             self.__ReadNormalData();
+            self.__ReadScalarData();
             self.__LaplacianMatrix();
             self.__CalculateBoundary();
             self.boundaryPoints     = self.pointData[:, self.boundary];
@@ -145,9 +154,9 @@ class VentricularImage:
         self.polyData               = polyData;
 
     def __ReadPolygonData(self):
-        rows                = None;
-        cols                = None;
-        polygons            = None;
+        rows                        = None;
+        cols                        = None;
+        polygons                    = None;
 
         try:
             polys = self.polyData.GetPolys();
@@ -156,19 +165,19 @@ class VentricularImage:
                                + "variable with no 'GetPolys()' method.");
 
         for i in xrange(self.polyData.GetNumberOfCells()):
-            triangle            = self.polyData.GetCell(i);
-            pointIds            = triangle.GetPointIds();
+            triangle                = self.polyData.GetCell(i);
+            pointIds                = triangle.GetPointIds();
 
             if polygons is None:
-                rows            = pointIds.GetNumberOfIds();
-                cols            = self.polyData.GetNumberOfCells();
-                polygons        = scipy.zeros((rows,cols), dtype=numpy.int);
+                rows                = pointIds.GetNumberOfIds();
+                cols                = self.polyData.GetNumberOfCells();
+                polygons            = scipy.zeros((rows,cols), dtype=numpy.int);
             
-            polygons[0,i]       = pointIds.GetId(0);
-            polygons[1,i]       = pointIds.GetId(1);
-            polygons[2,i]       = pointIds.GetId(2);
+            polygons[0,i]           = pointIds.GetId(0);
+            polygons[1,i]           = pointIds.GetId(1);
+            polygons[2,i]           = pointIds.GetId(2);
 
-        self.polygonData        = polygons;
+        self.polygonData            = polygons;
 
     def __ReadPointData(self):
         rows                        = None;
@@ -222,46 +231,73 @@ class VentricularImage:
 
         self.normalData             = normals;
 
-    def __LaplacianMatrix(self):
-        num_dims                = self.polygonData.shape[0];
-        num_points              = self.pointData.shape[1];
-        num_polygons            = self.polygonData.shape[1];
+    def __ReadScalarData(self):
+        rows                        = None;
+        cols                        = None;
+        scalars                     = None;
 
-        sparse_matrix           = scipy.sparse.coo_matrix((num_points, num_points));
+        try:
+            scalarVector            = self.polyData.GetPointData().GetScalars();
+        except:
+            raise RuntimeError("Tried to call function 'extract_normals' with a "  \
+                               + "variable with no 'GetScalars()' method.");
+
+        if scalarVector:
+            for i in xrange(scalarVector.GetNumberOfTuples()):
+                scalar_tuple        = scalarVector.GetTuple(i);
+
+                if scalars is None:
+                    rows            = len(scalar_tuple);
+                    cols            = scalarVector.GetNumberOfTuples();
+                    scalars         = scipy.zeros((rows,cols));
+                
+                for j in xrange(len(scalar_tuple)):
+                    scalars[j,i]        = scalar_tuple[j];
+
+        self.scalarData             = scalars;
+
+    def __LaplacianMatrix(self):
+        num_dims                    = self.polygonData.shape[0];
+        num_points                  = self.pointData.shape[1];
+        num_polygons                = self.polygonData.shape[1];
+
+        sparse_matrix               = scipy.sparse.coo_matrix((num_points, num_points));
 
         for i in range(0, num_dims):
-            i1                  = (i + 0)%3;
-            i2                  = (i + 1)%3;
-            i3                  = (i + 2)%3;
+            i1                      = (i + 0)%3;
+            i2                      = (i + 1)%3;
+            i3                      = (i + 2)%3;
 
-            dist_p2_p1          = self.pointData[:, self.polygonData[i2, :]]                \
-                                  - self.pointData[:, self.polygonData[i1, :]];
-            dist_p3_p1          = self.pointData[:, self.polygonData[i3, :]]                \
-                                  - self.pointData[:, self.polygonData[i1, :]];
+            dist_p2_p1              = self.pointData[:, self.polygonData[i2, :]]                \
+                                      - self.pointData[:, self.polygonData[i1, :]];
+            dist_p3_p1              = self.pointData[:, self.polygonData[i3, :]]                \
+                                      - self.pointData[:, self.polygonData[i1, :]];
 
-            dist_p2_p1          = dist_p2_p1 / numpy.matlib.repmat(scipy.sqrt((dist_p2_p1**2).sum(0)), 3, 1);
-            dist_p3_p1          = dist_p3_p1 / numpy.matlib.repmat(scipy.sqrt((dist_p3_p1**2).sum(0)), 3, 1);
+            dist_p2_p1              = dist_p2_p1 / numpy.matlib.repmat(scipy.sqrt((dist_p2_p1**2).sum(0)), 3, 1);
+            dist_p3_p1              = dist_p3_p1 / numpy.matlib.repmat(scipy.sqrt((dist_p3_p1**2).sum(0)), 3, 1);
 
-            angles              = scipy.arccos((dist_p2_p1 * dist_p3_p1).sum(0));
+            angles                  = scipy.arccos((dist_p2_p1 * dist_p3_p1).sum(0));
 
-            iter_data1          = scipy.sparse.coo_matrix((1/scipy.tan(angles),     \
-                                                          (self.polygonData[i2,:],      \
-                                                          self.polygonData[i3,:])),     \
-                                                          shape=(num_points,        \
-                                                                 num_points));
+            iter_data1              = scipy.sparse.coo_matrix((1/scipy.tan(angles),         \
+                                                              (self.polygonData[i2,:],      \
+                                                              self.polygonData[i3,:])),     \
+                                                              shape=(num_points,            \
+                                                                     num_points));
 
-            iter_data2          = scipy.sparse.coo_matrix((1/scipy.tan(angles), \
-                                                          (self.polygonData[i3,:],  \
-                                                          self.polygonData[i2,:])), \
-                                                          shape=(num_points,    \
-                                                                 num_points));
+            iter_data2              = scipy.sparse.coo_matrix((1/scipy.tan(angles),     \
+                                                              (self.polygonData[i3,:],  \
+                                                              self.polygonData[i2,:])), \
+                                                              shape=(num_points,        \
+                                                                     num_points));
 
-            sparse_matrix       = sparse_matrix + iter_data1 + iter_data2;
+            sparse_matrix           = sparse_matrix + iter_data1 + iter_data2;
 
-        diagonal                = sparse_matrix.sum(0);
-        diagonal_sparse         = scipy.sparse.spdiags(diagonal,0,num_points,num_points);
+        diagonal                    = sparse_matrix.sum(0);
+        diagonal_sparse             = scipy.sparse.spdiags(diagonal, 0, \
+                                                           num_points,  \
+                                                           num_points);
 
-        self.laplacianMatrix    = diagonal_sparse - sparse_matrix;
+        self.laplacianMatrix        = diagonal_sparse - sparse_matrix;
 
     def __CalculateBoundary(self):
         startingPoint                               = None;
@@ -416,15 +452,15 @@ class VentricularImage:
     #     self.polyData.BuildLinks();
 
     def SetPolyData(polyData):
-        self.imageType          = None;
-        self.path               = None;
-        self.polyData           = polyData;
-        self.pointData          = self.__ReadPointData();
-        self.polygonData        = self.__ReadPolygonData();
-        self.normalData         = self.__ReadNormalData();
-        self.laplacianMatrix    = self.__LaplacianMatrix();
-        self.boundary           = self.__CalculateBoundary();
-        self.boundaryPoints     = self.pointData[:, self.boundary];
+        self.imageType                  = None;
+        self.path                       = None;
+        self.polyData                   = polyData;
+        self.pointData                  = self.__ReadPointData();
+        self.polygonData                = self.__ReadPolygonData();
+        self.normalData                 = self.__ReadNormalData();
+        self.laplacianMatrix            = self.__LaplacianMatrix();
+        self.boundary                   = self.__CalculateBoundary();
+        self.boundaryPoints             = self.pointData[:, self.boundary];
 
     def GetPerimeter(self):
         boundaryNext                    = numpy.roll(self.boundary,-1);
@@ -529,7 +565,7 @@ print(time.time() - start);
 
 
 path                        = os.path.join("/home/guille/BitBucket/qcm/data/pat1/MRI", "pat1_MRI_Layer_6.vtk");
-start = time.time(); MRI = VentricularImage(path); print(time.time() - start);
+start = time.time(); MRI    = VentricularImage(path); print(time.time() - start);
 
 
 
