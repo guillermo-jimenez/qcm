@@ -8,7 +8,7 @@ RUN apt-get -qq update && apt-get -qq install -y                               \
                             python=2.7.11-2                                    \
                             python-numpy=1:1.11.1~rc1-1ubuntu1                 \
                             python-scipy=0.17.1-1                              \
-                            bpython=0.15-2                                     \
+                            # bpython=0.15-2                                     \
                             && rm -rf /var/lib/apt/lists/*
 
 
