@@ -16,38 +16,6 @@
 """
 
 
-
-# for subdir, dirs, files in os.walk(rootdir):
-#     for file in files:
-
-
-# def docstring_example():
-#     """ 
-#         Multi-line Docstrings
-
-#         Multi-line docstrings consist of a summary line just like a one-line
-#         docstring, followed by a blank line, followed by a more elaborate
-#         description. The summary line may be used by automatic indexing tools;
-#         it is important that it fits on one line and is separated from the rest
-#         of the docstring by a blank line. The summary line may be on the same
-#         line as the opening quotes or on the next line. The entire docstring is
-#         indented the same as the quotes at its first line (see example below).
-
-#         Example:
-#         def complex(real=0.0, imag=0.0):
-#             '''
-#                 Form a complex number.
-
-#                 Keyword arguments:
-#                 real -- the real part (default 0.0)
-#                 imag -- the imaginary part (default 0.0)
-#                 ...
-#             '''
-
-
-#     """
-
-
 from __future__ import division
 
 import os;
@@ -75,34 +43,48 @@ from scipy.sparse.linalg import spsolve;
 
 import time;
 import vtk;
+    
 
 start = time.time();
 
+
+def __main__():
+
+
+
 class VentricularImage:
     """ DOCSTRING """
-    __imageType                     = None;
-    __path                          = None;
-    __originalPolyData              = None;
-    __QCMPolyData                   = None;
-    __pointData                     = None;
-    __polygonData                   = None;
-    __scalarData                    = None;
-    __normalData                    = None;
+
+    imageType                       = None;
+
+    path                            = None;
+    originalPolyData                = None;
+    QCMPolyData                     = None;
+
+    pointData                       = None;
+    polygonData                     = None;
+
+    scalarData                      = None;
+    normalData                      = None;
+
     __nPoints                       = None;
     __nPolygons                     = None;
-    __septum                        = None;
-    __laplacianMatrix               = None;
-    __constrain                     = None;
-    __boundary                      = None;
-    __output                        = None;
+    __nDims                         = None;
+
+    septum                          = None;
+
+    laplacianMatrix                 = None;
+    linearMatrix                    = None;
+
+    boundary                        = None;
 
     def __init__(self, path=None, septum=None):
         if path is None:
             if septum is not None:
-                self.__septum         = septum;
+                self.septum         = septum;
         else:
             if os.path.isfile(path):
-                self.__path           = path;
+                self.path           = path;
             else:
                 raise RuntimeError("File does not exist. If file exists and this"  \
                                    + "error was raised when automatically "        \
@@ -114,23 +96,22 @@ class VentricularImage:
             self.__ReadPolygonData();
             self.__ReadNormalData();
             self.__ReadScalarData();
-            self.__septum           = septum;
-            self.__nPoints          = self.__pointData.shape[1];
-            self.__nPolygons        = self.__polygonData.shape[1];
+            self.septum             = septum;
+            self.__nPoints          = self.pointData.shape[1];
+            self.__nPolygons        = self.polygonData.shape[1];
             self.__CalculateBoundary();
             self.RearrangeBoundary();
             self.__LaplacianMatrix();
-            self.__CalculateLinearTransformation();
 
     def __ReadPolyData(self):
         reader                      = vtk.vtkPolyDataReader();
-        reader.SetFileName(self.__path);
+        reader.SetFileName(self.path);
         reader.Update();
 
         polyData                    = reader.GetOutput();
         polyData.BuildLinks();
 
-        self.__originalPolyData     = polyData;
+        self.originalPolyData       = polyData;
 
     def __ReadPolygonData(self):
         rows                        = None;
@@ -138,25 +119,25 @@ class VentricularImage:
         polygons                    = None;
 
         try:
-            polys = self.__originalPolyData.GetPolys();
+            polys = self.originalPolyData.GetPolys();
         except:
             raise RuntimeError("Tried to call function 'extract_polygons' with a " \
                                + "variable with no 'GetPolys()' method.");
 
-        for i in xrange(self.__originalPolyData.GetNumberOfCells()):
-            triangle                = self.__originalPolyData.GetCell(i);
+        for i in xrange(self.originalPolyData.GetNumberOfCells()):
+            triangle                = self.originalPolyData.GetCell(i);
             pointIds                = triangle.GetPointIds();
 
             if polygons is None:
                 rows                = pointIds.GetNumberOfIds();
-                cols                = self.__originalPolyData.GetNumberOfCells();
+                cols                = self.originalPolyData.GetNumberOfCells();
                 polygons            = scipy.zeros((rows,cols), dtype=numpy.int);
             
             polygons[0,i]           = pointIds.GetId(0);
             polygons[1,i]           = pointIds.GetId(1);
             polygons[2,i]           = pointIds.GetId(2);
 
-        self.__polygonData          = polygons;
+        self.polygonData            = polygons;
 
     def __ReadPointData(self):
         rows                        = None;
@@ -164,7 +145,7 @@ class VentricularImage:
         points                      = None;
 
         try:
-            pointVector             = self.__originalPolyData.GetPoints();
+            pointVector             = self.originalPolyData.GetPoints();
         except:
             raise RuntimeError("Tried to call function 'extract_points' with a "   \
                                + "variable with no 'GetPoints()' method.");
@@ -182,7 +163,7 @@ class VentricularImage:
                 points[1,i]         = point_tuple[1];
                 points[2,i]         = point_tuple[2];
 
-        self.__pointData            = points;
+        self.pointData              = points;
 
     def __ReadNormalData(self):
         rows                        = None;
@@ -190,7 +171,7 @@ class VentricularImage:
         normals                     = None;
 
         try:
-            normalVector            = self.__originalPolyData.GetPointData().GetNormals();
+            normalVector            = self.originalPolyData.GetPointData().GetNormals();
         except:
             raise RuntimeError("Tried to call function 'extract_normals' with a "  \
                                + "variable with no 'GetNormals()' method.");
@@ -208,7 +189,7 @@ class VentricularImage:
                 normals[1,i]        = normalTuple[1];
                 normals[2,i]        = normalTuple[2];
 
-        self.__normalData           = normals;
+        self.normalData             = normals;
 
     def __ReadScalarData(self):
         rows                        = None;
@@ -216,7 +197,7 @@ class VentricularImage:
         scalars                     = None;
 
         try:
-            scalarVector            = self.__originalPolyData.GetPointData().GetScalars();
+            scalarVector            = self.originalPolyData.GetPointData().GetScalars();
         except:
             raise RuntimeError("Tried to call function 'extract_normals' with a "  \
                                + "variable with no 'GetScalars()' method.");
@@ -233,13 +214,13 @@ class VentricularImage:
                 for j in xrange(len(scalarTuple)):
                     scalars[j,i]    = scalarTuple[j];
 
-        self.__scalarData           = scalars;
+        self.scalarData             = scalars;
 
     def __LaplacianMatrix(self):
-        numDims                     = self.__polygonData.shape[0];
-        numPoints                   = self.__pointData.shape[1];
-        numPolygons                 = self.__polygonData.shape[1];
-        boundary                    = self.__boundary;
+        numDims                     = self.polygonData.shape[0];
+        numPoints                   = self.pointData.shape[1];
+        numPolygons                 = self.polygonData.shape[1];
+        boundary                    = self.boundary;
         boundaryConstrain           = scipy.zeros((2,numPoints));
 
         sparseMatrix                = scipy.sparse.csr_matrix((numPoints, numPoints));
@@ -249,10 +230,10 @@ class VentricularImage:
             i2                      = (i + 1)%3;
             i3                      = (i + 2)%3;
 
-            distP2P1                = self.__pointData[:, self.__polygonData[i2, :]]                \
-                                      - self.__pointData[:, self.__polygonData[i1, :]];
-            distP3P1                = self.__pointData[:, self.__polygonData[i3, :]]                \
-                                      - self.__pointData[:, self.__polygonData[i1, :]];
+            distP2P1                = self.pointData[:, self.polygonData[i2, :]]                \
+                                      - self.pointData[:, self.polygonData[i1, :]];
+            distP3P1                = self.pointData[:, self.polygonData[i3, :]]                \
+                                      - self.pointData[:, self.polygonData[i1, :]];
 
             distP2P1                = distP2P1 / numpy.matlib.repmat(scipy.sqrt((distP2P1**2).sum(0)), 3, 1);
             distP3P1                = distP3P1 / numpy.matlib.repmat(scipy.sqrt((distP3P1**2).sum(0)), 3, 1);
@@ -260,14 +241,14 @@ class VentricularImage:
             angles                  = scipy.arccos((distP2P1 * distP3P1).sum(0));
 
             iterData1               = scipy.sparse.csr_matrix((1/scipy.tan(angles),         \
-                                                              (self.__polygonData[i2,:],      \
-                                                              self.__polygonData[i3,:])),     \
+                                                              (self.polygonData[i2,:],      \
+                                                              self.polygonData[i3,:])),     \
                                                               shape=(numPoints,            \
                                                                      numPoints));
 
             iterData2               = scipy.sparse.csr_matrix((1/scipy.tan(angles),     \
-                                                              (self.__polygonData[i3,:],  \
-                                                              self.__polygonData[i2,:])), \
+                                                              (self.polygonData[i3,:],  \
+                                                              self.polygonData[i2,:])), \
                                                               shape=(numPoints,        \
                                                                      numPoints));
 
@@ -277,31 +258,20 @@ class VentricularImage:
         diagonalSparse              = scipy.sparse.spdiags(diagonal, 0, \
                                                            numPoints,  \
                                                            numPoints);
-        self.__laplacianMatrix      = diagonalSparse - sparseMatrix;
+        self.laplacianMatrix        = diagonalSparse - sparseMatrix;
 
-    def __CalculateLinearTransformation(self):
-        if self.__laplacianMatrix is not None:
-            if self.__boundary is not None:
-                laplacian                               = self.__laplacianMatrix;
-                # laplacian                               = laplacian.tolil();
-                (nzi, nzj, _)                           = scipy.sparse.find(laplacian);
-
-                start = time.time();
-                for point in self.__boundary:
-                    positions                           = scipy.where(nzi==point)[0];
-
-                    laplacian[nzi[positions], nzj[positions]] = 0;
-
-                    laplacian[point, point]             = 1;
-
-                print(time.time() - start);
+    def CalculateLinearTransformation(self):
+        if self.laplacianMatrix is not None:
+            if self.boundary is not None:
+                laplacian                               = self.laplacianMatrix;
+                laplacian                               = laplacian.tolil();
+                laplacian[self.boundary, :]             = 0;
+                laplacian[self.boundary, self.boundary] = 1;
 
                 Z                                       = self.GetWithinBoundarySinCos();
 
-                boundaryConstrain                       = scipy.zeros((2, self.__nPoints));
-                boundaryConstrain[:, self.__boundary]   = Z;
-
-                self.__output = scipy.sparse.linalg.spsolve(laplacian, boundaryConstrain.transpose());
+                boundaryConstrain[:, boundary]          = Z;
+                self.linearMatrix                       = boundaryConstrain;
 
     def __CalculateBoundary(self):
         startingPoint                               = None;
@@ -313,12 +283,12 @@ class VentricularImage:
         visitedPoints                               = [];
         visitedBoundaryEdges                        = [];
 
-        for cellId in xrange(self.__originalPolyData.GetNumberOfCells()):
+        for cellId in xrange(self.originalPolyData.GetNumberOfCells()):
             cellPointIdList                         = vtk.vtkIdList();
             cellEdges                               = [];
 
             try:
-                _ = self.__originalPolyData.GetCellPoints(cellId, cellPointIdList);
+                a = self.originalPolyData.GetCellPoints(cellId, cellPointIdList);
             except:
                 raise Exception("Cell ID does not exist. Possibly mesh provided "  \
                                 + "is empty.");
@@ -336,12 +306,12 @@ class VentricularImage:
                     visitedEdges.append(cellEdges[i]);
 
                     edgeIdList                      = vtk.vtkIdList()
-                    _ = edgeIdList.InsertNextId(cellEdges[i][0]);
-                    _ = edgeIdList.InsertNextId(cellEdges[i][1]);
+                    a = edgeIdList.InsertNextId(cellEdges[i][0]);
+                    a = edgeIdList.InsertNextId(cellEdges[i][1]);
 
                     singleCellEdgeNeighborIds       = vtk.vtkIdList();
 
-                    _ = self.__originalPolyData.GetCellEdgeNeighbors(cellId,                 \
+                    a = self.originalPolyData.GetCellEdgeNeighbors(cellId,                 \
                                                       cellEdges[i][0],             \
                                                       cellEdges[i][1],             \
                                                       singleCellEdgeNeighborIds);
@@ -368,11 +338,11 @@ class VentricularImage:
         while currentPoint != startingPoint:
             neighboringCells                        = vtk.vtkIdList();
 
-            self.__originalPolyData.GetPointCells(currentPoint, neighboringCells);
+            self.originalPolyData.GetPointCells(currentPoint, neighboringCells);
 
             for i in xrange(neighboringCells.GetNumberOfIds()):
                 cell                                = neighboringCells.GetId(i);
-                triangle                            = self.__originalPolyData.GetCell(cell);
+                triangle                            = self.originalPolyData.GetCell(cell);
 
                 for j in xrange(triangle.GetNumberOfPoints()):
                     if triangle.GetPointId(j) == currentPoint:
@@ -387,10 +357,10 @@ class VentricularImage:
                 edgeNeighbors1                      = vtk.vtkIdList();
                 edgeNeighbors2                      = vtk.vtkIdList();
 
-                _ = self.__originalPolyData.GetCellEdgeNeighbors(cell, edge1[0], edge1[1],    \
+                a = self.originalPolyData.GetCellEdgeNeighbors(cell, edge1[0], edge1[1],    \
                                                        edgeNeighbors1);
 
-                _ = self.__originalPolyData.GetCellEdgeNeighbors(cell, edge2[0], edge2[1],    \
+                a = self.originalPolyData.GetCellEdgeNeighbors(cell, edge2[0], edge2[1],    \
                                                        edgeNeighbors2);
 
                 if edgeNeighbors1.GetNumberOfIds() == 0:
@@ -411,25 +381,25 @@ class VentricularImage:
                         currentPoint                = edge2[1];
                         break;
 
-        self.__boundary                             = scipy.asarray(boundary, dtype=int);
+        self.boundary                               = scipy.asarray(boundary, dtype=int);
 
     def GetPolyData(self):
-        return self.__originalPolyData;
+        return self.originalPolyData;
 
     def GetPointData(self):
-        return self.__pointData;
+        return self.pointData;
 
     def GetImageType(self):
-        return self.__imageType;
+        return self.imageType;
 
     def GetPath(self):
-        return self.__path;
+        return self.path;
 
     def GetNormalData(self):
-        return self.__normalData;
+        return self.normalData;
 
     def GetPolygonData(self):
-        return self.__polygonData;
+        return self.polygonData;
 
     def GetNumberOfPoints(self):
         return self.__nPoints;
@@ -438,27 +408,24 @@ class VentricularImage:
         return self.__nPolygons;
 
     def GetSeptumId(self):
-        return self.__septum;
+        return self.septum;
 
     def GetLaplacianMatrix(self):
-        return self.__laplacianMatrix;
+        return self.laplacianMatrix;
 
     def GetBoundary(self):
-        return self.__boundary;
-
-    def GetOutput(self):
-        return self.__output;
+        return self.boundary;
 
     def GetBoundaryPoints(self):
-        return self.__pointData[:, self.__boundary];
+        return self.pointData[:, self.boundary];
 
     def FlipBoundary(self):
-        self.__boundary       = scipy.flip(self.__boundary, 0);
-        self.__boundary       = scipy.roll(self.__boundary, 1);
+        self.boundary       = scipy.flip(self.boundary, 0);
+        self.boundary       = scipy.roll(self.boundary, 1);
 
     def GetWithinBoundaryDistances(self):
-        boundaryNext                    = scipy.roll(self.__boundary, -1);
-        boundaryNextPoints              = self.__pointData[:, boundaryNext];
+        boundaryNext                    = scipy.roll(self.boundary, -1);
+        boundaryNextPoints              = self.pointData[:, boundaryNext];
 
         distanceToNext                  = boundaryNextPoints - self.GetBoundaryPoints();
 
@@ -497,20 +464,20 @@ class VentricularImage:
         closestPoint                            = None;
 
         if objectivePoint is None:
-            if self.__septum is None:
+            if self.septum is None:
                 raise Exception("No septal point provided in function call "    \
                                 "and no septal point provided in constructor. " \
                                 "Aborting arrangement. ");
             else:
-                septalIndex                     = self.__septum;
+                septalIndex                     = self.septum;
         else:
             print("Using provided septal point as rearranging point.");
-            self.__septum                         = objectivePoint;
+            self.septum                         = objectivePoint;
             septalIndex                         = objectivePoint;
 
-        if septalIndex in self.__boundary:
+        if septalIndex in self.boundary:
             closestPoint                        = septalIndex;
-            closestPointIndex                   = scipy.where(self.__boundary==septalIndex);
+            closestPointIndex                   = scipy.where(self.boundary==septalIndex);
 
             if len(closestPointIndex) == 1:
                 if len(closestPointIndex[0]) == 1:
@@ -524,26 +491,26 @@ class VentricularImage:
                        + "ID associated to the objective point. Check your input data or "  \
                        + "contact the maintainer.");
 
-            self.__boundary                       = scipy.roll(self.__boundary, 
+            self.boundary                       = scipy.roll(self.boundary, 
                                                              -closestPointIndex);
         else:
             try:
-                septalPoint                     = self.__pointData[:, septalIndex];
+                septalPoint                     = self.pointData[:, septalIndex];
             except:
                 raise Exception("Septal point provided out of data bounds; the "   \
                        + "point does not exist (it is out of bounds) or a point "  \
                        + "identifier beyond the total amount of points has been "  \
                        + "provided. Check input.");
 
-            if len(self.__boundary.shape) == 1:
+            if len(self.boundary.shape) == 1:
                 septalPoint                     = numpy.matlib.repmat(septalPoint,
-                                                              self.__boundary.size, 1);
+                                                              self.boundary.size, 1);
                 septalPoint                     = septalPoint .transpose();
             else:
                 raise Exception("It seems you have multiple boundaries. "          \
                                 + "Contact the package maintainer.");
 
-            distanceToObjectivePoint            = (self.__pointData[:, self.__boundary] - septalPoint);
+            distanceToObjectivePoint            = (self.pointData[:, self.boundary] - septalPoint);
             distanceToObjectivePoint            = scipy.sqrt((distanceToObjectivePoint**2).sum(0));
             closestPointIndex                   = scipy.where(distanceToObjectivePoint          \
                                                       == distanceToObjectivePoint.min());
@@ -559,12 +526,67 @@ class VentricularImage:
                        + "ID associated to the objective point. Check your input data or "  \
                        + "contact the maintainer.");
 
-            self.__boundary                       = scipy.roll(self.__boundary, 
+            self.boundary                       = scipy.roll(self.boundary, 
                                                              -closestPointIndex);
 
     # def flattening(self):
 
 
+
+print(time.time() - start);
+
+
+
+septum                      = 201479 - 1;
+
+path                        = os.path.join("/home/guille/BitBucket/qcm/data/pat1/MRI", "pat1_MRI_Layer_6.vtk");
+start = time.time(); MRI1   = VentricularImage(path, septum); print(time.time() - start);
+start = time.time(); MRI2   = VentricularImage(path); print(time.time() - start);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+start = time.time(); 
+L = MRI1.GetLaplacianMatrix();
+print(time.time() - start);
+start = time.time(); 
+L = L.tolil(); 
+print(time.time() - start);
+start = time.time(); 
+L[MRI1.GetBoundary(), :] = 0;  ##### SLOWEST!! 6 seconds
+print(time.time() - start);
+start = time.time(); 
+L[MRI1.GetBoundary(), MRI1.GetBoundary()] = 1; 
+print(time.time() - start);
+start = time.time(); 
+Z = MRI1.GetWithinBoundarySinCos(); 
+print(time.time() - start);
+start = time.time(); 
+constrain = scipy.zeros((2, MRI1.GetNumberOfPoints())); 
+print(time.time() - start);
+start = time.time(); 
+constrain[:, MRI1.GetBoundary()] = Z; 
+print(time.time() - start);
+start = time.time(); 
+Y = scipy.sparse.linalg.spsolve(L, constrain.transpose()); ### 2ND SLOWEST!!! 4 seconds
 print(time.time() - start);
 
 
@@ -572,18 +594,16 @@ print(time.time() - start);
 
 
 
-septum                      = 201479 - 1;
-
-path                        = os.path.join("/home/guille/BitBucket/qcm/data/pat1/MRI", "pat1_MRI_Layer_6.vtk");
-start = time.time(); MRI    = VentricularImage(path, septum); print(time.time() - start);
-# start = time.time(); MRI2   = VentricularImage(path); print(time.time() - start);
-
-
-# MRI.CalculateLinearTransformation();
-
-# A = MRI.CalculateLinearTransformation();
 
 
 
 
 
+
+
+
+
+
+
+# if __name__ == '__main__':
+#     
