@@ -47,7 +47,6 @@
 
 # """
 
-
 from __future__ import division
 
 import os;
@@ -78,8 +77,9 @@ import vtk;
 
 # start = time.time();
 
-class VentricularImage:
+class AbstractImage:
     """ DOCSTRING """
+
     __imageType = None;
     __path = None;
     __originalPolyData = None;
@@ -499,24 +499,3 @@ class VentricularImage:
 
 
 # print(time.time() - start);
-
-
-
-
-
-
-# septum = 201479 - 1;
-
-# path = os.path.join("/home/guille/BitBucket/qcm/data/pat1/MRI", "pat1_MRI_Layer_6.vtk");
-# start = time.time(); MRI = VentricularImage(path, septum); print(time.time() - start);
-# start = time.time(); MRI2 = VentricularImage(path); print(time.time() - start);
-
-
-# MRI.CalculateLinearTransformation();
-
-# A = MRI.CalculateLinearTransformation();
-
-
-
-
-
