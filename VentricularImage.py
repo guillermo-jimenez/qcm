@@ -305,8 +305,11 @@ class VentricularImage(object):
                                                boundaryPoints.shape[1] + 1));
                 destination     = scipy.zeros((boundaryPoints.shape[0],
                                                boundaryPoints.shape[1] + 1));
+
                 source[:, 0:source.shape[1] - 1]        = boundaryPoints;
                 source[:, source.shape[1] - 1]          = self.__output[:, self.__apex];
+
+                destination[:, 0:source.shape[1] - 1]   = boundaryPoints;
                 destination[:, 0:source.shape[1] - 1]   = boundaryPoints;
 
                 if self.__apex in self.__boundary:
@@ -509,6 +512,9 @@ class VentricularImage(object):
     def GetNormalData(self):
         return self.__normalData;
 
+    def GetScalarData(self):
+        return self.__scalarData;
+
     def GetPolygonData(self):
         return self.__polygonData;
 
@@ -633,11 +639,12 @@ class VentricularImage(object):
 
 
 
+# import scipy, time, os, numpy, VentricularImage;
 
 # septum = 201479 - 1;
 # apex = 37963 - 1;
 
-# path = os.path.join("/home/guille/BitBucket/qcm/data/pat1/F", "pat1_MRI_Layer_6.vtk");
+# path = os.path.join("/home/guille/BitBucket/qcm/data/pat1/MRI", "pat1_MRI_Layer_6.vtk");
 # start = time.time(); reload(VentricularImage); MRI = VentricularImage.VentricularImage(path, septum, apex); print(time.time() - start);
 
 
@@ -649,6 +656,265 @@ class VentricularImage(object):
 # MRI.CalculateLinearTransformation();
 
 # A = MRI.CalculateLinearTransformation();
+
+
+
+
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+
+source, destination     = MRI.CalculateThinPlateSplines();
+
+x           = source.transpose();
+y           = destination.transpose();
+
+A           = scipy.zeros((x.shape[0], 3));
+A[:, :2]    = x;
+A[:, 2]     = 1;
+
+Q, R        = scipy.linalg.qr(A)
+radiags     = scipy.sort(scipy.absolute(scipy.diagonal(R)))
+
+Q1          = Q[:,0:3]; 
+Q           = scipy.delete(Q,[0,1,2], axis=1);
+
+# # form        = 'st-tp'; centers = x; coefs = []; interv = {[],[]};
+
+B           = scipy.asmatrix(y.transpose()[1,:])*Q;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# import numpy as np
+# import scipy.sparse.linalg as spla
+ 
+# A = np.array([[ 0.4445,  0.4444, -0.2222],
+#               [ 0.4444,  0.4445, -0.2222],
+#               [-0.2222, -0.2222,  0.1112]])
+
+# b = np.array([[ 0.6667], 
+#               [ 0.6667], 
+#               [-0.3332]])
+
+# M2 = spla.spilu(A)
+# M_x = lambda x: M2.solve(x)
+# M = spla.LinearOperator((3,3), M_x)
+
+# x = spla.gmres(A,b,M=M)
+
+# print x
+
+
+
+
+
+
+
+################################################################################
+# Using gmres with a Function Handle
+
+# This example replaces the matrix A in the previous example with a handle to a
+# matrix-vector product function afun, and the preconditioner M1 with a handle
+# to a backsolve function mfun. The example is contained in a function run_gmres
+# that
+
+# Calls gmres with the function handle @afun as its first argument.
+# Contains afun and mfun as nested functions, so that all variables in run_gmres
+# are available to afun and mfun.
+# The following shows the code for run_gmres:
+
+# function x1 = run_gmres
+# n = 21;
+# b = afun(ones(n,1));
+# tol = 1e-12;  maxit = 15; 
+# x1 = gmres(@afun,b,10,tol,maxit,@mfun);
+ 
+#     function y = afun(x)
+#         y = [0; x(1:n-1)] + ...
+#               [((n-1)/2:-1:0)'; (1:(n-1)/2)'].*x + ...
+#               [x(2:n); 0];
+#     end
+ 
+#     function y = mfun(r)
+#         y = r ./ [((n-1)/2:-1:1)'; 1; (1:(n-1)/2)'];
+#     end
+# end
+# When you enter
+
+# x1 = run_gmres;
+# MATLAB software displays the message
+
+# gmres(10) converged at outer iteration 2 (inner iteration 10) 
+# to a solution with relative residual 1.1e-013.
+# Using a Preconditioner without Restart
+# This example demonstrates the use of a preconditioner without restarting gmres.
+
+# Load west0479, a real 479-by-479 nonsymmetric sparse matrix.
+
+# load west0479;
+# A = west0479;
+# Set the tolerance and maximum number of iterations.
+
+# tol = 1e-12;
+# maxit = 20;
+# Define b so that the true solution is a vector of all ones.
+
+# b = full(sum(A,2));
+# [x0,fl0,rr0,it0,rv0] = gmres(A,b,[],tol,maxit);
+
+# fl0 is 1 because gmres does not converge to the requested tolerance 1e-12
+# within the requested 20 iterations. The best approximate solution that gmres
+# returns is the last one (as indicated by it0(2) = 20). MATLAB stores the
+# residual history in rv0.
+
+# Plot the behavior of gmres.
+
+# semilogy(0:maxit,rv0/norm(b),'-o');
+# xlabel('Iteration number');
+# ylabel('Relative residual');
+
+
+# The plot shows that the solution converges slowly. A preconditioner may improve the outcome.
+
+# Use ilu to form the preconditioner, since A is nonsymmetric.
+
+# [L,U] = ilu(A,struct('type','ilutp','droptol',1e-5));
+# Error using ilu
+# There is a pivot equal to zero. Consider decreasing
+# the drop tolerance or consider using the 'udiag' option.
+# Note MATLAB cannot construct the incomplete LU as it would result in a
+# singular factor, which is useless as a preconditioner.
+
+# As indicated by the error message, try again with a reduced drop tolerance.
+
+# [L,U] = ilu(A,struct('type','ilutp','droptol',1e-6));
+# [x1,fl1,rr1,it1,rv1] = gmres(A,b,[],tol,maxit,L,U);
+
+# fl1 is 0 because gmres drives the relative residual to 9.5436e-14 (the value
+# of rr1). The relative residual is less than the prescribed tolerance of 1e-12
+# at the sixth iteration (the value of it1(2)) when preconditioned by the
+# incomplete LU factorization with a drop tolerance of 1e-6. The output, rv1(1),
+# is norm(M\b), where M = L*U. The output, rv1(7), is norm(U\(L\(b-A*x1))).
+
+# Follow the progress of gmres by plotting the relative residuals at each
+# iteration starting from the initial estimate (iterate number 0).
+
+# semilogy(0:it1(2),rv1/norm(b),'-o');
+# xlabel('Iteration number');
+# ylabel('Relative residual');
+
+
+# Using a Preconditioner with Restart
+# This example demonstrates the use of a preconditioner with restarted gmres.
+
+# Load west0479, a real 479-by-479 nonsymmetric sparse matrix.
+
+# load west0479;
+# A = west0479;
+# Define b so that the true solution is a vector of all ones.
+
+# b = full(sum(A,2));
+# Construct an incomplete LU preconditioner as in the previous example.
+
+# [L,U] = ilu(A,struct('type','ilutp','droptol',1e-6));
+
+# The benefit to using restarted gmres is to limit the amount of memory required
+# to execute the method. Without restart, gmres requires maxit vectors of
+# storage to keep the basis of the Krylov subspace. Also, gmres must
+# orthogonalize against all of the previous vectors at each step. Restarting
+# limits the amount of workspace used and the amount of work done per outer
+# iteration. Note that even though preconditioned gmres converged in six
+# iterations above, the algorithm allowed for as many as twenty basis vectors
+# and therefore, allocated all of that space up front.
+
+# Execute gmres(3), gmres(4), and gmres(5)
+
+# tol = 1e-12;
+# maxit = 20;
+# re3 = 3;
+# [x3,fl3,rr3,it3,rv3] = gmres(A,b,re3,tol,maxit,L,U);
+# re4 = 4;
+# [x4,fl4,rr4,it4,rv4] = gmres(A,b,re4,tol,maxit,L,U);
+# re5 = 5;
+# [x5,fl5,rr5,it5,rv5] = gmres(A,b,re5,tol,maxit,L,U);
+
+# fl3, fl4, and fl5 are all 0 because in each case restarted gmres drives the
+# relative residual to less than the prescribed tolerance of 1e-12.
+
+# The following plots show the convergence histories of each restarted gmres
+# method. gmres(3) converges at outer iteration 5, inner iteration 3 (it3 = [5,
+# 3]) which would be the same as outer iteration 6, inner iteration 0, hence the
+# marking of 6 on the final tick mark.
+
+# figure
+# semilogy(1:1/3:6,rv3/norm(b),'-o');
+# h1 = gca;
+# h1.XTick = [1:1/3:6];
+# h1.XTickLabel = ['1';' ';' ';'2';' ';' ';'3';' ';' ';'4';' ';' ';'5';' ';' ';'6';];
+# title('gmres(3)')
+# xlabel('Iteration number');
+# ylabel('Relative residual');
+
+# figure
+# semilogy(1:1/4:3,rv4/norm(b),'-o');
+# h2 = gca;
+# h2.XTick = [1:1/4:3];
+# h2.XTickLabel = ['1';' ';' ';' ';'2';' ';' ';' ';'3'];
+# title('gmres(4)')
+# xlabel('Iteration number');
+# ylabel('Relative residual');
+
+# figure
+# semilogy(1:1/5:2.8,rv5/norm(b),'-o');
+# h3 = gca;
+# h3.XTick = [1:1/5:2.8];
+# h3.XTickLabel = ['1';' ';' ';' ';' ';'2';' ';' ';' ';' '];
+# title('gmres(5)')
+# xlabel('Iteration number');
+# ylabel('Relative residual');
+
+
 
 
 
