@@ -53,6 +53,8 @@ from __future__ import division
 import os;
 import numpy;
 import scipy;
+import mvpoly.rbf;
+import vtk;
 
 from numpy.matlib import repmat;
 from numpy import int;
@@ -69,14 +71,15 @@ from scipy import cumsum;
 from scipy import where;
 from scipy import roll;
 from scipy import flip;
-from scipy.interpolate import Rbf;
+# from scipy.interpolate import Rbf;
+# from mvpoly.rbf import RBFThinPlateSpline;
 
 from scipy.sparse import csr_matrix;
 from scipy.sparse import spdiags;
 from scipy.sparse.linalg import spsolve; 
 
+
 # import time;
-import vtk;
 
 class VentricularImage(object):
     """ DOCSTRING """
@@ -117,6 +120,7 @@ class VentricularImage(object):
         self.RearrangeBoundary();
         self.__LaplacianMatrix();
         self.__CalculateLinearTransformation();
+        self.__CalculateThinPlateSplines();
 
         # if path is None:
         #     if septum is not None:
@@ -295,7 +299,7 @@ class VentricularImage(object):
 
                 self.__output   = scipy.sparse.linalg.spsolve(laplacian, boundaryConstrain.transpose()).transpose();
 
-    def CalculateThinPlateSplines(self):
+    def __CalculateThinPlateSplines(self):
         if self.__output is not None:
             # thinPlate           = scipy.interpolate.Rbf()
 
@@ -350,7 +354,19 @@ class VentricularImage(object):
                     else:
                         raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
 
-                return source, destination;
+                x = source[0,:];
+                y = source[1,:];
+                d = destination[0,:] + 1j*destination[1,:];
+
+                thinPlateInterpolation = mvpoly.rbf.RBFThinPlateSpline(x,y,d);
+                result = thinPlateInterpolation(self.__output[0,:], self.__output[1,:]);
+
+                self.__output[0,:] = result.real;
+                self.__output[1,:] = result.imag;
+
+                # return source, destination;
+
+
 
                 # AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
                 # AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
@@ -650,8 +666,6 @@ class VentricularImage(object):
 
 
 
-# start = time.time(); MRI2 = VentricularImage(path); print(time.time() - start);
-
 
 # MRI.CalculateLinearTransformation();
 
@@ -686,29 +700,44 @@ class VentricularImage(object):
 # AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
 
-source, destination     = MRI.CalculateThinPlateSplines();
+# source, destination     = MRI.CalculateThinPlateSplines();
 
-x           = source.transpose();
-y           = destination.transpose();
+# x           = source.transpose();
+# y           = destination.transpose();
 
-A           = scipy.zeros((x.shape[0], 3));
-A[:, :2]    = x;
-A[:, 2]     = 1;
+# A           = scipy.zeros((x.shape[0], 3));
+# A[:, :2]    = x;
+# A[:, 2]     = 1;
 
-Q, R        = scipy.linalg.qr(A)
-radiags     = scipy.sort(scipy.absolute(scipy.diagonal(R)))
+# Q, R        = scipy.linalg.qr(A)
+# radiags     = scipy.sort(scipy.absolute(scipy.diagonal(R)))
 
-Q1          = Q[:,0:3]; 
-Q           = scipy.delete(Q,[0,1,2], axis=1);
+# Q1          = Q[:,0:3]; 
+# Q           = scipy.delete(Q,[0,1,2], axis=1);
 
-# # form        = 'st-tp'; centers = x; coefs = []; interv = {[],[]};
+# # # form        = 'st-tp'; centers = x; coefs = []; interv = {[],[]};
 
-B           = scipy.asmatrix(y.transpose()[1,:])*Q;
-
-
+# B           = scipy.asmatrix(y.transpose()[1,:])*Q;
 
 
 
+
+
+
+
+
+# x, y, z, d = np.random.rand(4, 50)
+
+
+# rbfi = Rbf(x, y, z, d)  # radial basis function interpolator instance
+
+# xi = yi = zi = np.linspace(0, 1, 20)
+
+# di = rbfi(xi, yi, zi)   # interpolated values
+
+
+# def tppval(x, st, Q2, p):
+#     if Q2.
 
 
 
