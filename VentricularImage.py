@@ -174,6 +174,51 @@ class VentricularImage(object):
         self.__CalculateThinPlateSplines();
         self.__WritePolyData();
 
+    def GetPolyData(self):
+        return self.__originalPolyData;
+
+    def GetBEP(self):
+        return self.__QCMPolyData;
+
+    def GetPointData(self):
+        return self.__pointData;
+
+    def GetImageType(self):
+        return self.__imageType;
+
+    def GetPath(self):
+        return self.__path;
+
+    def GetNormalData(self):
+        return self.__normalData;
+
+    def GetScalarData(self):
+        return self.__scalarData;
+
+    def GetPolygonData(self):
+        return self.__polygonData;
+
+    def GetNumberOfPoints(self):
+        return self.__nPoints;
+
+    def GetNumberOfPolygons(self):
+        return self.__nPolygons;
+
+    def GetSeptumId(self):
+        return self.__septum;
+
+    def GetLaplacianMatrix(self):
+        return self.__laplacianMatrix;
+
+    def GetBoundary(self):
+        return self.__boundary;
+
+    def GetOutput(self):
+        return self.__output;
+
+    def GetBoundaryPoints(self):
+        return self.__pointData[:, self.__boundary];
+
     def __ReadPolyData(self):
         reader                  = vtkPolyDataReader();
         reader.SetFileName(self.__path);
@@ -519,51 +564,6 @@ class VentricularImage(object):
 
         self.__boundary = boundary;
 
-    def GetPolyData(self):
-        return self.__originalPolyData;
-
-    def GetBEP(self):
-        return self.__QCMPolyData;
-
-    def GetPointData(self):
-        return self.__pointData;
-
-    def GetImageType(self):
-        return self.__imageType;
-
-    def GetPath(self):
-        return self.__path;
-
-    def GetNormalData(self):
-        return self.__normalData;
-
-    def GetScalarData(self):
-        return self.__scalarData;
-
-    def GetPolygonData(self):
-        return self.__polygonData;
-
-    def GetNumberOfPoints(self):
-        return self.__nPoints;
-
-    def GetNumberOfPolygons(self):
-        return self.__nPolygons;
-
-    def GetSeptumId(self):
-        return self.__septum;
-
-    def GetLaplacianMatrix(self):
-        return self.__laplacianMatrix;
-
-    def GetBoundary(self):
-        return self.__boundary;
-
-    def GetOutput(self):
-        return self.__output;
-
-    def GetBoundaryPoints(self):
-        return self.__pointData[:, self.__boundary];
-
     def FlipBoundary(self):
         self.__boundary         = flip(self.__boundary, 0);
         self.__boundary         = roll(self.__boundary, 1);
@@ -698,6 +698,45 @@ class VentricularImage(object):
 
 
 
+
+
+# class MouseInteractorHighLightActor(vtk.vtkInteractorStyleTrackballCamera):
+ 
+#     def __init__(self,parent=None):
+#         self.AddObserver("LeftButtonPressEvent",self.leftButtonPressEvent)
+ 
+#         self.LastPickedActor = None
+#         self.LastPickedProperty = vtk.vtkProperty()
+ 
+#     def leftButtonPressEvent(self,obj,event):
+#         clickPos = self.GetInteractor().GetEventPosition()
+ 
+#         picker = vtk.vtkPropPicker()
+#         picker.Pick(clickPos[0], clickPos[1], 0, self.GetDefaultRenderer())
+ 
+#         # get the new
+#         self.NewPickedActor = picker.GetActor()
+ 
+#         # If something was selected
+#         if self.NewPickedActor:
+#             # If we picked something before, reset its property
+#             if self.LastPickedActor:
+#                 self.LastPickedActor.GetProperty().DeepCopy(self.LastPickedProperty)
+ 
+ 
+#             # Save the property of the picked actor so that we can
+#             # restore it next time
+#             self.LastPickedProperty.DeepCopy(self.NewPickedActor.GetProperty())
+#             # Highlight the picked actor by changing its properties
+#             self.NewPickedActor.GetProperty().SetColor(1.0, 0.0, 0.0)
+#             self.NewPickedActor.GetProperty().SetDiffuse(1.0)
+#             self.NewPickedActor.GetProperty().SetSpecular(0.0)
+ 
+#             # save the last picked actor
+#             self.LastPickedActor = self.NewPickedActor
+ 
+#         self.OnLeftButtonDown()
+#         return
 
 
 
