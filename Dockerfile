@@ -3,27 +3,22 @@ FROM ubuntu:16.10
 MAINTAINER Guillermo Jimenez-Perez <guillermo.jim.per@gmail.com>
 
 ################################## APT-GET #####################################
-RUN apt-get -qq update && apt-get -qq install -y                               \
+RUN apt-get -qq update && apt-get -qq install -y --no-install-recommends       \
                             libvtk6.3=6.3.0+dfsg1-1build1                      \
                             python=2.7.11-2                                    \
                             python-numpy=1:1.11.1~rc1-1ubuntu1                 \
                             python-scipy=0.17.1-1                              \
                             python-pip=8.1.2-2ubuntu0.1                        \
+                            git=1:2.9.3-1                                      \
                             && rm -rf /var/lib/apt/lists/*
 
-RUN pip install mvpoly==0.97.5
+RUN pip install --no-cache-dir mvpoly==0.97.5
 
 # WORKDIR /work
 
 
-
-
 RUN groupadd -r host && useradd -r -g host host && usermod -u 1000 host
 USER host
-################################## APT-GET #####################################
-
-
-
 
 
 
