@@ -1,11 +1,22 @@
 from abc import ABCMeta, abstractmethod;
 
-class AbstractImage:
+class AbstractImage(object):
     __metaclass__ = ABCMeta
 
-    @abstractmethod
-    def say_something(self): pass
+    def __init__(self):
+        return
 
-class Cat(Animal):
-    def say_something(self):
-        return "Miauuu!"
+    @property
+    def imageType(self):
+        return self.__imageType;
+
+    @imageType.setter
+    def imageType(self, imageType):
+        self.__imageType = imageType;
+
+    # @abstractmethod
+    # def say_something(self): pass
+
+# class Cat(Animal):
+#     def say_something(self):
+#         return "Miauuu!"

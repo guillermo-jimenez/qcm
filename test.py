@@ -82,28 +82,112 @@
 
 
 
-import scipy, time, os, numpy, VentricularEAM, VentricularMRI;
+# # import scipy, time, os, numpy, VentricularImage;
+# from abc import ABCMeta, abstractmethod;
+
+# class wardrobe(object):
+#     __metaclass__ = ABCMeta;
+
+#     namme = None;
+#     amount1 = None;
+#     amount2 = None;
+
+#     @abstractmethod
+#     def __init__(self, number1, number2=56):
+#         pass;
+
+#     @classmethod
+#     def GetName(self):
+#         return self.namme;
+
+#     @abstractmethod
+#     def SetName(self, name):
+#         pass;
+
+#     @property
+#     def amount2(self):
+#         return self.amout1;
+
+#     @amount1.setter
+#     def amount2(self, value):
+#         print("AAAAAAAAAAAA");
+#         self.amount1 = value;
+
+
+# class waWardrobe(wardrobe):
+#     __clothes = None;
+
+#     def __init__(self, name, number1, cloth, number2=56):
+#         s              = super(wardrobe, self).__init__();
+#         self.namme = name;
+#         self.amount1 = number1;
+#         self.amount2 = number2;
+#         self.__clothes = cloth;
+
+#     @property
+#     def amount1(self):
+#         print("Getting...");
+#         return self.amount1;
+
+#     @amount1.setter
+#     def amount1(self, value):
+#         print("Setting")
+#         self.amoun1 = value;
+
+#     def SetName(self):
+#         self.namme = name;
+
+
+# B = waWardrobe("Michaels", 2,5,6);
+# B.GetName();
+
+
+
+
+    # @classmethod;
+    # def 
 
 def main():
-	septum_MRI = 201479 - 1;
-	apex_MRI = 37963 - 1;
-	path_MRI = os.path.join("/home/guille/BitBucket/qcm/data/pat1/MRI", "pat1_MRI_Layer_6.vtk");
+    # septum_MRI = 201479 - 1;
+    # apex_MRI = 37963 - 1;
+    # path_MRI = os.path.join("/home/guille/BitBucket/qcm/data/pat1/MRI", "pat1_MRI_Layer_6.vtk");
 
-	apex_EAM = 599 - 1;
-	septum_EAM = 1389 - 1;
-	path_EAM = os.path.join("/home/guille/BitBucket/qcm/data/pat1/EAM", "pat1_EAM_endo_smooth.vtk");
+    # apex_EAM = 599 - 1;
+    # septum_EAM = 1389 - 1;
+    # path_EAM = os.path.join("/home/guille/BitBucket/qcm/data/pat1/EAM", "pat1_EAM_endo_smooth.vtk");
 
-	start = time.time(); reload(VentricularMRI); MRI = VentricularMRI.VentricularMRI(path_MRI, septum_MRI, apex_MRI); print(time.time() - start);
-	start = time.time(); reload(VentricularEAM); EAM = VentricularEAM.VentricularEAM(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
+    # start = time.time(); reload(VentricularImage); MRI = VentricularImage.VentricularImage(path_MRI, septum_MRI, apex_MRI); print(time.time() - start);
+    # start = time.time(); reload(VentricularImage); EAM = VentricularImage.VentricularImage(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
 
-	start = time.time(); reload(VentricularInterpolator); interpolator = VentricularInterpolator.VentricularInterpolator(MRI, EAM); print(time.time() - start);
-
-
+    # start = time.time(); reload(VentricularInterpolator); interpolator = VentricularInterpolator.VentricularInterpolator(MRI, EAM); print(time.time() - start);
 
 
 
+import scipy, time, os, numpy, VentricularImage;
+
+septum_MRI = 201479 - 1;
+apex_MRI = 37963 - 1;
+path_MRI = os.path.join("/home/guille/BitBucket/qcm/data/pat1/MRI", "pat1_MRI_Layer_6.vtk");
+
+start = time.time(); reload(VentricularImage); MRI = VentricularImage.VentricularImage(path_MRI, septum_MRI, apex_MRI); print(time.time() - start);
 
 
+apex_EAM = 599 - 1;
+septum_EAM = 1389 - 1;
+path_EAM = os.path.join("/home/guille/BitBucket/qcm/data/pat1/EAM", "pat1_EAM_endo_smooth.vtk");
+
+start = time.time(); reload(VentricularImage); EAM = VentricularImage.VentricularImage(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
+
+# start = time.time(); reload(VentricularInterpolator); interpolator = VentricularInterpolator.VentricularInterpolator(MRI, EAM); print(time.time() - start);
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    main();
 
 
 

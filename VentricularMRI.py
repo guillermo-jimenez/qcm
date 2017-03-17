@@ -60,7 +60,7 @@ from vtk import vtkPolyDataWriter;
 from vtk import vtkPoints;
 from vtk import vtkIdList;
 
-class VentricularImage(object):
+class VentricularMRI(object):
     """ DOCSTRING """
 
     __imageType                 = None;
@@ -603,9 +603,9 @@ class VentricularImage(object):
 
 
 
-# # import scipy, time, os, numpy, VentricularImage;
+# # import scipy, time, os, numpy, VentricularMRI;
 
-# import time, os, VentricularImage;
+# import time, os, VentricularMRI;
 
 # septum_MRI = 201479 - 1;
 # apex_MRI = 37963 - 1;
@@ -615,8 +615,8 @@ class VentricularImage(object):
 # septum_EAM = 1389 - 1;
 # path_EAM = os.path.join("/home/guille/BitBucket/qcm/data/pat1/EAM", "pat1_EAM_endo_smooth.vtk");
 
-# start = time.time(); reload(VentricularImage); MRI = VentricularImage.VentricularImage(path_MRI, septum_MRI, apex_MRI); print(time.time() - start);
-# start = time.time(); reload(VentricularImage); EAM = VentricularImage.VentricularImage(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
+# start = time.time(); reload(VentricularMRI); MRI = VentricularMRI.VentricularMRI(path_MRI, septum_MRI, apex_MRI); print(time.time() - start);
+# start = time.time(); reload(VentricularMRI); EAM = VentricularMRI.VentricularMRI(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
 
 
 

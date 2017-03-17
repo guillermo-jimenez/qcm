@@ -591,6 +591,8 @@ class VentricularImage(object):
             self.__boundary             = roll(self.__boundary, 
                                           -closestPointIndex);
 
+    # def SetInputConnection():
+
 
 
 
