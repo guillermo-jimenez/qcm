@@ -19,7 +19,7 @@
 from VentricularImage import VentricularImage;
 
 from os.path import split, join, splitext, isdir, isfile;
-from os import mkdir;
+from os import mkdir, system;
 
 from sklearn.neighbors import NearestNeighbors;
 from vtk import vtkPolyDataWriter;
@@ -50,18 +50,18 @@ class VentricularInterpolator:
                                                    metric_params=None, n_jobs=1)
                                                    # **kwargs);
 
-        kNN.fit(EAM.GetOutput().transpose(), MRI.GetOutput().transpose());
-        dist, indices           = kNN.kneighbors(MRI.GetOutput().transpose());
+        kNN.fit(self.__EAM.GetOutput().transpose(), self.__MRI.GetOutput().transpose());
+        dist, indices           = kNN.kneighbors(self.__MRI.GetOutput().transpose());
 
-        newPolyData             = MRI.GetPolyData();
+        newPolyData             = self.__MRI.GetPolyData();
         newDataArray            = vtkFloatArray();
 
-        EAMScalars              = EAM.GetScalarData();
-        BIPS                    = empty((MRI.GetNumberOfPoints()));
+        EAMScalars              = self.__EAM.GetScalarData();
+        BIPS                    = empty((self.__MRI.GetNumberOfPoints()));
         BIPS.fill(0);
 
-        newDataArray.SetNumberOfTuples(MRI.GetNumberOfPoints());
-        newDataArray.SetName(EAM.GetPolyData().GetPointData().GetArrayName(0));
+        newDataArray.SetNumberOfTuples(self.__MRI.GetNumberOfPoints());
+        newDataArray.SetName(self.__EAM.GetPolyData().GetPointData().GetArrayName(0));
 
         zeroIndex               = where(dist == 0.);
 
@@ -70,14 +70,14 @@ class VentricularInterpolator:
             for j in xrange(zeroIndex[0].size):
                 dist[zeroIndex[0][j], zeroIndex[1][j]] = finfo(dist.dtype).eps;
 
-        for i in xrange(MRI.GetNumberOfPoints()):
+        for i in xrange(self.__MRI.GetNumberOfPoints()):
             dt                  = (1/dist[i,0]) + (1/dist[i,1]) + (1/dist[i,2]);
             BIPS[i]             = ((1/dist[i,:])*EAMScalars[0, indices[i,:]]).sum()/dt;
 
             newDataArray.SetValue(i, BIPS[i]);
 
 
-        directory, filename     = split(MRI.GetPath());
+        directory, filename     = split(self.__MRI.GetPath());
         filename, extension     = splitext(filename);
 
         writer                  = vtkPolyDataWriter();

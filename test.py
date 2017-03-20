@@ -178,8 +178,7 @@ path_EAM = os.path.join("/home/guille/BitBucket/qcm/data/pat1/EAM", "pat1_EAM_en
 
 start = time.time(); reload(VentricularImage); EAM = VentricularImage.VentricularImage(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
 
-# start = time.time(); reload(VentricularInterpolator); interpolator = VentricularInterpolator.VentricularInterpolator(MRI, EAM); print(time.time() - start);
-
+start = time.time(); reload(VentricularInterpolator); interpolator = VentricularInterpolator.VentricularInterpolator(MRI, EAM); interpolator.kNearestNeighbours(); print(time.time() - start);
 
 
 

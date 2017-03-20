@@ -61,9 +61,6 @@ from vtk import vtkPoints;
 from vtk import vtkIdList;
 
 class VentricularImage(object):
-    """ DOCSTRING """
-
-    __imageType                 = None;
     __path                      = None;
     __originalPolyData          = None;
     __QCMPolyData               = None;
@@ -79,17 +76,20 @@ class VentricularImage(object):
     __boundary                  = None;
     __output                    = None;
 
-    def __init__(self, path, septum, apex, imgType=None):
-        """ DOCSTRING """
+    def __init__(self, path, septum, apex):
+        """ VentricularImage(path, septum, apex)
+
+        Analyzes a ventricular image in vtk format and creates quasi-conformal 
+        mapping. Requires a  
+
+        The object VentricularImage provides an automatic traduction of a image \
+        file in vtk format to a quasi-conformal disk image to be further analyzed by \
+        other tools. """
+
         if isfile(path):
             self.__path         = path;
         else:
             raise RuntimeError("File does not exist.");
-        if imgType is not None:
-            if  type(imgType) is type(''):
-                self.__imageType = imgType;
-            else:
-                print("Invalid image type identifier. Ignoring input.") 
 
         self.__ReadPolyData();
         self.__ReadPointData();
@@ -115,9 +115,6 @@ class VentricularImage(object):
 
     def GetPointData(self):
         return self.__pointData;
-
-    def GetImageType(self):
-        return self.__imageType;
 
     def GetPath(self):
         return self.__path;
@@ -591,7 +588,6 @@ class VentricularImage(object):
             self.__boundary             = roll(self.__boundary, 
                                           -closestPointIndex);
 
-    # def SetInputConnection():
 
 
 
