@@ -44,65 +44,65 @@ class VentricularInterpolator:
                            leaf_size=30, metric='minkowski', p=5, 
                            metric_params=None, n_jobs=1, **kwargs):
 
-kNN                     = NearestNeighbors(n_neighbors=3, radius=1.0, 
-                                           algorithm='auto', leaf_size=30, 
-                                           metric='minkowski', p=5, 
-                                           metric_params=None, n_jobs=1)
-                                           # **kwargs);
+        kNN                     = NearestNeighbors(n_neighbors=3, radius=1.0, 
+                                                   algorithm='auto', leaf_size=30, 
+                                                   metric='minkowski', p=5, 
+                                                   metric_params=None, n_jobs=1)
+                                                   # **kwargs);
 
-kNN.fit(EAM.GetOutput().transpose(), MRI.GetOutput().transpose());
-dist, indices           = kNN.kneighbors(MRI.GetOutput().transpose());
+        kNN.fit(EAM.GetOutput().transpose(), MRI.GetOutput().transpose());
+        dist, indices           = kNN.kneighbors(MRI.GetOutput().transpose());
 
-newPolyData             = MRI.GetPolyData();
-newDataArray            = vtkFloatArray();
+        newPolyData             = MRI.GetPolyData();
+        newDataArray            = vtkFloatArray();
 
-EAMScalars              = EAM.GetScalarData();
-BIPS                    = empty((MRI.GetNumberOfPoints()));
-BIPS.fill(0);
+        EAMScalars              = EAM.GetScalarData();
+        BIPS                    = empty((MRI.GetNumberOfPoints()));
+        BIPS.fill(0);
 
-newDataArray.SetNumberOfTuples(MRI.GetNumberOfPoints());
-newDataArray.SetName(EAM.GetPolyData().GetPointData().GetArrayName(0));
+        newDataArray.SetNumberOfTuples(MRI.GetNumberOfPoints());
+        newDataArray.SetName(EAM.GetPolyData().GetPointData().GetArrayName(0));
 
-zeroIndex               = where(dist == 0.);
+        zeroIndex               = where(dist == 0.);
 
-# If a zero value is found, replace it with the lowest possible number
-if zeroIndex[0].size > 0:
-    for j in xrange(zeroIndex[0].size):
-        dist[zeroIndex[0][j], zeroIndex[1][j]] = finfo(dist.dtype).eps;
+        # If a zero value is found, replace it with the lowest possible number
+        if zeroIndex[0].size > 0:
+            for j in xrange(zeroIndex[0].size):
+                dist[zeroIndex[0][j], zeroIndex[1][j]] = finfo(dist.dtype).eps;
 
-for i in xrange(MRI.GetNumberOfPoints()):
-    dt                  = (1/dist[i,0]) + (1/dist[i,1]) + (1/dist[i,2]);
-    BIPS[i]             = ((1/dist[i,:])*EAMScalars[0, indices[i,:]]).sum()/dt;
+        for i in xrange(MRI.GetNumberOfPoints()):
+            dt                  = (1/dist[i,0]) + (1/dist[i,1]) + (1/dist[i,2]);
+            BIPS[i]             = ((1/dist[i,:])*EAMScalars[0, indices[i,:]]).sum()/dt;
 
-    newDataArray.SetValue(i, BIPS[i]);
-
-
-directory, filename     = split(MRI.GetPath());
-filename, extension     = splitext(filename);
-
-writer                  = vtkPolyDataWriter();
-
-if isdir(join(directory, 'Fusion')):
-    path                = join(directory, 'Fusion', str(filename + '_Fusion' + extension));
-    writer.SetFileName(path);
-else:
-    mkdir(join(directory, 'Fusion'));
-
-    if isdir(join(directory, 'Fusion')):
-        path            = join(directory, 'Fusion', str(filename + '_Fusion' + extension));
-        writer.SetFileName(path);
-    else:
-        path            = join(directory, str(filename + '_Fusion' + extension));
-        writer.SetFileName(path);
+            newDataArray.SetValue(i, BIPS[i]);
 
 
+        directory, filename     = split(MRI.GetPath());
+        filename, extension     = splitext(filename);
 
-newPolyData.GetPointData().AddArray(newDataArray);
+        writer                  = vtkPolyDataWriter();
 
-writer.SetInputData(newPolyData);
-writer.Write();
+        if isdir(join(directory, 'Fusion')):
+            path                = join(directory, 'Fusion', str(filename + '_Fusion' + extension));
+            writer.SetFileName(path);
+        else:
+            mkdir(join(directory, 'Fusion'));
 
-system("perl -pi -e 's/,/./g' %s " % path);
+            if isdir(join(directory, 'Fusion')):
+                path            = join(directory, 'Fusion', str(filename + '_Fusion' + extension));
+                writer.SetFileName(path);
+            else:
+                path            = join(directory, str(filename + '_Fusion' + extension));
+                writer.SetFileName(path);
+
+
+
+        newPolyData.GetPointData().AddArray(newDataArray);
+
+        writer.SetInputData(newPolyData);
+        writer.Write();
+
+        system("perl -pi -e 's/,/./g' %s " % path);
 
 
 
