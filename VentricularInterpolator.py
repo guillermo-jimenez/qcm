@@ -22,13 +22,15 @@ from os.path import split, join, splitext, isdir, isfile;
 from os import mkdir, system;
 
 from sklearn.neighbors import NearestNeighbors;
+
 from vtk import vtkPolyDataWriter;
 from vtk import vtkFloatArray;
+
 from scipy import finfo;
 from scipy import empty;
 from scipy import where;
 
-class VentricularInterpolator:
+class VentricularInterpolator(object):
     """ DOCSTRING """
 
     __MRI                       = None;

@@ -21,12 +21,12 @@ MAINTAINER Guillermo Jimenez-Perez <guillermo.jim.per@gmail.com>
 
 ################################## APT-GET #####################################
 RUN apt-get -qq update && apt-get -qq install -y --no-install-recommends       \
-                            libvtk6.3=6.3.0+dfsg1-1build1                      \
                             python=2.7.11-2                                    \
                             python-numpy=1:1.11.1~rc1-1ubuntu1                 \
                             python-scipy=0.17.1-1                              \
                             python-sklearn=0.17.1-2                            \
                             python-setuptools=26.1.1-1                         \
+                            python-vtk6=6.3.0+dfsg1-1build1                    \
                             python-pip=8.1.2-2ubuntu0.1                        \
                             git=1:2.9.3-1                                      \
                             && rm -rf /var/lib/apt/lists/*

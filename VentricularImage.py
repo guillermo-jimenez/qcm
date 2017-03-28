@@ -61,6 +61,110 @@ from vtk import vtkPoints;
 from vtk import vtkIdList;
 
 class VentricularImage(object):
+    """
+    Returns an object of the extracted information of a VTK file containing
+    data (mesh and scalar data) of a ventricular endocardial image.
+
+    May take any other image but convergence is not guaranteed.
+
+    Parameters
+    ----------
+
+
+
+
+
+    The class takes the image of a ventricle for its analysis: from a VTK file,
+    the points and the polygons are extracted. 
+
+    The class can be 
+
+    This can be instantiated in several ways:
+        csr_matrix(D)
+            with a dense matrix or rank-2 ndarray D
+        csr_matrix(S)
+            with another sparse matrix S (equivalent to S.tocsr())
+        csr_matrix((M, N), [dtype])
+            to construct an empty matrix with shape (M, N)
+            dtype is optional, defaulting to dtype='d'.
+        csr_matrix((data, (row_ind, col_ind)), [shape=(M, N)])
+            where ``data``, ``row_ind`` and ``col_ind`` satisfy the
+            relationship ``a[row_ind[k], col_ind[k]] = data[k]``.
+        csr_matrix((data, indices, indptr), [shape=(M, N)])
+            is the standard CSR representation where the column indices for
+            row i are stored in ``indices[indptr[i]:indptr[i+1]]`` and their
+            corresponding values are stored in ``data[indptr[i]:indptr[i+1]]``.
+            If the shape parameter is not supplied, the matrix dimensions
+            are inferred from the index arrays.
+    Attributes
+    ----------
+    dtype : dtype
+        Data type of the matrix
+    shape : 2-tuple
+        Shape of the matrix
+    ndim : int
+        Number of dimensions (this is always 2)
+    nnz
+        Number of nonzero elements
+    data
+        CSR format data array of the matrix
+    indices
+        CSR format index array of the matrix
+    indptr
+        CSR format index pointer array of the matrix
+    has_sorted_indices
+        Whether indices are sorted
+    Notes
+    -----
+    Sparse matrices can be used in arithmetic operations: they support
+    addition, subtraction, multiplication, division, and matrix power.
+    Advantages of the CSR format
+      - efficient arithmetic operations CSR + CSR, CSR * CSR, etc.
+      - efficient row slicing
+      - fast matrix vector products
+    Disadvantages of the CSR format
+      - slow column slicing operations (consider CSC)
+      - changes to the sparsity structure are expensive (consider LIL or DOK)
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from scipy.sparse import csr_matrix
+    >>> csr_matrix((3, 4), dtype=np.int8).toarray()
+    array([[0, 0, 0, 0],
+           [0, 0, 0, 0],
+           [0, 0, 0, 0]], dtype=int8)
+    >>> row = np.array([0, 0, 1, 2, 2, 2])
+    >>> col = np.array([0, 2, 2, 0, 1, 2])
+    >>> data = np.array([1, 2, 3, 4, 5, 6])
+    >>> csr_matrix((data, (row, col)), shape=(3, 3)).toarray()
+    array([[1, 0, 2],
+           [0, 0, 3],
+           [4, 5, 6]])
+    >>> indptr = np.array([0, 2, 3, 6])
+    >>> indices = np.array([0, 2, 2, 0, 1, 2])
+    >>> data = np.array([1, 2, 3, 4, 5, 6])
+    >>> csr_matrix((data, indices, indptr), shape=(3, 3)).toarray()
+    array([[1, 0, 2],
+           [0, 0, 3],
+           [4, 5, 6]])
+    As an example of how to construct a CSR matrix incrementally,
+    the following snippet builds a term-document matrix from texts:
+    >>> docs = [["hello", "world", "hello"], ["goodbye", "cruel", "world"]]
+    >>> indptr = [0]
+    >>> indices = []
+    >>> data = []
+    >>> vocabulary = {}
+    >>> for d in docs:
+    ...     for term in d:
+    ...         index = vocabulary.setdefault(term, len(vocabulary))
+    ...         indices.append(index)
+    ...         data.append(1)
+    ...     indptr.append(len(indices))
+    ...
+    >>> csr_matrix((data, indices, indptr), dtype=int).toarray()
+    array([[2, 1, 0, 0],
+           [0, 1, 1, 1]])
+    """
     __path                      = None;
     __originalPolyData          = None;
     __QCMPolyData               = None;
@@ -70,6 +174,7 @@ class VentricularImage(object):
     __normalData                = None;
     __nPoints                   = None;
     __nPolygons                 = None;
+    __nDimensions               = None;
     __septum                    = None;
     __apex                      = None;
     __laplacianMatrix           = None;
@@ -82,14 +187,14 @@ class VentricularImage(object):
         Analyzes a ventricular image in vtk format and creates quasi-conformal 
         mapping. Requires a  
 
-        The object VentricularImage provides an automatic traduction of a image \
-        file in vtk format to a quasi-conformal disk image to be further analyzed by \
-        other tools. """
+        The object VentricularImage provides an automatic traduction of a image
+        file in vtk format to a quasi-conformal disk image to be further 
+        analyzed by other tools. """
 
         if isfile(path):
             self.__path         = path;
         else:
-            raise RuntimeError("File does not exist.");
+            raise RuntimeError("File does not exist");
 
         self.__ReadPolyData();
         self.__ReadPointData();
@@ -98,6 +203,7 @@ class VentricularImage(object):
         self.__ReadScalarData();
         self.__septum           = septum;
         self.__apex             = apex;
+        self.__nDimensions      = self.__pointData.shape[0];
         self.__nPoints          = self.__pointData.shape[1];
         self.__nPolygons        = self.__polygonData.shape[1];
         self.__CalculateBoundary();
@@ -107,47 +213,101 @@ class VentricularImage(object):
         self.__CalculateThinPlateSplines();
         self.__WritePolyData();
 
-    def GetPolyData(self):
-        return self.__originalPolyData;
-
-    def GetBEP(self):
-        return self.__QCMPolyData;
-
-    def GetPointData(self):
-        return self.__pointData;
-
-    def GetPath(self):
+    @property
+    def path(self):
         return self.__path;
 
-    def GetNormalData(self):
-        return self.__normalData;
+    @path.setter
+    def path(self, path):
+        if isfile(path):
+            if self.path is not None:
+                print("Overwritting existing data on variable...")
+            else:
+                print("Loading data...")
 
-    def GetScalarData(self):
-        return self.__scalarData;
+            self.__init__(path, self.septum, self.apex);
+        else:
+            raise RuntimeError("File does not exist");
 
-    def GetPolygonData(self):
-        return self.__polygonData;
+    @property
+    def polydata(self):
+        """Testing docstring of attribute"""
+        return self.__originalPolyData;
 
-    def GetNumberOfPoints(self):
+    @property
+    def BEP(self):
+        return self.__QCMPolyData;
+
+    @property
+    def points(self):
+        return self.__pointData;
+
+    @property
+    def npoints(self):
         return self.__nPoints;
 
-    def GetNumberOfPolygons(self):
+    @property
+    def polygons(self):
+        return self.__polygonData;
+
+    @property
+    def npolygons(self):
         return self.__nPolygons;
 
-    def GetSeptumId(self):
+    @property
+    def scalars(self):
+        return self.__scalarData;
+
+    @property
+    def normals(self):
+        return self.__normalData;
+
+    @property
+    def septum(self):
         return self.__septum;
 
-    def GetLaplacianMatrix(self):
+    @septum.setter
+    def septum(self, septum):
+        self.__septum           = septum;
+
+        self.RearrangeBoundary();
+        self.__LaplacianMatrix();
+        self.__CalculateLinearTransformation();
+        self.__CalculateThinPlateSplines();
+        self.__WritePolyData();
+
+    @property
+    def apex(self):
+        return self.__apex;
+
+    @apex.setter
+    def apex(self, apex):
+        self.__apex             = apex;
+
+        self.RearrangeBoundary();
+        self.__LaplacianMatrix();
+        self.__CalculateLinearTransformation();
+        self.__CalculateThinPlateSplines();
+        self.__WritePolyData();
+
+    @property
+    def laplacian_matrix(self):
+        """Returns the laplacian matrix"""
         return self.__laplacianMatrix;
 
-    def GetBoundary(self):
+    @property
+    def boundary(self):
         return self.__boundary;
 
-    def GetOutput(self):
+    @property
+    def output(self):
         return self.__output;
 
-    def GetBoundaryPoints(self):
-        return self.__pointData[:, self.__boundary];
+    @property
+    def boundary_points(self):
+        return self.points[:, self.boundary];
+
+
 
     def __ReadPolyData(self):
         reader                  = vtkPolyDataReader();
@@ -167,7 +327,7 @@ class VentricularImage(object):
 
             path                = None;
 
-            directory, filename = split(self.__path);
+            directory, filename = split(self.path);
             filename, extension = splitext(filename);
 
             newPolyData         = vtkPolyData();
@@ -302,8 +462,6 @@ class VentricularImage(object):
         numDims                 = self.__polygonData.shape[0];
         numPoints               = self.__pointData.shape[1];
         numPolygons             = self.__polygonData.shape[1];
-        boundary                = self.__boundary;
-        boundaryConstrain       = zeros((2,numPoints));
 
         sparseMatrix            = csr_matrix((numPoints, numPoints));
 
@@ -502,7 +660,7 @@ class VentricularImage(object):
         boundaryNext            = roll(self.__boundary, -1);
         boundaryNextPoints      = self.__pointData[:, boundaryNext];
 
-        distanceToNext          = boundaryNextPoints - self.GetBoundaryPoints();
+        distanceToNext          = boundaryNextPoints - self.boundary_points;
 
         return sqrt((distanceToNext**2).sum(0));
 
