@@ -18,8 +18,6 @@
 
 from __future__ import division
 
-from AbstractImage import BaseImage;
-
 from os import system;
 from os import mkdir;
 
@@ -43,8 +41,8 @@ from scipy import tan;
 from scipy import arccos;
 from scipy import cumsum;
 from scipy import where;
-from scipy import flipud;
 from scipy import roll;
+from scipy import flip;
 from scipy import dot;
 from scipy import cross;
 
@@ -62,119 +60,126 @@ from vtk import vtkPolyDataWriter;
 from vtk import vtkPoints;
 from vtk import vtkIdList;
 
-class VentricularBEP(BaseImage):
+class VentricularImage(object):
     """
-    Data extraction from any VTK file, regardless of the specific image 
-    (ventricle, atrium; endocardium, epicardium)
+    Returns an object of the extracted information of a VTK file containing
+    data (mesh and scalar data) of a ventricular endocardial image.
 
+    May take any other image but convergence is not guaranteed.
 
-
-    Attributes
+    Parameters
     ----------
 
-    path:               str
-        path to the image file
-
-    ndim:               int
-        dimensionality of the VTK image
-
-    npoints:            int
-        number of points in the VTK file
-
-    npolygons:          int
-        number of polygons in the VTK file
-
-    nedges_mesh:        int
-        number of edges of the mesh in the input VTK file. Determines the
-        shape of the mesh; whether it is triangular, quadrilateral or of a
-        higher order
-
-    nscalars:           int
-        number of scalar vectors in the input VTK file
-
-    polydata:           vtkPolyData
-        link to the original vtkPolyData stored in the 'path' variable
-
-    points:             numpy.ndarray
-        coordinates of the point in a numpy array, in shape (ndim, npoints)
-
-    polygons:           numpy.ndarray
-        point identifiers of each of the triangles of the mesh, 
-        in shape (nedges_mesh, npolygons). If a point of a mesh cell wants to
-        be accessed, the specific point ID has to be passed to the points array:
-
-        >>> # (being ob the BaseImage object)
-        >>> ob.nedges_mesh # The mesh is triangular
-        3
-        >>> ob.polygons[:,35] # Let's check the point IDs of the 36th triangle
-        array([286, 715, 69])
-        >>> # If we wanted to check the spatial coordinates of the first node
-        >>> # of the 36th triangle, that is, the 287th node of the set, it
-        >>> # could be accessed by passing the 1st node of the 36th triangle
-        >>> # to the points array:
-        >>> point_of_interest = ob.points[:, ob.polygons[0, 35]]
-        array([  56.53070068, -101.97899628,  179.80900574]) 
-
-    scalars:            numpy.ndarray
-        structured numpy array containing the information of the scalars
-        associated to each point coordinate, in shape (nscalars, npoints). It
-        allows for specific attribute calls. E.g:  if a VTK file with two scalar
-        fields is analyzed, the first being called 'scalars' and the second
-        'LAT', the following statement is valid:
-
-        >>> # (being ob the BaseImage object)
-        >>> ob.scalars['LAT']
-        array([ 0.52275603,  0.94302633,  0.81044762, ...,  0.02766091,
-                0.18389358,  0.62247573])
-
-    scalars_names:      tuple
-        wrapper for 'scalars.dtype.names'. Provides the names of the scalar 
-        arrays contained in the input VTK file
-
-    normals:            numpy.ndarray
-        numpy array containing the normals of each point, in shape 
-        (ndim, npoints)
 
 
 
-    Returns
-    -------
 
-    output:         BaseImage
-        BaseImage object containing the extracted information of the input VTK
-        file
+    The class takes the image of a ventricle for its analysis: from a VTK file,
+    the points and the polygons are extracted. 
 
+    The class can be 
 
-
-    See Also
+    This can be instantiated in several ways:
+        csr_matrix(D)
+            with a dense matrix or rank-2 ndarray D
+        csr_matrix(S)
+            with another sparse matrix S (equivalent to S.tocsr())
+        csr_matrix((M, N), [dtype])
+            to construct an empty matrix with shape (M, N)
+            dtype is optional, defaulting to dtype='d'.
+        csr_matrix((data, (row_ind, col_ind)), [shape=(M, N)])
+            where ``data``, ``row_ind`` and ``col_ind`` satisfy the
+            relationship ``a[row_ind[k], col_ind[k]] = data[k]``.
+        csr_matrix((data, indices, indptr), [shape=(M, N)])
+            is the standard CSR representation where the column indices for
+            row i are stored in ``indices[indptr[i]:indptr[i+1]]`` and their
+            corresponding values are stored in ``data[indptr[i]:indptr[i+1]]``.
+            If the shape parameter is not supplied, the matrix dimensions
+            are inferred from the index arrays.
+    Attributes
+    ----------
+    dtype : dtype
+        Data type of the matrix
+    shape : 2-tuple
+        Shape of the matrix
+    ndim : int
+        Number of dimensions (this is always 2)
+    nnz
+        Number of nonzero elements
+    data
+        CSR format data array of the matrix
+    indices
+        CSR format index array of the matrix
+    indptr
+        CSR format index pointer array of the matrix
+    has_sorted_indices
+        Whether indices are sorted
+    Notes
+    -----
+    Sparse matrices can be used in arithmetic operations: they support
+    addition, subtraction, multiplication, division, and matrix power.
+    Advantages of the CSR format
+      - efficient arithmetic operations CSR + CSR, CSR * CSR, etc.
+      - efficient row slicing
+      - fast matrix vector products
+    Disadvantages of the CSR format
+      - slow column slicing operations (consider CSC)
+      - changes to the sparsity structure are expensive (consider LIL or DOK)
+    Examples
     --------
-
-    VentricularEndocardium
-
-
-
-    Example
-    -------
-
-    >>> import BaseImage
-    >>> import os
-    >>> path = os.path("/path/to/image.vtk")
-    >>> image1 = BaseImage.BaseImage(path)
-    >>> # Alternative method
-    >>> image2 = BaseImage.BaseImage()
-    >>> image2.path = path
-    Loading data...
-    >>> image2.path
-    /path/to/image.vtk
-
+    >>> import numpy as np
+    >>> from scipy.sparse import csr_matrix
+    >>> csr_matrix((3, 4), dtype=np.int8).toarray()
+    array([[0, 0, 0, 0],
+           [0, 0, 0, 0],
+           [0, 0, 0, 0]], dtype=int8)
+    >>> row = np.array([0, 0, 1, 2, 2, 2])
+    >>> col = np.array([0, 2, 2, 0, 1, 2])
+    >>> data = np.array([1, 2, 3, 4, 5, 6])
+    >>> csr_matrix((data, (row, col)), shape=(3, 3)).toarray()
+    array([[1, 0, 2],
+           [0, 0, 3],
+           [4, 5, 6]])
+    >>> indptr = np.array([0, 2, 3, 6])
+    >>> indices = np.array([0, 2, 2, 0, 1, 2])
+    >>> data = np.array([1, 2, 3, 4, 5, 6])
+    >>> csr_matrix((data, indices, indptr), shape=(3, 3)).toarray()
+    array([[1, 0, 2],
+           [0, 0, 3],
+           [4, 5, 6]])
+    As an example of how to construct a CSR matrix incrementally,
+    the following snippet builds a term-document matrix from texts:
+    >>> docs = [["hello", "world", "hello"], ["goodbye", "cruel", "world"]]
+    >>> indptr = [0]
+    >>> indices = []
+    >>> data = []
+    >>> vocabulary = {}
+    >>> for d in docs:
+    ...     for term in d:
+    ...         index = vocabulary.setdefault(term, len(vocabulary))
+    ...         indices.append(index)
+    ...         data.append(1)
+    ...     indptr.append(len(indices))
+    ...
+    >>> csr_matrix((data, indices, indptr), dtype=int).toarray()
+    array([[2, 1, 0, 0],
+           [0, 1, 1, 1]])
     """
-
+    __path                      = None;
+    __originalPolyData          = None;
+    __QCMPolyData               = None;
+    __pointData                 = None;
+    __polygonData               = None;
+    __scalarData                = None;
+    __normalData                = None;
+    __nPoints                   = None;
+    __nPolygons                 = None;
+    __nDimensions               = None;
     __septum                    = None;
     __apex                      = None;
-    __laplacian                 = None;
-    __boundary_IDs              = None;
-    __BEP_polydata              = None;
-    __BEP_points                = None;
+    __laplacianMatrix           = None;
+    __boundary                  = None;
+    __output                    = None;
 
     def __init__(self, path, septum, apex):
         """ VentricularImage(path, septum, apex)
@@ -186,30 +191,76 @@ class VentricularBEP(BaseImage):
         file in vtk format to a quasi-conformal disk image to be further 
         analyzed by other tools. """
 
-        BaseImage.__init__(self, path);
+        if isfile(path):
+            self.__path         = path;
+        else:
+            raise RuntimeError("File does not exist");
 
+        self.__ReadPolyData();
+        self.__ReadPointData();
+        self.__ReadPolygonData();
+        self.__ReadNormalData();
+        self.__ReadScalarData();
         self.__septum           = septum;
         self.__apex             = apex;
-        self.__calc_boundary_IDs();
-        self.rearrange();
-        self.__calc_laplacian();
-        self.__calc_BEP_points();
-        self.__write_BEP_polydata();
+        self.__nDimensions      = self.__pointData.shape[0];
+        self.__nPoints          = self.__pointData.shape[1];
+        self.__nPolygons        = self.__polygonData.shape[1];
+        self.__CalculateBoundary();
+        self.RearrangeBoundary();
+        self.__LaplacianMatrix();
+        self.__CalculateLinearTransformation();
+        self.__CalculateThinPlateSplines();
+        self.__WritePolyData();
 
-    # @BaseImage.path.setter
-    # def path(self, path):
-    #     if isfile(path):
-    #         if self.path is not None:
-    #             print("Overwritting existing data on variable...")
-    #         else:
-    #             print("Loading data...")
+    @property
+    def path(self):
+        return self.__path;
 
-    #         if (self.septum is not None) and (self.apex is not None):
-    #             self.__init__(path, self.septum, self.apex);
-    #         else:
-    #             raise RuntimeError("Operation prohibited if septum and apex not specified");
-    #     else:
-    #         raise RuntimeError("File does not exist");
+    @path.setter
+    def path(self, path):
+        if isfile(path):
+            if self.path is not None:
+                print("Overwritting existing data on variable...")
+            else:
+                print("Loading data...")
+
+            self.__init__(path, self.septum, self.apex);
+        else:
+            raise RuntimeError("File does not exist");
+
+    @property
+    def polydata(self):
+        """Testing docstring of attribute"""
+        return self.__originalPolyData;
+
+    @property
+    def BEP(self):
+        return self.__QCMPolyData;
+
+    @property
+    def points(self):
+        return self.__pointData;
+
+    @property
+    def npoints(self):
+        return self.__nPoints;
+
+    @property
+    def polygons(self):
+        return self.__polygonData;
+
+    @property
+    def npolygons(self):
+        return self.__nPolygons;
+
+    @property
+    def scalars(self):
+        return self.__scalarData;
+
+    @property
+    def normals(self):
+        return self.__normalData;
 
     @property
     def septum(self):
@@ -219,10 +270,11 @@ class VentricularBEP(BaseImage):
     def septum(self, septum):
         self.__septum           = septum;
 
-        self.rearrange();
-        self.__calc_laplacian();
-        self.__calc_BEP_points();
-        self.__write_BEP_polydata();
+        self.RearrangeBoundary();
+        self.__LaplacianMatrix();
+        self.__CalculateLinearTransformation();
+        self.__CalculateThinPlateSplines();
+        self.__WritePolyData();
 
     @property
     def apex(self):
@@ -232,38 +284,46 @@ class VentricularBEP(BaseImage):
     def apex(self, apex):
         self.__apex             = apex;
 
-        self.__calc_boundary_IDs();
-        self.rearrange();
-        self.__calc_laplacian();
-        self.__calc_BEP_points();
-        self.__write_BEP_polydata();
+        self.RearrangeBoundary();
+        self.__LaplacianMatrix();
+        self.__CalculateLinearTransformation();
+        self.__CalculateThinPlateSplines();
+        self.__WritePolyData();
 
     @property
-    def laplacian(self):
+    def laplacian_matrix(self):
         """Returns the laplacian matrix"""
-        return self.__laplacian;
+        return self.__laplacianMatrix;
 
     @property
-    def boundary_IDs(self):
-        return self.__boundary_IDs;
+    def boundary(self):
+        return self.__boundary;
+
+    @property
+    def output(self):
+        return self.__output;
 
     @property
     def boundary_points(self):
-        return self.points[:, self.boundary_IDs];
+        return self.points[:, self.boundary];
 
-    @property
-    def BEP_points(self):
-        return self.__BEP_points;
 
-    @property
-    def BEP_polydata(self):
-        return self.__BEP_polydata;
 
-    def __write_BEP_polydata(self):
-        if ((self.BEP_points is not None)
-            and (self.points is not None)
-            and (self.scalars is not None)
-            and (self.polygons is not None)):
+    def __ReadPolyData(self):
+        reader                  = vtkPolyDataReader();
+        reader.SetFileName(self.__path);
+        reader.Update();
+
+        polyData                = reader.GetOutput();
+        polyData.BuildLinks();
+
+        self.__originalPolyData = polyData;
+
+    def __WritePolyData(self):
+        if ((self.__output is not None)
+            and (self.__scalarData is not None)
+            and (self.__pointData is not None)
+            and (self.__polygonData is not None)):
 
             path                = None;
 
@@ -287,30 +347,121 @@ class VentricularBEP(BaseImage):
                     path        = join(directory, str(filename + '_BEP' + extension));
                     writer.SetFileName(path);
 
-            for i in xrange(self.npoints):
-                newPointData.InsertPoint(i, (self.BEP_points[0, i], self.BEP_points[1, i], 0.0));
+            for i in xrange(self.__nPoints):
+                newPointData.InsertPoint(i, (self.__output[0, i], self.__output[1, i], 0.0));
 
             newPolyData.SetPoints(newPointData);
-            newPolyData.SetPolys(self.polydata.GetPolys());
-            if self.polydata.GetPointData().GetScalars() is None:
-                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(0));
+            newPolyData.SetPolys(self.__originalPolyData.GetPolys());
+            if self.__originalPolyData.GetPointData().GetScalars() is None:
+                newPolyData.GetPointData().SetScalars(
+                    self.__originalPolyData.GetPointData().GetArray(0));
             else:
-                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetScalars());
+                newPolyData.GetPointData().SetScalars(
+                    self.__originalPolyData.GetPointData().GetScalars());
 
             writer.SetInputData(newPolyData);
             writer.Write();
 
-            self.__BEP_polydata  = newPolyData;
+            self.__QCMPolyData  = newPolyData;
 
             system("perl -pi -e 's/,/./g' %s " % path);
 
-        else:
-            raise RuntimeError("Information provided insufficient");
+    def __ReadPolygonData(self):
+        rows                    = None;
+        cols                    = None;
+        polygons                = None;
 
-    def __calc_laplacian(self):
-        numDims                 = self.polygons.shape[0];
-        numPoints               = self.points.shape[1];
-        numPolygons             = self.polygons.shape[1];
+        polys                   = self.__originalPolyData.GetPolys();
+
+        for i in xrange(self.__originalPolyData.GetNumberOfCells()):
+            triangle            = self.__originalPolyData.GetCell(i);
+            pointIds            = triangle.GetPointIds();
+
+            if polygons is None:
+                rows            = pointIds.GetNumberOfIds();
+                cols            = self.__originalPolyData.GetNumberOfCells();
+                polygons        = zeros((rows,cols), dtype=int);
+            
+            polygons[0,i]       = pointIds.GetId(0);
+            polygons[1,i]       = pointIds.GetId(1);
+            polygons[2,i]       = pointIds.GetId(2);
+
+        self.__polygonData      = polygons;
+
+    def __ReadPointData(self):
+        rows                    = None;
+        cols                    = None;
+        points                  = None;
+
+        pointVector             = self.__originalPolyData.GetPoints();
+
+        if pointVector:
+            for i in range(0, pointVector.GetNumberOfPoints()):
+                point_tuple     = pointVector.GetPoint(i);
+
+                if points is None:
+                    rows        = len(point_tuple);
+                    cols        = pointVector.GetNumberOfPoints();
+                    points      = zeros((rows,cols));
+                
+                points[0,i]     = point_tuple[0];
+                points[1,i]     = point_tuple[1];
+                points[2,i]     = point_tuple[2];
+
+        self.__pointData        = points;
+
+    def __ReadNormalData(self):
+        rows                    = None;
+        cols                    = None;
+        normals                 = None;
+
+        normalVector            = self.__originalPolyData.GetPointData().GetNormals();
+
+        if normalVector:
+            for i in range(0, normalVector.GetNumberOfTuples()):
+                normalTuple     = normalVector.GetTuple(i);
+
+                if normals is None:
+                    rows        = len(normalTuple);
+                    cols        = normalVector.GetNumberOfTuples();
+                    normals     = zeros((rows,cols));
+                
+                normals[0,i]    = normalTuple[0];
+                normals[1,i]    = normalTuple[1];
+                normals[2,i]    = normalTuple[2];
+
+        self.__normalData       = normals;
+
+    def __ReadScalarData(self):
+        rows                    = None;
+        cols                    = None;
+        scalars                 = None;
+
+        scalarVector            = self.__originalPolyData.GetPointData().GetScalars();
+
+        if scalarVector is None:
+            scalarVector        = self.__originalPolyData.GetPointData().GetArray(0);
+
+        if scalarVector:
+            for i in xrange(scalarVector.GetNumberOfTuples()):
+                scalarTuple     = scalarVector.GetTuple(i);
+
+                if scalars is None:
+                    rows        = len(scalarTuple);
+                    cols        = scalarVector.GetNumberOfTuples();
+                    scalars     = zeros((rows,cols));
+                
+                for j in xrange(len(scalarTuple)):
+                    scalars[j,i] = scalarTuple[j];
+        else:
+            print("The input file does not have any associated scalar data.")
+
+        self.__scalarData       = scalars;
+
+    def __LaplacianMatrix(self):
+        numDims                 = self.__polygonData.shape[0];
+        numPoints               = self.__pointData.shape[1];
+        numPolygons             = self.__polygonData.shape[1];
 
         sparseMatrix            = csr_matrix((numPoints, numPoints));
 
@@ -319,8 +470,8 @@ class VentricularBEP(BaseImage):
             i2                  = (i + 1)%3;
             i3                  = (i + 2)%3;
 
-            distP2P1            = self.points[:, self.polygons[i2, :]] - self.points[:, self.polygons[i1, :]];
-            distP3P1            = self.points[:, self.polygons[i3, :]] - self.points[:, self.polygons[i1, :]];
+            distP2P1            = self.__pointData[:, self.__polygonData[i2, :]] - self.__pointData[:, self.__polygonData[i1, :]];
+            distP3P1            = self.__pointData[:, self.__polygonData[i3, :]] - self.__pointData[:, self.__polygonData[i1, :]];
 
             distP2P1            = distP2P1 / repmat(sqrt((distP2P1**2).sum(0)), 3, 1);
             distP3P1            = distP3P1 / repmat(sqrt((distP3P1**2).sum(0)), 3, 1);
@@ -328,50 +479,49 @@ class VentricularBEP(BaseImage):
             angles              = arccos((distP2P1 * distP3P1).sum(0));
 
             iterData1           = csr_matrix((1/tan(angles), 
-                                                    (self.polygons[i2,:], 
-                                                     self.polygons[i3,:])), 
+                                                    (self.__polygonData[i2,:], 
+                                                     self.__polygonData[i3,:])), 
                                                     shape=(numPoints, numPoints));
 
-            iterData2           = csr_matrix((1/tan(angles), (self.polygons[i3,:], self.polygons[i2,:])), shape=(numPoints, numPoints));
+            iterData2           = csr_matrix((1/tan(angles), (self.__polygonData[i3,:], self.__polygonData[i2,:])), shape=(numPoints, numPoints));
 
             sparseMatrix        = sparseMatrix + iterData1 + iterData2;
 
         diagonal                = sparseMatrix.sum(0);
         diagonalSparse          = spdiags(diagonal, 0, numPoints, numPoints);
-        self.__laplacian        = diagonalSparse - sparseMatrix;
+        self.__laplacianMatrix  = diagonalSparse - sparseMatrix;
 
-    def __calc_BEP_points(self):
-        if self.laplacian is not None:
-            if self.boundary_IDs is not None:
-                (nzi, nzj)      = find(self.laplacian)[0:2];
+    def __CalculateLinearTransformation(self):
+        if self.__laplacianMatrix is not None:
+            if self.__boundary is not None:
+                laplacian       = self.__laplacianMatrix;
+                (nzi, nzj)      = find(laplacian)[0:2];
 
-                for point in self.boundary_IDs:
+                for point in self.__boundary:
                     positions   = where(nzi==point)[0];
 
-                    self.laplacian[nzi[positions], nzj[positions]] = 0;
+                    laplacian[nzi[positions], nzj[positions]] = 0;
 
-                    self.laplacian[point, point] = 1;
+                    laplacian[point, point] = 1;
 
                 Z = self.GetWithinBoundarySinCos();
 
-                boundaryConstrain = zeros((2, self.npoints));
-                boundaryConstrain[:, self.boundary_IDs] = Z;
+                boundaryConstrain = zeros((2, self.__nPoints));
+                boundaryConstrain[:, self.__boundary] = Z;
 
-                self.__BEP_points = spsolve(self.laplacian, boundaryConstrain.transpose()).transpose();
+                self.__output   = spsolve(laplacian, boundaryConstrain.transpose()).transpose();
 
-                self.__calc_thin_plate_splines();
-
-    def __calc_thin_plate_splines(self):
-        if self.BEP_points is not None:
-            if self.apex is not None:
-                boundaryPoints  = self.BEP_points[:,self.boundary_IDs];
+    def __CalculateThinPlateSplines(self):
+        if self.__output is not None:
+            if self.__apex is not None:
+                boundaryPoints  = self.__output[:,self.__boundary];
                 source          = zeros((boundaryPoints.shape[0],
                                                boundaryPoints.shape[1] + 1));
                 destination     = zeros((boundaryPoints.shape[0],
                                                boundaryPoints.shape[1] + 1));
 
                 source[:, 0:source.shape[1] - 1]        = boundaryPoints;
-                source[:, source.shape[1] - 1]          = self.BEP_points[:, self.apex];
+                source[:, source.shape[1] - 1]          = self.__output[:, self.__apex];
 
                 destination[:, 0:source.shape[1] - 1]   = boundaryPoints;
                 destination[:, 0:source.shape[1] - 1]   = boundaryPoints;
@@ -382,12 +532,12 @@ class VentricularBEP(BaseImage):
 
                 thinPlateInterpolation = RBFThinPlateSpline(x,y,d);
 
-                result = thinPlateInterpolation(self.BEP_points[0,:], self.BEP_points[1,:]);
+                result = thinPlateInterpolation(self.__output[0,:], self.__output[1,:]);
 
-                self.__BEP_points[0,:] = result.real;
-                self.__BEP_points[1,:] = result.imag;
+                self.__output[0,:] = result.real;
+                self.__output[1,:] = result.imag;
 
-    def __calc_boundary_IDs(self):
+    def __CalculateBoundary(self):
         startingPoint           = None;
         currentPoint            = None;
         foundBoundary           = False;
@@ -397,11 +547,11 @@ class VentricularBEP(BaseImage):
         visitedPoints           = [];
         visitedBoundaryEdges    = [];
 
-        for cellId in xrange(self.polydata.GetNumberOfCells()):
+        for cellId in xrange(self.__originalPolyData.GetNumberOfCells()):
             cellPointIdList     = vtkIdList();
             cellEdges           = [];
 
-            self.polydata.GetCellPoints(cellId, cellPointIdList);
+            self.__originalPolyData.GetCellPoints(cellId, cellPointIdList);
 
             cellEdges           = [[cellPointIdList.GetId(0), 
                                     cellPointIdList.GetId(1)], 
@@ -420,7 +570,7 @@ class VentricularBEP(BaseImage):
 
                     singleCellEdgeNeighborIds = vtkIdList();
 
-                    self.polydata.GetCellEdgeNeighbors(cellId, cellEdges[i][0], cellEdges[i][1], singleCellEdgeNeighborIds);
+                    self.__originalPolyData.GetCellEdgeNeighbors(cellId, cellEdges[i][0], cellEdges[i][1], singleCellEdgeNeighborIds);
 
                     if singleCellEdgeNeighborIds.GetNumberOfIds() == 0:
                         foundBoundary   = True;
@@ -443,11 +593,11 @@ class VentricularBEP(BaseImage):
         while currentPoint != startingPoint:
             neighboringCells    = vtkIdList();
 
-            self.polydata.GetPointCells(currentPoint, neighboringCells);
+            self.__originalPolyData.GetPointCells(currentPoint, neighboringCells);
 
             for i in xrange(neighboringCells.GetNumberOfIds()):
                 cell = neighboringCells.GetId(i);
-                triangle = self.polydata.GetCell(cell);
+                triangle = self.__originalPolyData.GetCell(cell);
 
                 for j in xrange(triangle.GetNumberOfPoints()):
                     if triangle.GetPointId(j) == currentPoint:
@@ -462,9 +612,9 @@ class VentricularBEP(BaseImage):
                 edgeNeighbors1  = vtkIdList();
                 edgeNeighbors2  = vtkIdList();
 
-                self.polydata.GetCellEdgeNeighbors(cell, edge1[0], edge1[1], edgeNeighbors1);
+                self.__originalPolyData.GetCellEdgeNeighbors(cell, edge1[0], edge1[1], edgeNeighbors1);
 
-                self.polydata.GetCellEdgeNeighbors(cell, edge2[0], edge2[1], edgeNeighbors2);
+                self.__originalPolyData.GetCellEdgeNeighbors(cell, edge2[0], edge2[1], edgeNeighbors2);
 
                 if edgeNeighbors1.GetNumberOfIds() == 0:
                     if ([edge1[1], edge1[0]] in visitedBoundaryEdges) == False:
@@ -486,29 +636,29 @@ class VentricularBEP(BaseImage):
 
         boundary    = asarray(boundary, dtype=int);
 
-        center      = mean(self.points[:,boundary], axis=1);
-        vector1     = asarray(self.points[:,boundary[0]] - center);
-        vector2     = asarray(self.points[:,boundary[1]] - center);
+        center      = mean(self.__pointData[:,boundary], axis=1);
+        vector1     = asarray(self.__pointData[:,boundary[0]] - center);
+        vector2     = asarray(self.__pointData[:,boundary[1]] - center);
         vectorNormal= cross(vector1, vector2);
-        vectorApex  = self.points[:, self.apex] - center;
+        vectorApex  = self.__pointData[:, self.__apex] - center;
 
         if len(center.shape) is not 1:
             if center.shape[0] is not 3:
                 raise Exception("Something went wrong. Probably forgot to transpose this. Contact maintainer.");
 
         if dot(vectorApex, vectorNormal) < 0:
-            boundary            = flipud(boundary);
-            boundary            = roll(boundary, 1);
+            boundary         = flip(boundary, 0);
+            boundary         = roll(boundary, 1);
 
-        self.__boundary_IDs     = boundary;
+        self.__boundary = boundary;
 
     def FlipBoundary(self):
-        self.__boundary_IDs     = flipud(self.boundary_IDs);
-        self.__boundary_IDs     = roll(self.boundary_IDs, 1);
+        self.__boundary         = flip(self.__boundary, 0);
+        self.__boundary         = roll(self.__boundary, 1);
 
     def GetWithinBoundaryDistances(self):
-        boundaryNext            = roll(self.boundary_IDs, -1);
-        boundaryNextPoints      = self.points[:, boundaryNext];
+        boundaryNext            = roll(self.__boundary, -1);
+        boundaryNextPoints      = self.__pointData[:, boundaryNext];
 
         distanceToNext          = boundaryNextPoints - self.boundary_points;
 
@@ -541,24 +691,24 @@ class VentricularBEP(BaseImage):
 
         return Z;
 
-    def rearrange(self, objectivePoint=None):
+    def RearrangeBoundary(self, objectivePoint=None):
         septalIndex             = None;
         septalPoint             = None;
         closestPoint            = None;
 
         if objectivePoint is None:
-            if self.septum is None:
+            if self.__septum is None:
                 raise Exception("No septal point provided in function call and no septal point provided in constructor. Aborting arrangement. ");
             else:
-                septalIndex     = self.septum;
+                septalIndex     = self.__septum;
         else:
             print("Using provided septal point as rearranging point.");
             self.__septum       = objectivePoint;
             septalIndex         = objectivePoint;
 
-        if septalIndex in self.boundary_IDs:
+        if septalIndex in self.__boundary:
             closestPoint        = septalIndex;
-            closestPointIndex   = where(self.boundary_IDs==septalIndex);
+            closestPointIndex   = where(self.__boundary==septalIndex);
 
             if len(closestPointIndex) == 1:
                 if len(closestPointIndex[0]) == 1:
@@ -568,21 +718,21 @@ class VentricularBEP(BaseImage):
             else:
                 raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
 
-            self.__boundary_IDs = roll(self.boundary_IDs, -closestPointIndex);
+            self.__boundary     = roll(self.__boundary, -closestPointIndex);
         else:
             try:
-                septalPoint     = self.points[:, septalIndex];
+                septalPoint     = self.__pointData[:, septalIndex];
             except:
                 raise Exception("Septal point provided out of data bounds; the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.");
 
-            if len(self.boundary_IDs.shape) == 1:
+            if len(self.__boundary.shape) == 1:
                 septalPoint     = repmat(septalPoint,
-                                    self.boundary_IDs.size, 1);
+                                    self.__boundary.size, 1);
                 septalPoint     = septalPoint .transpose();
             else:
                 raise Exception("It seems you have multiple boundaries. Contact the package maintainer.");
 
-            distanceToObjectivePoint    = (self.points[:, self.boundary_IDs] - septalPoint);
+            distanceToObjectivePoint    = (self.__pointData[:, self.__boundary] - septalPoint);
             distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0));
             closestPointIndex           = where(distanceToObjectivePoint == distanceToObjectivePoint.min());
             if len(closestPointIndex) == 1:
@@ -593,8 +743,8 @@ class VentricularBEP(BaseImage):
             else:
                 raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
 
-            self.__boundary_IDs = roll(self.boundary_IDs, 
-                                       -closestPointIndex);
+            self.__boundary             = roll(self.__boundary, 
+                                          -closestPointIndex);
 
 
 

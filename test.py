@@ -180,6 +180,22 @@ start = time.time(); reload(VentricularImage); EAM = VentricularImage.Ventricula
 
 
 
+
+
+
+
+
+start = time.time(); reload(VentricularImage); EAM = VentricularImage.VentricularBEP(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
+
+
+
+
+
+
+
+
+
+
 start = time.time(); reload(VentricularInterpolator); interpolator = VentricularInterpolator.VentricularInterpolator(MRI, EAM); interpolator.kNearestNeighbours(); print(time.time() - start);
 
 

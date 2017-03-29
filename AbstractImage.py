@@ -152,7 +152,6 @@ class BaseImage(object):
     __nscalars                  = None;
     __nedges_mesh               = None;
     __scalars_names             = None;
-    __laplacian_matrix          = None;
 
     def __init__(self, path):
         """BaseImage(path=None)
@@ -180,17 +179,17 @@ class BaseImage(object):
     def path(self):
         return self.__path;
 
-    @path.setter
-    def path(self, path):
-        if isfile(path):
-            if self.path is not None:
-                print("Overwritting existing data on variable...")
-            else:
-                print("Loading data...")
+    # @path.setter
+    # def path(self, path):
+    #     if isfile(path):
+    #         if self.path is not None:
+    #             print("Overwritting existing data on variable...")
+    #         else:
+    #             print("Loading data...")
 
-            self.__init__(path);
-        else:
-            raise RuntimeError("File does not exist");
+    #         self.__init__(path);
+    #     else:
+    #         raise RuntimeError("File does not exist");
 
     @property
     def polydata(self):
@@ -239,10 +238,13 @@ class BaseImage(object):
         reader.SetFileName(self.path);
         reader.Update();
 
-        polyData                = reader.GetOutput();
-        polyData.BuildLinks();
+        polydata                = reader.GetOutput();
+        polydata.BuildLinks();
 
-        self.__polydata         = polyData;
+        self.__npoints          = polydata.GetNumberOfPoints();
+        self.__npolygons        = polydata.GetNumberOfPolys();
+        self.__ndim             = polydata.GetPoints().GetData().GetNumberOfComponents();
+        self.__polydata         = polydata;
 
     def __read_polygons(self):
         rows                    = None;
