@@ -23,7 +23,7 @@ from AbstractImage import BaseImage;
 from os import system;
 from os import mkdir;
 
-from os.path import isfile;
+# from os.path import isfile;
 from os.path import isdir;
 from os.path import split;
 from os.path import splitext;
@@ -48,16 +48,18 @@ from scipy import roll;
 from scipy import dot;
 from scipy import cross;
 
+from scipy.linalg import norm;
+
 from scipy.sparse import csr_matrix;
 from scipy.sparse import spdiags;
 from scipy.sparse import find;
 
-from scipy.sparse.linalg import spsolve; 
+from scipy.sparse.linalg import spsolve;
 
 from mvpoly.rbf import RBFThinPlateSpline;
 
 from vtk import vtkPolyData;
-from vtk import vtkPolyDataReader;
+# from vtk import vtkPolyDataReader;
 from vtk import vtkPolyDataWriter;
 from vtk import vtkPoints;
 from vtk import vtkIdList;
@@ -172,7 +174,7 @@ class VentricularBEP(BaseImage):
     __septum                    = None;
     __apex                      = None;
     __laplacian                 = None;
-    __boundary_IDs              = None;
+    __boundary                  = None;
     __BEP_polydata              = None;
     __BEP_points                = None;
 
@@ -190,8 +192,8 @@ class VentricularBEP(BaseImage):
 
         self.__septum           = septum;
         self.__apex             = apex;
-        self.__calc_boundary_IDs();
-        self.rearrange();
+        self.__calc_boundary();
+        self.__rearrange();
         self.__calc_laplacian();
         self.__calc_BEP_points();
         self.__write_BEP_polydata();
@@ -217,12 +219,10 @@ class VentricularBEP(BaseImage):
 
     @septum.setter
     def septum(self, septum):
-        self.__septum           = septum;
+        if septum >= self.npoints:
+            raise RuntimeError("Septal point provided is out of bounds");
 
-        self.rearrange();
-        self.__calc_laplacian();
-        self.__calc_BEP_points();
-        self.__write_BEP_polydata();
+        self.rearrange_boundary(septum);
 
     @property
     def apex(self):
@@ -230,11 +230,10 @@ class VentricularBEP(BaseImage):
 
     @apex.setter
     def apex(self, apex):
-        self.__apex             = apex;
+        if apex >= self.npoints:
+            raise RuntimeError("Apical point provided is out of bounds");
 
-        self.__calc_boundary_IDs();
-        self.rearrange();
-        self.__calc_laplacian();
+        self.__apex             = apex;
         self.__calc_BEP_points();
         self.__write_BEP_polydata();
 
@@ -244,12 +243,12 @@ class VentricularBEP(BaseImage):
         return self.__laplacian;
 
     @property
-    def boundary_IDs(self):
-        return self.__boundary_IDs;
+    def boundary(self):
+        return self.__boundary;
 
     @property
     def boundary_points(self):
-        return self.points[:, self.boundary_IDs];
+        return self.points[:, self.boundary];
 
     @property
     def BEP_points(self):
@@ -342,20 +341,25 @@ class VentricularBEP(BaseImage):
 
     def __calc_BEP_points(self):
         if self.laplacian is not None:
-            if self.boundary_IDs is not None:
+            if self.boundary is not None:
                 (nzi, nzj)      = find(self.laplacian)[0:2];
 
-                for point in self.boundary_IDs:
+                for point in self.boundary:
                     positions   = where(nzi==point)[0];
 
                     self.laplacian[nzi[positions], nzj[positions]] = 0;
 
                     self.laplacian[point, point] = 1;
 
-                Z = self.GetWithinBoundarySinCos();
+                angles                  = self.__calc_boundary_node_angles();
+                Z                       = zeros((2, angles.size));
+                Z[0,:]                  = cos(angles);
+                Z[1,:]                  = sin(angles);
+
+                # Z = self.GetWithinBoundarySinCos();
 
                 boundaryConstrain = zeros((2, self.npoints));
-                boundaryConstrain[:, self.boundary_IDs] = Z;
+                boundaryConstrain[:, self.boundary] = Z;
 
                 self.__BEP_points = spsolve(self.laplacian, boundaryConstrain.transpose()).transpose();
 
@@ -364,7 +368,7 @@ class VentricularBEP(BaseImage):
     def __calc_thin_plate_splines(self):
         if self.BEP_points is not None:
             if self.apex is not None:
-                boundaryPoints  = self.BEP_points[:,self.boundary_IDs];
+                boundaryPoints  = self.BEP_points[:,self.boundary];
                 source          = zeros((boundaryPoints.shape[0],
                                                boundaryPoints.shape[1] + 1));
                 destination     = zeros((boundaryPoints.shape[0],
@@ -387,15 +391,15 @@ class VentricularBEP(BaseImage):
                 self.__BEP_points[0,:] = result.real;
                 self.__BEP_points[1,:] = result.imag;
 
-    def __calc_boundary_IDs(self):
+    def __calc_boundary(self):
         startingPoint           = None;
         currentPoint            = None;
         foundBoundary           = False;
         cellId                  = None;
         boundary                = [];
         visitedEdges            = [];
-        visitedPoints           = [];
         visitedBoundaryEdges    = [];
+        # visitedPoints           = [];
 
         for cellId in xrange(self.polydata.GetNumberOfCells()):
             cellPointIdList     = vtkIdList();
@@ -414,7 +418,7 @@ class VentricularBEP(BaseImage):
                 if (cellEdges[i] in visitedEdges) == False:
                     visitedEdges.append(cellEdges[i]);
 
-                    edgeIdList  = vtkIdList()
+                    edgeIdList  = vtkIdList();
                     edgeIdList.InsertNextId(cellEdges[i][0]);
                     edgeIdList.InsertNextId(cellEdges[i][1]);
 
@@ -500,32 +504,32 @@ class VentricularBEP(BaseImage):
             boundary            = flipud(boundary);
             boundary            = roll(boundary, 1);
 
-        self.__boundary_IDs     = boundary;
+        self.__boundary         = boundary;
 
-    def FlipBoundary(self):
-        self.__boundary_IDs     = flipud(self.boundary_IDs);
-        self.__boundary_IDs     = roll(self.boundary_IDs, 1);
+    def flip_boundary(self):
+        self.__boundary         = flipud(self.boundary);
+        self.__boundary         = roll(self.boundary, 1);
 
-    def GetWithinBoundaryDistances(self):
-        boundaryNext            = roll(self.boundary_IDs, -1);
+    def get_boundary_node_distances(self):
+        boundaryNext            = roll(self.boundary, -1);
         boundaryNextPoints      = self.points[:, boundaryNext];
 
         distanceToNext          = boundaryNextPoints - self.boundary_points;
 
         return sqrt((distanceToNext**2).sum(0));
 
-    def GetPerimeter(self):
-        return self.GetWithinBoundaryDistances().sum();
+    def get_boundary_perimeter(self):
+        return self.get_boundary_node_distances().sum();
 
-    def GetWithinBoundaryDistancesAsFraction(self):
-        euclideanNorm           = self.GetWithinBoundaryDistances();
+    def get_boundary_node_distances_fraction(self):
+        euclideanNorm           = self.get_boundary_node_distances();
         perimeter               = euclideanNorm.sum();
 
         return euclideanNorm/perimeter;
 
-    def GetWithinBoundaryAngles(self):
+    def __calc_boundary_node_angles(self):
         circleLength            = 2*pi;
-        fraction                = self.GetWithinBoundaryDistancesAsFraction();
+        fraction                = self.get_boundary_node_distances_fraction();
 
         angles                  = cumsum(circleLength*fraction);
         angles                  = roll(angles, 1);
@@ -533,15 +537,15 @@ class VentricularBEP(BaseImage):
 
         return angles;
 
-    def GetWithinBoundarySinCos(self):
-        angles                  = self.GetWithinBoundaryAngles();
-        Z                       = zeros((2, angles.size));
-        Z[0,:]                  = cos(angles);
-        Z[1,:]                  = sin(angles);
+    # def GetWithinBoundarySinCos(self):
+    #     angles                  = self.get_boundary_node_angles();
+    #     Z                       = zeros((2, angles.size));
+    #     Z[0,:]                  = cos(angles);
+    #     Z[1,:]                  = sin(angles);
 
-        return Z;
+    #     return Z;
 
-    def rearrange(self, objectivePoint=None):
+    def __rearrange(self, objectivePoint=None):
         septalIndex             = None;
         septalPoint             = None;
         closestPoint            = None;
@@ -556,9 +560,9 @@ class VentricularBEP(BaseImage):
             self.__septum       = objectivePoint;
             septalIndex         = objectivePoint;
 
-        if septalIndex in self.boundary_IDs:
+        if septalIndex in self.boundary:
             closestPoint        = septalIndex;
-            closestPointIndex   = where(self.boundary_IDs==septalIndex);
+            closestPointIndex   = where(self.boundary==septalIndex);
 
             if len(closestPointIndex) == 1:
                 if len(closestPointIndex[0]) == 1:
@@ -568,23 +572,24 @@ class VentricularBEP(BaseImage):
             else:
                 raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
 
-            self.__boundary_IDs = roll(self.boundary_IDs, -closestPointIndex);
+            self.__boundary     = roll(self.boundary, -closestPointIndex);
         else:
             try:
                 septalPoint     = self.points[:, septalIndex];
             except:
                 raise Exception("Septal point provided out of data bounds; the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.");
 
-            if len(self.boundary_IDs.shape) == 1:
+            if len(self.boundary.shape) == 1:
                 septalPoint     = repmat(septalPoint,
-                                    self.boundary_IDs.size, 1);
+                                    self.boundary.size, 1);
                 septalPoint     = septalPoint .transpose();
             else:
                 raise Exception("It seems you have multiple boundaries. Contact the package maintainer.");
 
-            distanceToObjectivePoint    = (self.points[:, self.boundary_IDs] - septalPoint);
+            distanceToObjectivePoint    = (self.points[:, self.boundary] - septalPoint);
             distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0));
             closestPointIndex           = where(distanceToObjectivePoint == distanceToObjectivePoint.min());
+
             if len(closestPointIndex) == 1:
                 if len(closestPointIndex[0]) == 1:
                     closestPointIndex   = closestPointIndex[0][0];
@@ -593,8 +598,82 @@ class VentricularBEP(BaseImage):
             else:
                 raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
 
-            self.__boundary_IDs = roll(self.boundary_IDs, 
-                                       -closestPointIndex);
+            self.__boundary     = roll(self.boundary, -closestPointIndex);
+
+
+
+    def rearrange_boundary(self, objectivePoint):
+        old_septum              = self.septum;
+        septalIndex             = None;
+        # septalPoint             = None;
+        closestPoint            = None;
+
+        if objectivePoint == self.septum:
+            return
+
+        if objectivePoint in self.boundary:
+            septalIndex         = objectivePoint;
+            closestPoint        = objectivePoint;
+            closestPointIndex   = where(self.boundary==objectivePoint);
+
+            if len(closestPointIndex) == 1:
+                if len(closestPointIndex[0]) == 1:
+                    closestPointIndex = closestPointIndex[0][0];
+                else:
+                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
+            else:
+                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
+
+            # self.__boundary = roll(self.boundary, -septalIndex);
+        else:
+            print("Provided point not found in the boundary. Selecting closest point available...");
+
+            try:
+                searched_point  = self.points[:, objectivePoint];
+            except:
+                raise Exception("Septal point provided out of data bounds; the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.");
+
+            if len(self.boundary.shape) == 1:
+                searched_point  = repmat(searched_point, self.boundary.size, 1);
+                searched_point  = searched_point.transpose();
+            else:
+                raise Exception("It seems you have multiple boundaries. Contact the package maintainer.");
+
+            distanceToObjectivePoint    = (self.points[:, self.boundary] - searched_point);
+            distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0));
+            closestPointIndex           = where(distanceToObjectivePoint == distanceToObjectivePoint.min());
+
+            if len(closestPointIndex) == 1:
+                if len(closestPointIndex[0]) == 1:
+                    closestPointIndex   = closestPointIndex[0][0];
+                else:
+                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
+            else:
+                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
+
+            septalIndex                 = self.boundary[closestPointIndex];
+
+        self.__boundary                 = roll(self.boundary, -closestPointIndex);
+
+        center  = asarray([0, 0]); # The center of the disk will always be a 
+        vector1 = asarray([1, 0]); # point (0,0) and the septum a vector (1,0), 
+                                   # as induced by the boundary conditions
+        vector2 = self.BEP_points[:, septalIndex] - center;
+
+        angle   = arccos(dot(vector1, vector2)/(norm(vector1)*norm(vector2)));
+
+        # If the y coordinate of the vector w.r.t. the rotation will take place
+        # is negative, the rotation must be done counterclock-wise
+        if vector2[1] > 0:
+            angle = -angle;
+
+        rotation_matrix                 = asarray([[cos(angle), -sin(angle)],
+                                                   [sin(angle), cos(angle)]]);
+
+        self.__septum                   = septalIndex;
+        self.__BEP_points               = rotation_matrix.dot(self.BEP_points);
+
+        self.__write_BEP_polydata();
 
 
 

@@ -42,9 +42,11 @@ from scipy import arccos;
 from scipy import cumsum;
 from scipy import where;
 from scipy import roll;
-from scipy import flip;
+from scipy import flipud;
 from scipy import dot;
 from scipy import cross;
+
+from scipy.linalg import norm;
 
 from scipy.sparse import csr_matrix;
 from scipy.sparse import spdiags;
@@ -647,13 +649,13 @@ class VentricularImage(object):
                 raise Exception("Something went wrong. Probably forgot to transpose this. Contact maintainer.");
 
         if dot(vectorApex, vectorNormal) < 0:
-            boundary         = flip(boundary, 0);
+            boundary         = flipud(boundary);
             boundary         = roll(boundary, 1);
 
         self.__boundary = boundary;
 
     def FlipBoundary(self):
-        self.__boundary         = flip(self.__boundary, 0);
+        self.__boundary         = flipud(self.__boundary);
         self.__boundary         = roll(self.__boundary, 1);
 
     def GetWithinBoundaryDistances(self):
@@ -726,8 +728,7 @@ class VentricularImage(object):
                 raise Exception("Septal point provided out of data bounds; the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.");
 
             if len(self.__boundary.shape) == 1:
-                septalPoint     = repmat(septalPoint,
-                                    self.__boundary.size, 1);
+                septalPoint     = repmat(septalPoint, self.__boundary.size, 1);
                 septalPoint     = septalPoint .transpose();
             else:
                 raise Exception("It seems you have multiple boundaries. Contact the package maintainer.");
@@ -745,6 +746,75 @@ class VentricularImage(object):
 
             self.__boundary             = roll(self.__boundary, 
                                           -closestPointIndex);
+
+
+    def rearrange(self, objectivePoint):
+        old_septum              = self.septum;
+        septalIndex             = None;
+        septalPoint             = None;
+        closestPoint            = None;
+
+        if objectivePoint in self.__boundary:
+            septalIndex         = objectivePoint;
+            closestPoint        = objectivePoint;
+            closestPointIndex   = where(self.__boundary==objectivePoint);
+
+            if len(closestPointIndex) == 1:
+                if len(closestPointIndex[0]) == 1:
+                    closestPointIndex = closestPointIndex[0][0];
+                else:
+                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
+            else:
+                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
+
+            self.__boundary     = roll(self.__boundary, -closestPointIndex);
+        else:
+            try:
+                septalPoint     = self.__pointData[:, objectivePoint];
+            except:
+                raise Exception("Septal point provided out of data bounds; the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.");
+
+            if len(self.__boundary.shape) == 1:
+                septalPoint     = repmat(septalPoint, self.__boundary.size, 1);
+                septalPoint     = septalPoint .transpose();
+            else:
+                raise Exception("It seems you have multiple boundaries. Contact the package maintainer.");
+
+            distanceToObjectivePoint    = (self.__pointData[:, self.__boundary] - septalPoint);
+            distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0));
+            septalIndex                 = where(distanceToObjectivePoint == distanceToObjectivePoint.min());
+
+            if len(septalIndex) == 1:
+                if len(septalIndex[0]) == 1:
+                    septalIndex         = septalIndex[0][0];
+                else:
+                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
+            else:
+                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
+
+            self.__boundary             = roll(self.__boundary, 
+                                          -closestPointIndex);
+
+        center  = asarray([0, 0]);
+
+        vector1 = self.output[:, old_septum];
+        vector2 = self.output[:, septalIndex];
+
+        angle   = arccos(dot(vector1, vector2)/(norm(vector1)*norm(vector2)));
+
+        rotation_matrix                 = asarray([[cos(angle), -sin(angle)],
+                                                   [sin(angle), cos(angle)]]);
+
+        self.__output                   = rotation_matrix.dot(self.output);
+
+        self.__WritePolyData();
+
+        # self.__LaplacianMatrix();
+        # self.__CalculateLinearTransformation();
+        # self.__CalculateThinPlateSplines();
+        # self.__WritePolyData();
+
+
 
 
 
