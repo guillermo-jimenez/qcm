@@ -59,21 +59,55 @@ from scipy.sparse.linalg import spsolve;
 from mvpoly.rbf import RBFThinPlateSpline;
 
 from vtk import vtkPolyData;
-# from vtk import vtkPolyDataReader;
 from vtk import vtkPolyDataWriter;
 from vtk import vtkPoints;
 from vtk import vtkIdList;
 
-class VentricularBEP(BaseImage):
+class VentricularQCM(BaseImage):
     """
-    Data extraction from any VTK file, regardless of the specific image 
-    (ventricle, atrium; endocardium, epicardium)
+    Data extraction from a VTK file containing information from a ventricle
+    chamber. A quasi-conformal mapping of the mesh (f: R2->R3) will be produced,
+    taking the information of the scalar fields associated to the mesh.
+
+    This object creates a vtk file containing the information of the quasi
+    conformal mapping on either a specified output location (QCM_output_path)
+    or the same location of the input file (adding a "_QCM" suffix).
 
 
 
     Attributes
     ----------
 
+    septum:             int
+        identifier of the point that marks the septal point of the chamber
+
+    apex:               int
+        identifier of the point that marks the apical point of the chamber
+
+    laplacian:          scipy.sparse.csr.csr_matrix
+        laplacian matrix of the connectivity of the input VTK mesh, in the 
+        form of a sparse matrix
+
+    boundary:           numpy.ndarray
+        array of the identifiers of the points that compose the boundary, 
+        ordered by connectivity and following a clockwise orientation
+
+    QCM_points:         numpy.ndarray
+        numpy array containing the two-dimensional points resulting from the
+        application of the quasi-conformal mapping and a thin-plate splines
+        transformation
+
+    QCM_polydata:       vtk.vtkPolyData
+        polydata containing the information of the ventricle after applying
+        the quasi-conformal mapping from the 3D input VTK file
+
+    QCM_path:           str
+        (optional) defaults to the same path as the input file, creating a 
+        folder in the input file's folder (named QCM) and, inside of that
+        folder, a file with the same name as the input folder followed by 
+        "_QCM" and the extension
+
+    <Attributes inherited of BaseImage>
     path:               str
         path to the image file
 
@@ -142,32 +176,67 @@ class VentricularBEP(BaseImage):
     Returns
     -------
 
-    output:         BaseImage
-        BaseImage object containing the extracted information of the input VTK
-        file
+    output:         VentricularQCM
+        VentricularQCM object containing the extracted information of the input
+        VTK file
 
 
 
     See Also
     --------
 
-    VentricularEndocardium
+    BaseImage
+    VentricularInterpolator
 
 
 
     Example
     -------
 
-    >>> import BaseImage
+    >>> import VentricularImage
     >>> import os
-    >>> path = os.path("/path/to/image.vtk")
-    >>> image1 = BaseImage.BaseImage(path)
-    >>> # Alternative method
-    >>> image2 = BaseImage.BaseImage()
-    >>> image2.path = path
-    Loading data...
-    >>> image2.path
-    /path/to/image.vtk
+    >>> input_path = os.path("/path/to/image.vtk")
+    >>> septum = 1894
+    >>> apex = 1098
+    >>> output_path = os.path("/desired/path/to/output/file.vtk")
+    >>> output_path = os.path("/desired/path/to/output/file") # Also works
+    >>> image1 = VentricularImage.VentricularQCM(input_path, septum, apex)
+     *  Writing to default location: 
+        /home/qcm/data/pat1/EAM/QCM/pat1_EAM_endo_smooth_QCM.vtk
+    
+    >>> polydata = image1.polydata
+    >>> polydata.GetNumberOfPoints()
+    489618
+    >>> image1.npoints
+    489618
+    >>> image1.boundary
+    array([1388, 1239, 1244, 1404, 1400, 1176, 1363, 1181, 1313, 1186, 1253,
+           1183, 1258, 1320, 1105, 1316, 1365, 1015, 1009,  913,  935, 1394,
+            907,  805,  799,  793,  787,  881, 1371,  934,  875, 1330, 1282,
+           1219, 1012, 1096, 1182, 1177, 1249, 1309, 1291, 1339, 1362, 1344,
+           1383, 1403])
+    >>> image1.boundary_points[:, 0:4]
+    array([[  -5.78809977,   -9.1422596 ,   -6.71489   ,   -5.78809977],
+           [ -93.72029877,  -93.72029877,  -97.84989929,  -99.01100159],
+           [ 145.13800049,  146.772995  ,  146.772995  ,  146.772995  ]])
+    >>> 
+    >>> new_septum = 4897
+    >>> new_septum in image1.boundary
+    False
+    >>> image1.septum = new_septum
+     *  Provided point not found in the boundary. Selecting 
+    closest point available...
+    >>> new apex = 181
+    >>> image1.apex = new_apex
+     *  Writing to default location: 
+    /home/qcm/data/pat1/EAM/QCM/pat1_EAM_endo_smooth_QCM.vtk
+    >>> image1.QCM_path = input_path
+     *  Warning! Overwriting the input file is not permitted.
+    Aborting...
+    >>> new_output_path = "/another/path/to/output/file" # No need for os.path
+    >>> image1.QCM_path = new_output_path
+     *  Warning! The file written to the default location will *not*
+    be deleted
 
     """
 
@@ -175,43 +244,68 @@ class VentricularBEP(BaseImage):
     __apex                      = None;
     __laplacian                 = None;
     __boundary                  = None;
-    __BEP_polydata              = None;
-    __BEP_points                = None;
+    __QCM_polydata              = None;
+    __QCM_points                = None;
+    __QCM_path                  = None;
 
-    def __init__(self, path, septum, apex):
+
+    def __init__(self, path, septum, apex, output_path=None):
         """ VentricularImage(path, septum, apex)
 
         Analyzes a ventricular image in vtk format and creates quasi-conformal 
-        mapping. Requires a  
+        mapping. Requires the information of the input path, the IDs of the 
+        septal and the apical points and, optionally, the desired output path.
 
-        The object VentricularImage provides an automatic traduction of a image
+        The object VentricularQCM provides an automatic traduction of a image
         file in vtk format to a quasi-conformal disk image to be further 
-        analyzed by other tools. """
+        analyzed by other tools. 
+
+        For more information, type help(VentricularImage.VentricularQCM);
+        """
 
         BaseImage.__init__(self, path);
 
         self.__septum           = septum;
         self.__apex             = apex;
+        if output_path is None:
+            self.__QCM_path     = self.path;
+        else:
+            if output_path is self.path:
+                print(" *  Output path provided coincides with input path.\n"+
+                      "    Overwriting the input file is not permitted.\n"+
+                      "    Writing in the default location...\n")
+                self.__QCM_path = self.path;
+            else:
+                self.__QCM_path = output_path;
+
         self.__calc_boundary();
         self.__rearrange();
         self.__calc_laplacian();
-        self.__calc_BEP_points();
-        self.__write_BEP_polydata();
+        self.__calc_QCM_points();
+        self.__write_QCM_polydata();
 
-    # @BaseImage.path.setter
-    # def path(self, path):
-    #     if isfile(path):
-    #         if self.path is not None:
-    #             print("Overwritting existing data on variable...")
-    #         else:
-    #             print("Loading data...")
+    @property
+    def QCM_path(self):
+        return self.__QCM_path;
 
-    #         if (self.septum is not None) and (self.apex is not None):
-    #             self.__init__(path, self.septum, self.apex);
-    #         else:
-    #             raise RuntimeError("Operation prohibited if septum and apex not specified");
-    #     else:
-    #         raise RuntimeError("File does not exist");
+
+    @QCM_path.setter
+    def QCM_path(self, output_path):
+        if output_path is self.path:
+            print(" *  Warning! Overwriting the input file is not permitted.\n"
+                  "    Aborting...\n")
+            return
+        else:
+            if self.QCM_path == self.path:
+                print(" *  Warning! The file written to the default location will *not*\n"
+                      "    be deleted\n");
+            else:
+                print(" *  Warning! The file written to the previous working location will \n"
+                      "    *not* be deleted\n");
+
+        self.__QCM_path         = output_path;
+        self.__write_QCM_polydata();
+
 
     @property
     def septum(self):
@@ -234,12 +328,11 @@ class VentricularBEP(BaseImage):
             raise RuntimeError("Apical point provided is out of bounds");
 
         self.__apex             = apex;
-        self.__calc_BEP_points();
-        self.__write_BEP_polydata();
+        self.__calc_QCM_points();
+        self.__write_QCM_polydata();
 
     @property
     def laplacian(self):
-        """Returns the laplacian matrix"""
         return self.__laplacian;
 
     @property
@@ -251,43 +344,54 @@ class VentricularBEP(BaseImage):
         return self.points[:, self.boundary];
 
     @property
-    def BEP_points(self):
-        return self.__BEP_points;
+    def QCM_points(self):
+        return self.__QCM_points;
 
     @property
-    def BEP_polydata(self):
-        return self.__BEP_polydata;
+    def QCM_polydata(self):
+        return self.__QCM_polydata;
 
-    def __write_BEP_polydata(self):
-        if ((self.BEP_points is not None)
+    def __write_QCM_polydata(self):
+        if ((self.QCM_points is not None)
             and (self.points is not None)
             and (self.scalars is not None)
             and (self.polygons is not None)):
-
-            path                = None;
-
-            directory, filename = split(self.path);
-            filename, extension = splitext(filename);
 
             newPolyData         = vtkPolyData();
             newPointData        = vtkPoints();
             writer              = vtkPolyDataWriter();
 
-            if isdir(join(directory, 'BEP')):
-                path            = join(directory, 'BEP', str(filename + '_BEP' + extension));
-                writer.SetFileName(path);
-            else:
-                mkdir(join(directory, 'BEP'));
+            if self.QCM_path is self.path:
+                print(" *  Writing to default location: ")
 
-                if isdir(join(directory, 'BEP')):
-                    path        = join(directory, 'BEP', str(filename + '_BEP' + extension));
-                    writer.SetFileName(path);
+                path                = None;
+
+                directory, filename = split(self.path);
+                filename, extension = splitext(filename);
+
+                if isdir(join(directory, 'QCM')):
+                    path            = join(directory, 'QCM', str(filename + '_QCM' + extension));
                 else:
-                    path        = join(directory, str(filename + '_BEP' + extension));
-                    writer.SetFileName(path);
+                    mkdir(join(directory, 'QCM'));
+
+                    if isdir(join(directory, 'QCM')):
+                        path        = join(directory, 'QCM', str(filename + '_QCM' + extension));
+                    else:
+                        path        = join(directory, str(filename + '_QCM' + extension));
+
+                print("    " + path + "\n");
+
+            else:
+                if splitext(self.QCM_path)[1] is '':
+                    self.__QCM_path = self.QCM_path + ".vtk";
+
+                path                = self.QCM_path;
+
+
+            writer.SetFileName(path);
 
             for i in xrange(self.npoints):
-                newPointData.InsertPoint(i, (self.BEP_points[0, i], self.BEP_points[1, i], 0.0));
+                newPointData.InsertPoint(i, (self.QCM_points[0, i], self.QCM_points[1, i], 0.0));
 
             newPolyData.SetPoints(newPointData);
             newPolyData.SetPolys(self.polydata.GetPolys());
@@ -299,7 +403,7 @@ class VentricularBEP(BaseImage):
             writer.SetInputData(newPolyData);
             writer.Write();
 
-            self.__BEP_polydata  = newPolyData;
+            self.__QCM_polydata  = newPolyData;
 
             system("perl -pi -e 's/,/./g' %s " % path);
 
@@ -339,7 +443,7 @@ class VentricularBEP(BaseImage):
         diagonalSparse          = spdiags(diagonal, 0, numPoints, numPoints);
         self.__laplacian        = diagonalSparse - sparseMatrix;
 
-    def __calc_BEP_points(self):
+    def __calc_QCM_points(self):
         if self.laplacian is not None:
             if self.boundary is not None:
                 (nzi, nzj)      = find(self.laplacian)[0:2];
@@ -356,26 +460,24 @@ class VentricularBEP(BaseImage):
                 Z[0,:]                  = cos(angles);
                 Z[1,:]                  = sin(angles);
 
-                # Z = self.GetWithinBoundarySinCos();
-
                 boundaryConstrain = zeros((2, self.npoints));
                 boundaryConstrain[:, self.boundary] = Z;
 
-                self.__BEP_points = spsolve(self.laplacian, boundaryConstrain.transpose()).transpose();
+                self.__QCM_points = spsolve(self.laplacian, boundaryConstrain.transpose()).transpose();
 
                 self.__calc_thin_plate_splines();
 
     def __calc_thin_plate_splines(self):
-        if self.BEP_points is not None:
+        if self.QCM_points is not None:
             if self.apex is not None:
-                boundaryPoints  = self.BEP_points[:,self.boundary];
+                boundaryPoints  = self.QCM_points[:,self.boundary];
                 source          = zeros((boundaryPoints.shape[0],
                                                boundaryPoints.shape[1] + 1));
                 destination     = zeros((boundaryPoints.shape[0],
                                                boundaryPoints.shape[1] + 1));
 
                 source[:, 0:source.shape[1] - 1]        = boundaryPoints;
-                source[:, source.shape[1] - 1]          = self.BEP_points[:, self.apex];
+                source[:, source.shape[1] - 1]          = self.QCM_points[:, self.apex];
 
                 destination[:, 0:source.shape[1] - 1]   = boundaryPoints;
                 destination[:, 0:source.shape[1] - 1]   = boundaryPoints;
@@ -386,10 +488,10 @@ class VentricularBEP(BaseImage):
 
                 thinPlateInterpolation = RBFThinPlateSpline(x,y,d);
 
-                result = thinPlateInterpolation(self.BEP_points[0,:], self.BEP_points[1,:]);
+                result = thinPlateInterpolation(self.QCM_points[0,:], self.QCM_points[1,:]);
 
-                self.__BEP_points[0,:] = result.real;
-                self.__BEP_points[1,:] = result.imag;
+                self.__QCM_points[0,:] = result.real;
+                self.__QCM_points[1,:] = result.imag;
 
     def __calc_boundary(self):
         startingPoint           = None;
@@ -399,7 +501,6 @@ class VentricularBEP(BaseImage):
         boundary                = [];
         visitedEdges            = [];
         visitedBoundaryEdges    = [];
-        # visitedPoints           = [];
 
         for cellId in xrange(self.polydata.GetNumberOfCells()):
             cellPointIdList     = vtkIdList();
@@ -537,14 +638,6 @@ class VentricularBEP(BaseImage):
 
         return angles;
 
-    # def GetWithinBoundarySinCos(self):
-    #     angles                  = self.get_boundary_node_angles();
-    #     Z                       = zeros((2, angles.size));
-    #     Z[0,:]                  = cos(angles);
-    #     Z[1,:]                  = sin(angles);
-
-    #     return Z;
-
     def __rearrange(self, objectivePoint=None):
         septalIndex             = None;
         septalPoint             = None;
@@ -556,7 +649,7 @@ class VentricularBEP(BaseImage):
             else:
                 septalIndex     = self.septum;
         else:
-            print("Using provided septal point as rearranging point.");
+            print(" *  Using provided septal point as rearranging point.");
             self.__septum       = objectivePoint;
             septalIndex         = objectivePoint;
 
@@ -603,9 +696,10 @@ class VentricularBEP(BaseImage):
 
 
     def rearrange_boundary(self, objectivePoint):
+        """Rearranges the boundary aroung a new point identifier
+        """
         old_septum              = self.septum;
         septalIndex             = None;
-        # septalPoint             = None;
         closestPoint            = None;
 
         if objectivePoint == self.septum:
@@ -626,7 +720,8 @@ class VentricularBEP(BaseImage):
 
             # self.__boundary = roll(self.boundary, -septalIndex);
         else:
-            print("Provided point not found in the boundary. Selecting closest point available...");
+            print(" *  Provided point not found in the boundary. Selecting \n"
+                  "    closest point available...");
 
             try:
                 searched_point  = self.points[:, objectivePoint];
@@ -658,7 +753,7 @@ class VentricularBEP(BaseImage):
         center  = asarray([0, 0]); # The center of the disk will always be a 
         vector1 = asarray([1, 0]); # point (0,0) and the septum a vector (1,0), 
                                    # as induced by the boundary conditions
-        vector2 = self.BEP_points[:, septalIndex] - center;
+        vector2 = self.QCM_points[:, septalIndex] - center;
 
         angle   = arccos(dot(vector1, vector2)/(norm(vector1)*norm(vector2)));
 
@@ -671,37 +766,19 @@ class VentricularBEP(BaseImage):
                                                    [sin(angle), cos(angle)]]);
 
         self.__septum                   = septalIndex;
-        self.__BEP_points               = rotation_matrix.dot(self.BEP_points);
+        self.__QCM_points               = rotation_matrix.dot(self.QCM_points);
 
-        self.__write_BEP_polydata();
+        self.__write_QCM_polydata();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # import scipy, time, os, numpy, VentricularImage;
-
-# import time, os, VentricularImage;
-
-# septum_MRI = 201479 - 1;
-# apex_MRI = 37963 - 1;
-# path_MRI = os.path.join("/home/guille/BitBucket/qcm/data/pat1/MRI", "pat1_MRI_Layer_6.vtk");
-
-# apex_EAM = 599 - 1;
-# septum_EAM = 1389 - 1;
-# path_EAM = os.path.join("/home/guille/BitBucket/qcm/data/pat1/EAM", "pat1_EAM_endo_smooth.vtk");
-
-# start = time.time(); reload(VentricularImage); MRI = VentricularImage.VentricularImage(path_MRI, septum_MRI, apex_MRI); print(time.time() - start);
-# start = time.time(); reload(VentricularImage); EAM = VentricularImage.VentricularImage(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
+    def __str__(self):
+        s = "'" + self.__class__.__name__ + "' object at '" + self.path + "'.\n";
+        s = s + "Number of dimensions: " + str(self.ndim) + "\n";
+        s = s + "Number of points: " + str(self.npoints) + "\n";
+        s = s + "Number of polygons: " + str(self.npolygons) + "\n";
+        s = s + "Number of edges of the polygons: " + str(self.nedges_mesh) + "\n";
+        s = s + "Scalar information: " + str(self.scalars_names);
+        s = s + "Output file location: " + str(self.QCM_path);
+        return s;
 
 
 
@@ -709,117 +786,6 @@ class VentricularBEP(BaseImage):
 
 
 
-
-
-
-
-
-
-
-
-
-# class MouseInteractorHighLightActor(vtk.vtkInteractorStyleTrackballCamera):
- 
-#     def __init__(self,parent=None):
-#         self.AddObserver("LeftButtonPressEvent",self.leftButtonPressEvent)
- 
-#         self.LastPickedActor = None
-#         self.LastPickedProperty = vtk.vtkProperty()
- 
-#     def leftButtonPressEvent(self,obj,event):
-#         clickPos = self.GetInteractor().GetEventPosition()
- 
-#         picker = vtk.vtkPropPicker()
-#         picker.Pick(clickPos[0], clickPos[1], 0, self.GetDefaultRenderer())
- 
-#         # get the new
-#         self.NewPickedActor = picker.GetActor()
- 
-#         # If something was selected
-#         if self.NewPickedActor:
-#             # If we picked something before, reset its property
-#             if self.LastPickedActor:
-#                 self.LastPickedActor.GetProperty().DeepCopy(self.LastPickedProperty)
- 
- 
-#             # Save the property of the picked actor so that we can
-#             # restore it next time
-#             self.LastPickedProperty.DeepCopy(self.NewPickedActor.GetProperty())
-#             # Highlight the picked actor by changing its properties
-#             self.NewPickedActor.GetProperty().SetColor(1.0, 0.0, 0.0)
-#             self.NewPickedActor.GetProperty().SetDiffuse(1.0)
-#             self.NewPickedActor.GetProperty().SetSpecular(0.0)
- 
-#             # save the last picked actor
-#             self.LastPickedActor = self.NewPickedActor
- 
-#         self.OnLeftButtonDown()
-#         return
-
-
-
-
-# class MouseInteractor(vtk.vtkInteractorStyleTrackballCamera):
-#     __mapper                    = None;
-#     __actor                     = None;
-
-#     def __init__(self):
-#         self.__mapper           = vtk.vtkDataSetMapper();
-#         self.__actor            = vtk.vtkActor();
-
-#     def OnLeftButtonDown(self):
-#         position                = self.GetInteractor().GetEventPosition();
-#         picker                  = vtk.vtkCellPicker();
-#         picker.SetTolerance(0.0005);
-
-
-
-#     def GetMapper(self):
-#         return self.__mapper;
-
-#     def GetActor(self):
-#         return self.__actor;
-         
-
-
-# >>> A = MRI.GetPolyData();
-# >>> 
-# >>> 
-# >>> mapper = vtk.vtkPolyDataMapper();
-# >>> 
-# >>> 
-# >>> mapper.SetInputData(A);
-# >>> 
-# >>> actor = vtk.vtkActor();
-# >>> 
-# >>> actor.SetMapper(mapper);
-# >>> 
-# >>> 
-# >>> trackball = vtk.vtkInteractorStyleTrackballCamera();
-# >>> 
-# >>> renderer = vtk.vtkRenderer();
-# >>> 
-# >>> 
-# >>> rendererWindow = vtk.vtkRenderWindow();
-# >>> 
-# >>> 
-# >>> rendererWindowInteractor = vtk.vtkRenderWindowInteractor();
-# >>> 
-# >>> 
-# >>> rendererWindowInteractor.SetRenderWindow(rendererWindow);
-# >>> 
-# >>> 
-# >>> trackball.SetDefaultRenderer(renderer);
-# >>> 
-# >>> rendererWindowInteractor.SetInteractorStyle(trackball);
-# >>> 
-# >>> 
-# >>> renderer.AddActor(actor);
-# >>> renderer.SetBackground( 0,0,1 );
-# >>> 
-# >>> rendererWindow.Render();
-# >>> rendererWindowInteractor.Initialize()
-# >>> rendererWindowInteractor.Start()
 
 
 

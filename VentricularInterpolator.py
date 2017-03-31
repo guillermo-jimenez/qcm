@@ -16,7 +16,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from VentricularImage import VentricularImage;
+# from VentricularImage import VentricularQCM;
 
 from os.path import split, join, splitext, isdir, isfile;
 from os import mkdir, system;
@@ -27,20 +27,45 @@ from vtk import vtkPolyDataWriter;
 from vtk import vtkFloatArray;
 
 from scipy import finfo;
-from scipy import empty;
+from scipy import zeros;
+# from scipy import empty;
 from scipy import where;
 
 class VentricularInterpolator(object):
     """ DOCSTRING """
 
+    __image_high_res            = None;
+    __image_low_res             = None;
+
     __MRI                       = None;
     __EAM                       = None;
     __kNN                       = None;
+    __interpolated_polydata     = None;
 
-    def __init__(self, MRI, EAM):
-        # if type(VentricularImage)
-        self.__MRI = MRI;
-        self.__EAM = EAM;
+    @property
+    def image_high_res(self):
+        return self.__image_high_res;
+
+    @image_high_res.setter
+    def image_high_res(self, image_high_res):
+        self.__image_high_res   = image_high_res;
+
+    @property
+    def image_low_res(self):
+        return self.__image_low_res;
+
+    @image_low_res.setter
+    def image_low_res(self, image_low_res):
+        self.__image_low_res    = image_low_res;
+
+    @property
+    def kNN(self):
+        return self.__kNN;
+
+    def __init__(self, image_high_res, image_low_res):
+        self.__image_high_res   = image_high_res;
+        self.__image_low_res    = image_low_res;
+
 
     def kNearestNeighbours(self, n_neighbors=3, radius=1.0, algorithm='auto', 
                            leaf_size=30, metric='minkowski', p=5, 
@@ -52,18 +77,27 @@ class VentricularInterpolator(object):
                                                    metric_params=None, n_jobs=1)
                                                    # **kwargs);
 
-        kNN.fit(self.__EAM.GetOutput().transpose(), self.__MRI.GetOutput().transpose());
-        dist, indices           = kNN.kneighbors(self.__MRI.GetOutput().transpose());
+        kNN.fit(self.image_low_res.QCM_points.transpose(), 
+                self.image_high_res.QCM_points.transpose());
 
-        newPolyData             = self.__MRI.GetPolyData();
-        newDataArray            = vtkFloatArray();
+        dist, indices           = kNN.kneighbors(self.image_high_res.QCM_points.transpose());
 
-        EAMScalars              = self.__EAM.GetScalarData();
-        BIPS                    = empty((self.__MRI.GetNumberOfPoints()));
-        BIPS.fill(0);
+        newPolyData             = self.image_high_res.polydata;
+        newDataArrays           = [];
 
-        newDataArray.SetNumberOfTuples(self.__MRI.GetNumberOfPoints());
-        newDataArray.SetName(self.__EAM.GetPolyData().GetPointData().GetArrayName(0));
+        for i in xrange(len(self.image_low_res.scalars_names)):
+            newDataArrays.append(vtkFloatArray());
+            newDataArrays[i].SetNumberOfTuples(self.image_high_res.npoints);
+            newDataArrays[i].SetName(self.image_low_res.scalars_names[i]);
+
+        lr_scalars              = self.image_low_res.scalars;
+        BIPS                    = zeros((len(self.image_low_res.scalars_names), 
+                                         self.image_high_res.npoints));
+        # BIPS                    = empty((self.image_high_res.npoints));
+        # BIPS.fill(0);
+
+        # newDataArray.SetNumberOfTuples(self.image_high_res.npoints);
+        # newDataArray.SetName(self.image_low_res.polydata.GetPointData().GetArrayName(0));
 
         zeroIndex               = where(dist == 0.);
 
@@ -72,14 +106,15 @@ class VentricularInterpolator(object):
             for j in xrange(zeroIndex[0].size):
                 dist[zeroIndex[0][j], zeroIndex[1][j]] = finfo(dist.dtype).eps;
 
-        for i in xrange(self.__MRI.GetNumberOfPoints()):
-            dt                  = (1/dist[i,0]) + (1/dist[i,1]) + (1/dist[i,2]);
-            BIPS[i]             = ((1/dist[i,:])*EAMScalars[0, indices[i,:]]).sum()/dt;
+        for j in xrange(len(self.image_low_res.scalars_names)):
+            for i in xrange(self.image_high_res.npoints):
+                dt                  = (1/dist[i,0]) + (1/dist[i,1]) + (1/dist[i,2]);
+                BIPS[j, i]          = ((1/dist[i,:])*lr_scalars[self.image_low_res.scalars_names[j]][j, indices[i,:]]).sum()/dt;
 
-            newDataArray.SetValue(i, BIPS[i]);
+                newDataArrays[j].SetValue(i, BIPS[j, i]);
 
 
-        directory, filename     = split(self.__MRI.GetPath());
+        directory, filename     = split(self.image_high_res.path);
         filename, extension     = splitext(filename);
 
         writer                  = vtkPolyDataWriter();
@@ -98,8 +133,8 @@ class VentricularInterpolator(object):
                 writer.SetFileName(path);
 
 
-
-        newPolyData.GetPointData().AddArray(newDataArray);
+        for dataArray in newDataArrays:
+            newPolyData.GetPointData().AddArray(dataArray);
 
         writer.SetInputData(newPolyData);
         writer.Write();

@@ -189,8 +189,8 @@ septum_MRI = 201479 - 1;
 apex_MRI = 37963 - 1;
 path_MRI = os.path.join("/home/qcm/data/pat1/MRI", "pat1_MRI_Layer_6.vtk");
 
-start = time.time(); reload(VentricularImage); MRI = VentricularImage.VentricularBEP(path_MRI, septum_MRI, apex_MRI); print(time.time() - start);
-start = time.time(); reload(VentricularImage); EAM = VentricularImage.VentricularBEP(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
+start = time.time(); reload(VentricularImage); MRI = VentricularImage.VentricularQCM(path_MRI, septum_MRI, apex_MRI); print(time.time() - start);
+start = time.time(); reload(VentricularImage); EAM = VentricularImage.VentricularQCM(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
 
 
 
@@ -203,19 +203,19 @@ septum_MRI = 201479 - 1;
 apex_MRI = 37963 - 1;
 path_MRI = os.path.join("/home/qcm/data/pat1/MRI", "pat1_MRI_Layer_6.vtk");
 
-start = time.time(); reload(VentricularImage); MRI = VentricularImage.VentricularImage(path_MRI, septum_MRI, apex_MRI); print(time.time() - start);
+start = time.time(); reload(VentricularImage); MRI = VentricularImage.VentricularQCM(path_MRI, septum_MRI, apex_MRI); print(time.time() - start);
 
 apex_EAM = 599 - 1;
 septum_EAM = 1389 - 1;
 path_EAM = os.path.join("/home/qcm/data/pat1/EAM", "pat1_EAM_endo_smooth.vtk");
 
-start = time.time(); reload(VentricularImage); EAM = VentricularImage.VentricularImage(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
+start = time.time(); reload(VentricularImage); EAM = VentricularImage.VentricularQCM(path_EAM, septum_EAM, apex_EAM); print(time.time() - start);
 
 
 
 
 
-
+import VentricularInterpolator;
 
 start = time.time(); reload(VentricularInterpolator); interpolator = VentricularInterpolator.VentricularInterpolator(MRI, EAM); interpolator.kNearestNeighbours(); print(time.time() - start);
 

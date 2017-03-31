@@ -33,7 +33,7 @@ from vtk import vtkPolyDataReader;
 
 class BaseImage(object):
     """
-    Data extraction from any VTK file, regardless of the specific image 
+    Data extraction from VTK file, regardless of the specific image 
     (ventricle, atrium; endocardium, epicardium)
 
 
@@ -129,12 +129,8 @@ class BaseImage(object):
     >>> import os
     >>> path = os.path("/path/to/image.vtk")
     >>> image1 = BaseImage.BaseImage(path)
-    >>> # Alternative method
-    >>> image2 = BaseImage.BaseImage()
-    >>> image2.path = path
-    Loading data...
-    >>> image2.path
-    /path/to/image.vtk
+    >>> image1.scalars
+    array([624, 263, 142 ... 124, 412, 416])
 
     """
 
@@ -154,14 +150,12 @@ class BaseImage(object):
     __scalars_names             = None;
 
     def __init__(self, path):
-        """BaseImage(path=None)
+        """BaseImage(path)
 
-        Analyzes a ventricular image in vtk format and creates quasi-conformal 
-        mapping. Requires a  
-
-        The object VentricularImage provides an automatic traduction of a image
-        file in vtk format to a quasi-conformal disk image to be further 
-        analyzed by other tools. """
+        Analyzes a ventricular image in vtk format, extracting the point, mesh
+        and scalar information from it. Requires a path as a string to be
+        initialized.
+        """
 
         if isfile(path):
             self.__path         = path;
@@ -337,7 +331,6 @@ class BaseImage(object):
                     scalars     = aux;
                 else:
                     scalars     = __join_struct_arrays(scalars, aux)
-
 
         self.__nscalars         = nscalars;
         self.__scalars          = scalars;
