@@ -23,14 +23,14 @@ from os.path import splitext;
 
 
 class CartoReader(object):
-	"""Explicación de la clase
-	"""
+    """Explicación de la clase
+    """
 
-	__path 			= None;
-	__binfile		= None;
-	__output		= None;
+    __path          = None;
+    __binfile       = None;
+    __output        = None;
 
-	def __init__(self, path):
+    def __init__(self, path):
         """BaseImage(path)
 
         Analyzes a ventricular image in vtk format, extracting the point, mesh
@@ -43,7 +43,7 @@ class CartoReader(object):
         else:
             raise RuntimeError("File does not exist");
 
-        self.__read_polydata();
+        self.__read_to_vtk();
 
     @property
     def path(self):
@@ -66,22 +66,64 @@ class CartoReader(object):
     #     """Testing docstring of attribute"""
     #     return self.__polydata;
 
-    def __read(self):
-		if (splitext(self.path)[1] == '.mesh'):
-			if isfile(self.path):
-				F = open(self.path, 'r');
-			else:
-				print("The file does not exist.");
-				return
-		else:
-			print("Only '.mesh' files are accepted. Set a new file path.");
-			return
+    def __read_to_vtk(self):
+        attributesDict                      = dict();
+        tags                                = dict();
+        tags['[GeneralAttributes]']         = False;
+        tags['[VerticesSection]']           = False;
+        tags['[TrianglesSection]']          = False;
+        tags['[VerticesColorsSection]']     = False;
+        tags['[VerticesAttributesSection]'] = False;
+        
+        if (splitext(self.path)[1] == '.mesh'):
+            if isfile(self.path):
+                data = open(self.path, 'r').read().splitlines();
+                data[:] = (line for line in data if line != '');
+            else:
+                print("The file does not exist.");
+                return
+        else:
+            print("Only '.mesh' files are accepted. Set a new file path.");
+            return
 
-    	data = 
+        for i in xrange(len(data)):
+            if ((data[i][0] == '#') or (';')):
+                continue
+            elif data[i][0] == '[':
+                for i in tags:
+                    tags[i]                 = False;
+
+                if data[i] in tags:
+                    tags[data[i]]           = True;
+                    continue
+                else:
+                    raise RuntimeError('Tag not considered. Contact maintainer.\nLine states: ' + data[i])
+
+            if tags['[GeneralAttributes]']:
+                splits = data[i].split();
+                attributesDict[splits[0]] = [splits[i] for i in range(2, len(splits))];
+
+            elif tags['[VerticesSection]']:
+
+            elif tags['[TrianglesSection]']:
+
+            elif tags['[VerticesColorsSection]']:
+
+            elif tags['[VerticesAttributesSection]']:
+
+
+
+writer = vtk.vtkPolyDataWriter()
+polydata = vtk.vtkPolyData()
+points = vtk.vtkPoints()
+pointNormals = vtk.vtkDoubleArray()
+pointNormals.SetNumberOfComponents(3)
+pointNormals.SetNumberOfTuples(points.GetNumberOfPoints())
+
 
 
     def GetOutput(self):
-    	return self.__output;
+        return self.__output;
 
     def __read_polydata(self):
         reader                  = vtkPolyDataReader();
