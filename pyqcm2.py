@@ -234,203 +234,36 @@ class PyQCM(BaseImage):
         self.__ndim             = polydata.GetPoints().GetData().GetNumberOfComponents()
         self.__polydata         = polydata
 
-    def __read_polygons(self):
-        rows                    = None
-        cols                    = None
-        polygons                = None
-
-        polys                   = self.polydata.GetPolys()
-
-        for i in xrange(self.polydata.GetNumberOfCells()):
-            triangle            = self.polydata.GetCell(i)
-            pointIds            = triangle.GetPointIds()
-
-            if polygons is None:
-                rows            = pointIds.GetNumberOfIds()
-                cols            = self.polydata.GetNumberOfCells()
-                polygons        = zeros((rows,cols), dtype=int)
-            
-            polygons[0,i]       = pointIds.GetId(0)
-            polygons[1,i]       = pointIds.GetId(1)
-            polygons[2,i]       = pointIds.GetId(2)
-
-        self.__polygons         = polygons
-
-    def __read_points(self):
-        rows                    = None
-        cols                    = None
-        points                  = None
-
-        pointVector             = self.polydata.GetPoints()
-
-        if pointVector:
-            for i in range(0, pointVector.GetNumberOfPoints()):
-                point_tuple     = pointVector.GetPoint(i)
-
-                if points is None:
-                    rows        = len(point_tuple)
-                    cols        = pointVector.GetNumberOfPoints()
-                    points      = zeros((rows,cols))
-                
-                points[0,i]     = point_tuple[0]
-                points[1,i]     = point_tuple[1]
-                points[2,i]     = point_tuple[2]
-
-        self.__points           = points
-
-    def __read_normals(self):
-        rows                    = None
-        cols                    = None
-        normals                 = None
-
-        normalVector            = self.polydata.GetPointData().GetNormals()
-
-        if normalVector:
-            for i in range(0, normalVector.GetNumberOfTuples()):
-                normalTuple     = normalVector.GetTuple(i)
-
-                if normals is None:
-                    rows        = len(normalTuple)
-                    cols        = normalVector.GetNumberOfTuples()
-                    normals     = zeros((rows,cols))
-                
-                normals[0, i]   = normalTuple[0]
-                normals[1, i]   = normalTuple[1]
-                normals[2, i]   = normalTuple[2]
-
-        self.__normals          = normals
-
-    def __read_scalars(self):
-        point_data              = self.polydata.GetPointData()
-        scalars                 = None
-        nscalars                = 0
-
-        for i in xrange(point_data.GetNumberOfArrays()):
-            scalar_name         = point_data.GetArrayName(i)
-            scalar_array        = point_data.GetArray(i)
-            scalar_dtype        = scalar_array.GetDataTypeAsString()
-
-            if scalar_array.GetNumberOfComponents() is 1:
-                aux_dtype       = dtype([(scalar_name, scalar_dtype)])
-                aux             = zeros((1, scalar_array.GetNumberOfTuples()), 
-                                        dtype=scalar_dtype)
-                nscalars        = nscalars + 1
-
-                for j in xrange(scalar_array.GetNumberOfTuples()):
-                    aux[0, j]   = scalar_array.GetTuple1(j)
-
-                aux             = array(aux, dtype=aux_dtype)
-
-                if scalars is None:
-                    scalars     = aux
-                else:
-                    scalars     = self.__join_struct_arrays(scalars, aux)
-
-        self.__nscalars         = nscalars
-        self.__scalars          = scalars
-        self.__scalars_names    = scalars.dtype.names
-
-    def __join_struct_arrays(array1, array2, *args):
-        new_dtype = []
-
-        descriptor = []
-        for field in array1.dtype.names:
-            (typ, _) = array1.dtype.fields[field]
-            descriptor.append((field, typ))
-        new_dtype.extend(tuple(descriptor))
-
-        descriptor = []
-        for field in array2.dtype.names:
-            (typ, _) = array2.dtype.fields[field]
-            descriptor.append((field, typ))
-        new_dtype.extend(tuple(descriptor))
-        
-        for arr in args:
-            descriptor = []
-            for field in arr.dtype.names:
-                (typ, _) = arr.dtype.fields[field]
-                descriptor.append((field, typ))
-            new_dtype.extend(tuple(descriptor))
-
-        new_rec_array = np.zeros(len(arrays[0]), dtype = new_dtype)
-
-        for name in array1.dtype.names:
-            new_rec_array[name] = array1[name]
-
-        for name in array2.dtype.names:
-            new_rec_array[name] = array2[name]
-
-        for arr in args:
-            for name in arr.dtype.names:
-                new_rec_array[name] = arr[name]
-
-        return new_rec_array
-
-    def __write_QCM_polydata(self):
-        if ((self.QCM_points is not None)
-            and (self.points is not None)
-            and (self.scalars is not None)
-            and (self.polygons is not None)):
-
-            newPolyData         = vtkPolyData()
-            newPointData        = vtkPoints()
-            writer              = vtkPolyDataWriter()
-
-            if self.QCM_path is self.path:
-                print(" *  Writing to default location: ")
-
-                path                = None
-
-                directory, filename = split(self.path)
-                filename, extension = splitext(filename)
-
-                if isdir(join(directory, 'QCM')):
-                    path            = join(directory, 'QCM', str(filename + '_QCM' + extension))
-                else:
-                    mkdir(join(directory, 'QCM'))
-
-                    if isdir(join(directory, 'QCM')):
-                        path        = join(directory, 'QCM', str(filename + '_QCM' + extension))
-                    else:
-                        path        = join(directory, str(filename + '_QCM' + extension))
-
-                print("    " + path + "\n")
-
-            else:
-                if splitext(self.QCM_path)[1] is '':
-                    self.__QCM_path = self.QCM_path + ".vtk"
-
-                path                = self.QCM_path
-
-
-            writer.SetFileName(path)
-
-            for i in xrange(self.npoints):
-                newPointData.InsertPoint(i, (self.QCM_points[0, i], self.QCM_points[1, i], 0.0))
-
-            newPolyData.SetPoints(newPointData)
-            newPolyData.SetPolys(self.polydata.GetPolys())
-            if self.polydata.GetPointData().GetScalars() is None:
-                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(0))
-            else:
-                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetScalars())
-
-            writer.SetInputData(newPolyData)
-            writer.Write()
-
-            self.__QCM_polydata  = newPolyData
-
-            system("perl -pi -e 's/,/./g' %s " % path)
-
-        else:
-            raise RuntimeError("Information provided insufficient")
 
     def __calc_laplacian(self):
+
+
         numDims                 = self.polygons.shape[0]
         numPoints               = self.points.shape[1]
         numPolygons             = self.polygons.shape[1]
 
         sparseMatrix            = csr_matrix((numPoints, numPoints))
+
+        # try:
+        #     self.polydata.GetPoint(0)
+        # except:
+        #     raise Exception('Empty VTK file provided')
+
+        if self.polydata.GetNumberOfPoints() > 0:
+            for i in range(self.polydata.GetNumberOfPoints()):
+                triangle            = self.polydata.GetCell(i)
+                pointIds            = triangle.GetPointIds()
+
+                point_1             = numpy.array(self.polydata.GetPoint(pointIds.GetId(0)))
+                point_2             = numpy.array(self.polydata.GetPoint(pointIds.GetId(1)))
+                point_3             = numpy.array(self.polydata.GetPoint(pointIds.GetId(2)))
+
+                dist_p2_p1          = (point_2 - point_1) / ((point_2 - point_1)**2).sum(0)
+                dist_p3_p1          = (point_3 - point_1) / ((point_3 - point_1)**2).sum(0)
+
+                angles              = arccos((dist_p2_p1 * dist_p3_p1).sum(0))
+
+
 
         for i in range(0, numDims):
             i1                  = (i + 0)%3
@@ -784,6 +617,65 @@ class PyQCM(BaseImage):
         self.__QCM_points               = rotation_matrix.dot(self.QCM_points)
 
         self.__write_QCM_polydata()
+
+    def __write_QCM_polydata(self):
+        if ((self.QCM_points is not None)
+            and (self.points is not None)
+            and (self.scalars is not None)
+            and (self.polygons is not None)):
+
+            newPolyData         = vtkPolyData()
+            newPointData        = vtkPoints()
+            writer              = vtkPolyDataWriter()
+
+            if self.QCM_path is self.path:
+                print(" *  Writing to default location: ")
+
+                path                = None
+
+                directory, filename = split(self.path)
+                filename, extension = splitext(filename)
+
+                if isdir(join(directory, 'QCM')):
+                    path            = join(directory, 'QCM', str(filename + '_QCM' + extension))
+                else:
+                    mkdir(join(directory, 'QCM'))
+
+                    if isdir(join(directory, 'QCM')):
+                        path        = join(directory, 'QCM', str(filename + '_QCM' + extension))
+                    else:
+                        path        = join(directory, str(filename + '_QCM' + extension))
+
+                print("    " + path + "\n")
+
+            else:
+                if splitext(self.QCM_path)[1] is '':
+                    self.__QCM_path = self.QCM_path + ".vtk"
+
+                path                = self.QCM_path
+
+
+            writer.SetFileName(path)
+
+            for i in xrange(self.npoints):
+                newPointData.InsertPoint(i, (self.QCM_points[0, i], self.QCM_points[1, i], 0.0))
+
+            newPolyData.SetPoints(newPointData)
+            newPolyData.SetPolys(self.polydata.GetPolys())
+            if self.polydata.GetPointData().GetScalars() is None:
+                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(0))
+            else:
+                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetScalars())
+
+            writer.SetInputData(newPolyData)
+            writer.Write()
+
+            self.__QCM_polydata  = newPolyData
+
+            system("perl -pi -e 's/,/./g' %s " % path)
+
+        else:
+            raise RuntimeError("Information provided insufficient")
 
     def __str__(self):
         s = "'" + self.__class__.__name__ + "' object at '" + self.path + "'.\n"
