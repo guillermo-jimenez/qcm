@@ -330,7 +330,7 @@ class BaseImage(object):
                 if scalars is None:
                     scalars     = aux;
                 else:
-                    scalars     = __join_struct_arrays(scalars, aux)
+                    scalars     = self.__join_struct_arrays(scalars, aux)
 
         self.__nscalars         = nscalars;
         self.__scalars          = scalars;

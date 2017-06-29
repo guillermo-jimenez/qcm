@@ -20,17 +20,41 @@
 from __future__ import division
 from os.path import isfile;
 from os.path import splitext;
+from os.path import split;
+from os.path import isdir;
+from os.path import join;
+from vtk import vtkPolyData;
+from vtk import vtkPoints; 
+from vtk import vtkCellArray; 
+from vtk import vtkDoubleArray;
+from vtk import vtkTriangle;
 
+
+import vtk
+import time
+import numpy
 
 class CartoReader(object):
     """Explicación de la clase
     """
 
-    __path          = None;
-    __binfile       = None;
-    __output        = None;
+    __path                                = None;
+#     __binfile                             = None;
+#     __output                              = None;
 
-    def __init__(self, path):
+    __attributes                          = dict();
+    __tags                                = dict();
+    __output_path                         = __path;
+    
+    __tags['[GeneralAttributes]']         = False;
+    __tags['[VerticesSection]']           = False;
+    __tags['[TrianglesSection]']          = False;
+    __tags['[VerticesColorsSection]']     = False;
+    __tags['[VerticesAttributesSection]'] = False;
+    
+    __polydata = vtkPolyData();
+
+    def __init__(self, path, output_path=None):
         """BaseImage(path)
 
         Analyzes a ventricular image in vtk format, extracting the point, mesh
@@ -43,101 +67,170 @@ class CartoReader(object):
         else:
             raise RuntimeError("File does not exist");
 
+
+        if output_path is not None:
+            self.__output_path  = output_path;
+        else:
+            print(" * Writing to default location: ")
+
+            path                = None;
+            directory, filename = split(self.path);
+            filename, extension = splitext(filename);
+            
+            if isdir(join(directory, 'VTK')):
+                self.__output_path            = join(directory, 'VTK', str(filename + '.vtk'));
+            else:
+                mkdir(join(directory, 'VTK'));
+
+                if isdir(join(directory, 'VTK')):
+                    self.__output_path        = join(directory, 'VTK', str(filename + '.vtk'));
+                else:
+                    print("  !-> Could not create output directory. Writing in input directory")
+                    self.__output_path        = join(directory, str(filename + '.vtk'));
+            
+            print("  --> " + self.output_path);
+
         self.__read_to_vtk();
 
     @property
     def path(self):
         return self.__path;
 
-    # @path.setter
-    # def path(self, path):
-    #     if isfile(path):
-    #         if self.path is not None:
-    #             print("Overwritting existing data on variable...")
-    #         else:
-    #             print("Loading data...")
+    @property
+    def attributes(self):
+        return self.__attributes;
 
-    #         self.__init__(path);
-    #     else:
-    #         raise RuntimeError("File does not exist");
+    @property
+    def output(self):
+        return self.__polydata;
 
-    # @property
-    # def output(self):
-    #     """Testing docstring of attribute"""
-    #     return self.__polydata;
-
+    @property
+    def output_path(self):
+        return self.__output_path;
+    
     def __read_to_vtk(self):
-        attributesDict                      = dict();
-        tags                                = dict();
-        tags['[GeneralAttributes]']         = False;
-        tags['[VerticesSection]']           = False;
-        tags['[TrianglesSection]']          = False;
-        tags['[VerticesColorsSection]']     = False;
-        tags['[VerticesAttributesSection]'] = False;
-        
+        writer       = vtkPolyDataWriter();
+
+        points       = vtkPoints();
+        cells        = vtkCellArray();
+
+        pointNormals = vtkDoubleArray();
+        cellNormals  = vtkDoubleArray();
+        cellArray = vtkDoubleArray();
+
+        signals      = [];
+        boolSignals  = False;
+
+        pointNormals.SetNumberOfComponents(3);
+        pointNormals.SetNumberOfTuples(points.GetNumberOfPoints());
+        pointNormals.SetName('PointNormals');
+
+        cellNormals.SetNumberOfComponents(3);
+        cellNormals.SetNumberOfTuples(points.GetNumberOfPoints());
+        cellNormals.SetName('CellNormals');
+
         if (splitext(self.path)[1] == '.mesh'):
             if isfile(self.path):
                 data = open(self.path, 'r').read().splitlines();
-                data[:] = (line for line in data if line != '');
+#                 data[:] = (line for line in data if line != '');
             else:
                 print("The file does not exist.");
-                return
+                return;
+            
         else:
             print("Only '.mesh' files are accepted. Set a new file path.");
-            return
+            return;
 
         for i in xrange(len(data)):
-            if ((data[i][0] == '#') or (';')):
-                continue
+            if data[i] == '':
+                continue;
+                
+            elif ((data[i][0] == '#') or (data[i][0] == ';')):
+                continue;
+
             elif data[i][0] == '[':
-                for i in tags:
-                    tags[i]                 = False;
+                for j in self.__tags:
+                    self.__tags[j]          = False;
 
-                if data[i] in tags:
-                    tags[data[i]]           = True;
-                    continue
+                if data[i] in self.__tags:
+                    self.__tags[data[i]]    = True;
+                    continue;
+
                 else:
-                    raise RuntimeError('Tag not considered. Contact maintainer.\nLine states: ' + data[i])
+                    raise RuntimeError('Tag not considered. Contact maintainer.\nLine states: ' + data[i]);
 
-            if tags['[GeneralAttributes]']:
+            if self.__tags['[GeneralAttributes]']:
                 splits = data[i].split();
-                attributesDict[splits[0]] = [splits[i] for i in range(2, len(splits))];
+                self.__attributes[splits[0]] = [splits[i] for i in range(2, len(splits))];
 
-            elif tags['[VerticesSection]']:
+            elif boolSignals == False:
+                boolSignals = True;
 
-            elif tags['[TrianglesSection]']:
+                nPoints      = int(self.__attributes['NumVertex'][0]);
+                nColors      = int(self.__attributes['NumVertexColors'][0]);
+                nAttrib      = int(self.__attributes['NumVertexAttributes'][0]);
 
-            elif tags['[VerticesColorsSection]']:
+                for j in xrange(nColors + nAttrib):
+                    cellArray = vtkDoubleArray();
+                    cellArray.SetNumberOfComponents(1);
+                    if j < nColors:
+                        cellArray.SetName(self.__attributes['ColorsNames'][j]);
+                    else:
+                        cellArray.SetName(self.__attributes['VertexAttributesNames'][j - nColors]);
 
-            elif tags['[VerticesAttributesSection]']:
+                    signals.append(cellArray);
 
+            if self.__tags['[VerticesSection]']:
+                points.InsertPoint(int(data[i].split()[0]), (float(data[i].split()[2]),
+                                                             float(data[i].split()[3]),
+                                                             float(data[i].split()[4])));
 
+                pointNormals.InsertNextTuple3(float(data[i].split()[5]),
+                                              float(data[i].split()[6]),
+                                              float(data[i].split()[7]));
 
-writer = vtk.vtkPolyDataWriter()
-polydata = vtk.vtkPolyData()
-points = vtk.vtkPoints()
-pointNormals = vtk.vtkDoubleArray()
-pointNormals.SetNumberOfComponents(3)
-pointNormals.SetNumberOfTuples(points.GetNumberOfPoints())
+                ### FALTA EL GROUPID DE ESTE VERTICESSECTION
 
+            elif self.__tags['[TrianglesSection]']:
+                triangle = vtkTriangle();
 
+                triangle.GetPointIds().SetId(0, int(data[i].split()[2]));
+                triangle.GetPointIds().SetId(1, int(data[i].split()[3]));
+                triangle.GetPointIds().SetId(2, int(data[i].split()[4]));
 
-    def GetOutput(self):
-        return self.__output;
+                cells.InsertNextCell(triangle);
 
-    def __read_polydata(self):
-        reader                  = vtkPolyDataReader();
-        reader.SetFileName(self.path);
-        reader.Update();
+                cellNormals.InsertNextTuple3(float(data[i].split()[5]),
+                                             float(data[i].split()[6]),
+                                             float(data[i].split()[7]));
 
-        polydata                = reader.GetOutput();
-        polydata.BuildLinks();
+                ### FALTA EL GROUPID DE ESTE TRIANGLESSECTION
+                    
+            elif self.__tags['[VerticesColorsSection]']:
+                for j in range(2, len(data[i].split())):
+                    signals[j-2].InsertNextTuple1(float(data[i].split()[j]));
 
-        self.__npoints          = polydata.GetNumberOfPoints();
-        self.__npolygons        = polydata.GetNumberOfPolys();
-        self.__ndim             = polydata.GetPoints().GetData().GetNumberOfComponents();
-        self.__polydata         = polydata;
+            elif self.__tags['[VerticesAttributesSection]']:
+                for j in range(2, len(data[i].split())):
+                    signals[nColors + j - 2].InsertNextTuple1(float(data[i].split()[j]));
 
+        writer.SetFileName(self.output_path);
+
+        self.__polydata.SetPoints(points);
+        self.__polydata.SetPolys(cells);
+
+        self.__polydata.GetPointData().SetNormals(pointNormals);
+        self.__polydata.GetCellData().SetNormals(cellNormals);
+
+        for array in signals:
+            if array.GetName() == 'Bipolar':
+                self.__polydata.GetPointData().SetScalars(array);
+            else:
+                self.__polydata.GetPointData().AddArray(array);
+
+        writer.SetInputData(self.__polydata);
+        writer.SetFileName(self.output_path)
+        writer.Write()
 
     def __str__(self):
         s = "'" + self.__class__.__name__ + "' object at '" + self.path;
