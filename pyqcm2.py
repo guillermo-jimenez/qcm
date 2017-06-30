@@ -236,61 +236,80 @@ class PyQCM(BaseImage):
 
 
     def __calc_laplacian(self):
+for j in range(10):
+    start = time.time()
+
+    numPoints    = polydata.GetNumberOfPoints()
+    numPolygons  = polydata.GetNumberOfPolys()
+    sparseMatrix = scipy.sparse.csr_matrix((numPoints, numPoints))
+
+    try:
+        rows_polys      = polydata.GetCell(0).GetPointIds().GetNumberOfIds()
+        cols_polys      = polydata.GetNumberOfCells()
+        polygons        = numpy.zeros((rows_polys,cols_polys), dtype=int)
+
+        rows_points     = len(polydata.GetPoint(0))
+        cols_points     = polydata.GetPoints().GetNumberOfPoints()
+        points          = numpy.zeros((rows_points,cols_points))
+
+        numDims         = rows_points
+    except:
+        raise Exception('The polydata provided is empty')
+
+    # Exporting VTK triangles to numpy for a more efficient manipulation
+    for i in xrange(polydata.GetNumberOfCells()):
+        triangle            = polydata.GetCell(i)
+        pointIds            = triangle.GetPointIds()
+
+        polygons[0,i]       = pointIds.GetId(0)
+        polygons[1,i]       = pointIds.GetId(1)
+        polygons[2,i]       = pointIds.GetId(2)
 
 
-        numDims                 = self.polygons.shape[0]
-        numPoints               = self.points.shape[1]
-        numPolygons             = self.polygons.shape[1]
+    # Exporting VTK points to numpy for a more efficient manipulation
+    pointVector             = polydata.GetPoints()
 
-        sparseMatrix            = csr_matrix((numPoints, numPoints))
+    if pointVector:
+        for i in range(0, pointVector.GetNumberOfPoints()):
+            point_tuple     = pointVector.GetPoint(i)
 
-        # try:
-        #     self.polydata.GetPoint(0)
-        # except:
-        #     raise Exception('Empty VTK file provided')
+            if points is None:
+                rows        = len(point_tuple)
+                cols        = pointVector.GetNumberOfPoints()
+                points      = numpy.zeros((rows,cols))
 
-        if self.polydata.GetNumberOfPoints() > 0:
-            for i in range(self.polydata.GetNumberOfPoints()):
-                triangle            = self.polydata.GetCell(i)
-                pointIds            = triangle.GetPointIds()
+            points[0,i]     = point_tuple[0]
+            points[1,i]     = point_tuple[1]
+            points[2,i]     = point_tuple[2]
 
-                point_1             = numpy.array(self.polydata.GetPoint(pointIds.GetId(0)))
-                point_2             = numpy.array(self.polydata.GetPoint(pointIds.GetId(1)))
-                point_3             = numpy.array(self.polydata.GetPoint(pointIds.GetId(2)))
+    # Calculation of Laplacian
+    for i in range(0, numDims):
+        i1                  = (i + 0)%3
+        i2                  = (i + 1)%3
+        i3                  = (i + 2)%3
 
-                dist_p2_p1          = (point_2 - point_1) / ((point_2 - point_1)**2).sum(0)
-                dist_p3_p1          = (point_3 - point_1) / ((point_3 - point_1)**2).sum(0)
+        vectP2P1            = points[:, polygons[i2, :]] - points[:, polygons[i1, :]]
+        vectP3P1            = points[:, polygons[i3, :]] - points[:, polygons[i1, :]]
 
-                angles              = arccos((dist_p2_p1 * dist_p3_p1).sum(0))
+        vectP2P1            = vectP2P1 / numpy.matlib.repmat(numpy.sqrt((vectP2P1**2).sum(0)), numDims, 1)
+        vectP3P1            = vectP3P1 / numpy.matlib.repmat(numpy.sqrt((vectP3P1**2).sum(0)), numDims, 1)
 
+        angles              = scipy.arccos((vectP2P1 * vectP3P1).sum(0))
 
+        iterData1           = scipy.sparse.csr_matrix((1/scipy.tan(angles), 
+                                                      (polygons[i2,:], 
+                                                       polygons[i3,:])), 
+                                                       shape=(numPoints, numPoints))
 
-        for i in range(0, numDims):
-            i1                  = (i + 0)%3
-            i2                  = (i + 1)%3
-            i3                  = (i + 2)%3
+        iterData2           = scipy.sparse.csr_matrix((1/scipy.tan(angles), (polygons[i3,:], polygons[i2,:])), shape=(numPoints, numPoints))
 
-            distP2P1            = self.points[:, self.polygons[i2, :]] - self.points[:, self.polygons[i1, :]]
-            distP3P1            = self.points[:, self.polygons[i3, :]] - self.points[:, self.polygons[i1, :]]
+        sparseMatrix        = sparseMatrix + iterData1 + iterData2
 
-            distP2P1            = distP2P1 / repmat(sqrt((distP2P1**2).sum(0)), 3, 1)
-            distP3P1            = distP3P1 / repmat(sqrt((distP3P1**2).sum(0)), 3, 1)
+    diagonal                = sparseMatrix.sum(0)
+    diagonalSparse          = spdiags(diagonal, 0, numPoints, numPoints)
+    self.laplacian          = diagonalSparse - sparseMatrix
 
-            angles              = arccos((distP2P1 * distP3P1).sum(0))
-
-            iterData1           = csr_matrix((1/tan(angles), 
-                                                    (self.polygons[i2,:], 
-                                                     self.polygons[i3,:])), 
-                                                    shape=(numPoints, numPoints))
-
-            iterData2           = csr_matrix((1/tan(angles), (self.polygons[i3,:], self.polygons[i2,:])), shape=(numPoints, numPoints))
-
-            sparseMatrix        = sparseMatrix + iterData1 + iterData2
-
-        diagonal                = sparseMatrix.sum(0)
-        diagonalSparse          = spdiags(diagonal, 0, numPoints, numPoints)
-        self.__laplacian        = diagonalSparse - sparseMatrix
-
+    
     def __calc_QCM_points(self):
         if self.laplacian is not None:
             if self.boundary is not None:
