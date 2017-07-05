@@ -1,0 +1,177 @@
+\hypertarget{hm_tri_mesh_8c}{\subsection{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/hm\-Tri\-Mesh.c File Reference}
+\label{hm_tri_mesh_8c}\index{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/hm\-Tri\-Mesh.\-c@{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/hm\-Tri\-Mesh.\-c}}
+}
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$math.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}hm\-Tri\-Mesh.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hm\-Vec3.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hm\-Utility.\-h\char`\"{}}\\*
+\subsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{hm_tri_mesh_8c_aa648381694a0814d6316de6a7bd450fe}{hm\-Tri\-Mesh\-Initialize} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh)
+\item 
+void \hyperlink{hm_tri_mesh_8c_a611fcd313be57d8169355f0c94184ea7}{hm\-Tri\-Mesh\-Destroy} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh)
+\item 
+void \hyperlink{hm_tri_mesh_8c_a190234d61c5571c1a05465e96353d496}{hm\-Tri\-Mesh\-Copy} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh1, const \hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh2)
+\item 
+void \hyperlink{hm_tri_mesh_8c_a0b4da8535f470323fee6e98ee159df6e}{hm\-Tri\-Mesh\-Copy\-Data} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh, size\-\_\-t n\-Vertices, const double $\ast$vertices, size\-\_\-t n\-Faces, const size\-\_\-t $\ast$faces)
+\item 
+void \hyperlink{hm_tri_mesh_8c_a94fe27953eb8030538a09f320defb51a}{hm\-Tri\-Mesh\-Reference\-Data} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh, size\-\_\-t n\-Vertices, double $\ast$vertices, size\-\_\-t n\-Faces, size\-\_\-t $\ast$faces)
+\item 
+void \hyperlink{hm_tri_mesh_8c_ad57fca68a2c3293d8a94c329cea76382}{hm\-Tri\-Mesh\-Read\-O\-B\-J} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh, const char $\ast$filename)
+\item 
+void \hyperlink{hm_tri_mesh_8c_a41d3b0a8052634a2b5cc44e0cd58a467}{hm\-Tri\-Mesh\-Write\-O\-B\-J} (const \hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh, const char $\ast$filename)
+\item 
+void \hyperlink{hm_tri_mesh_8c_a0ee8e90d74c322f204e88f28a8ba18d4}{hm\-Tri\-Mesh\-Build} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh)
+\item 
+void \hyperlink{hm_tri_mesh_8c_aef791119de0ff7910e8373815ea1df71}{hm\-Tri\-Mesh\-Find\-One\-Rings} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh)
+\item 
+void \hyperlink{hm_tri_mesh_8c_afad4faec4e709ad557fa21e0300a3bc9}{hm\-Tri\-Mesh\-Compute\-Vertex\-Areas} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh)
+\item 
+void \hyperlink{hm_tri_mesh_8c_a8091e9095ea94d1dfe816ab0ed842aa4}{hm\-Tri\-Mesh\-Compute\-Weights} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh)
+\item 
+void \hyperlink{hm_tri_mesh_8c_a4d7110353aaeb9eec6fa69a5a944a4cb}{hm\-Tri\-Mesh\-Cache\-Edge\-Data} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh)
+\item 
+double \hyperlink{hm_tri_mesh_8c_a5a33fe6327f51c99d5fc68a7c72b4336}{hm\-Tri\-Mesh\-L2\-Distance} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh, double $\ast$phi1, double $\ast$phi2)
+\item 
+double \hyperlink{hm_tri_mesh_8c_a697319de6c7f30be61b3f952043a836c}{hm\-Tri\-Mesh\-L\-Infinity\-Distance} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh, double $\ast$phi1, double $\ast$phi2)
+\item 
+double \hyperlink{hm_tri_mesh_8c_abb7a03205d6d9767bb702e84048879f6}{hm\-Tri\-Mesh\-Mean\-Relative\-Error} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh, double $\ast$phi1, double $\ast$phi2)
+\item 
+double \hyperlink{hm_tri_mesh_8c_aa469c6eece94b57ceada98c24b758819}{hm\-Tri\-Mesh\-Diameter} (\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh)
+\end{DoxyCompactItemize}
+
+
+\subsubsection{Function Documentation}
+\hypertarget{hm_tri_mesh_8c_a0ee8e90d74c322f204e88f28a8ba18d4}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Build@{hm\-Tri\-Mesh\-Build}}
+\index{hm\-Tri\-Mesh\-Build@{hm\-Tri\-Mesh\-Build}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Build}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Build (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_a0ee8e90d74c322f204e88f28a8ba18d4}
+\hypertarget{hm_tri_mesh_8c_a4d7110353aaeb9eec6fa69a5a944a4cb}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Cache\-Edge\-Data@{hm\-Tri\-Mesh\-Cache\-Edge\-Data}}
+\index{hm\-Tri\-Mesh\-Cache\-Edge\-Data@{hm\-Tri\-Mesh\-Cache\-Edge\-Data}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Cache\-Edge\-Data}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Cache\-Edge\-Data (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_a4d7110353aaeb9eec6fa69a5a944a4cb}
+\hypertarget{hm_tri_mesh_8c_afad4faec4e709ad557fa21e0300a3bc9}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Compute\-Vertex\-Areas@{hm\-Tri\-Mesh\-Compute\-Vertex\-Areas}}
+\index{hm\-Tri\-Mesh\-Compute\-Vertex\-Areas@{hm\-Tri\-Mesh\-Compute\-Vertex\-Areas}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Compute\-Vertex\-Areas}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Compute\-Vertex\-Areas (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_afad4faec4e709ad557fa21e0300a3bc9}
+\hypertarget{hm_tri_mesh_8c_a8091e9095ea94d1dfe816ab0ed842aa4}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Compute\-Weights@{hm\-Tri\-Mesh\-Compute\-Weights}}
+\index{hm\-Tri\-Mesh\-Compute\-Weights@{hm\-Tri\-Mesh\-Compute\-Weights}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Compute\-Weights}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Compute\-Weights (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_a8091e9095ea94d1dfe816ab0ed842aa4}
+\hypertarget{hm_tri_mesh_8c_a190234d61c5571c1a05465e96353d496}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Copy@{hm\-Tri\-Mesh\-Copy}}
+\index{hm\-Tri\-Mesh\-Copy@{hm\-Tri\-Mesh\-Copy}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Copy}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Copy (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh1, }
+\item[{const {\bf hm\-Tri\-Mesh} $\ast$}]{mesh2}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_a190234d61c5571c1a05465e96353d496}
+\hypertarget{hm_tri_mesh_8c_a0b4da8535f470323fee6e98ee159df6e}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Copy\-Data@{hm\-Tri\-Mesh\-Copy\-Data}}
+\index{hm\-Tri\-Mesh\-Copy\-Data@{hm\-Tri\-Mesh\-Copy\-Data}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Copy\-Data}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Copy\-Data (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh, }
+\item[{size\-\_\-t}]{n\-Vertices, }
+\item[{const double $\ast$}]{vertices, }
+\item[{size\-\_\-t}]{n\-Faces, }
+\item[{const size\-\_\-t $\ast$}]{faces}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_a0b4da8535f470323fee6e98ee159df6e}
+\hypertarget{hm_tri_mesh_8c_a611fcd313be57d8169355f0c94184ea7}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Destroy@{hm\-Tri\-Mesh\-Destroy}}
+\index{hm\-Tri\-Mesh\-Destroy@{hm\-Tri\-Mesh\-Destroy}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Destroy}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Destroy (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_a611fcd313be57d8169355f0c94184ea7}
+\hypertarget{hm_tri_mesh_8c_aa469c6eece94b57ceada98c24b758819}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Diameter@{hm\-Tri\-Mesh\-Diameter}}
+\index{hm\-Tri\-Mesh\-Diameter@{hm\-Tri\-Mesh\-Diameter}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Diameter}]{\setlength{\rightskip}{0pt plus 5cm}double hm\-Tri\-Mesh\-Diameter (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_aa469c6eece94b57ceada98c24b758819}
+\hypertarget{hm_tri_mesh_8c_aef791119de0ff7910e8373815ea1df71}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Find\-One\-Rings@{hm\-Tri\-Mesh\-Find\-One\-Rings}}
+\index{hm\-Tri\-Mesh\-Find\-One\-Rings@{hm\-Tri\-Mesh\-Find\-One\-Rings}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Find\-One\-Rings}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Find\-One\-Rings (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_aef791119de0ff7910e8373815ea1df71}
+\hypertarget{hm_tri_mesh_8c_aa648381694a0814d6316de6a7bd450fe}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Initialize@{hm\-Tri\-Mesh\-Initialize}}
+\index{hm\-Tri\-Mesh\-Initialize@{hm\-Tri\-Mesh\-Initialize}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Initialize}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Initialize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_aa648381694a0814d6316de6a7bd450fe}
+\hypertarget{hm_tri_mesh_8c_a5a33fe6327f51c99d5fc68a7c72b4336}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-L2\-Distance@{hm\-Tri\-Mesh\-L2\-Distance}}
+\index{hm\-Tri\-Mesh\-L2\-Distance@{hm\-Tri\-Mesh\-L2\-Distance}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-L2\-Distance}]{\setlength{\rightskip}{0pt plus 5cm}double hm\-Tri\-Mesh\-L2\-Distance (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh, }
+\item[{double $\ast$}]{phi1, }
+\item[{double $\ast$}]{phi2}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_a5a33fe6327f51c99d5fc68a7c72b4336}
+\hypertarget{hm_tri_mesh_8c_a697319de6c7f30be61b3f952043a836c}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-L\-Infinity\-Distance@{hm\-Tri\-Mesh\-L\-Infinity\-Distance}}
+\index{hm\-Tri\-Mesh\-L\-Infinity\-Distance@{hm\-Tri\-Mesh\-L\-Infinity\-Distance}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-L\-Infinity\-Distance}]{\setlength{\rightskip}{0pt plus 5cm}double hm\-Tri\-Mesh\-L\-Infinity\-Distance (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh, }
+\item[{double $\ast$}]{phi1, }
+\item[{double $\ast$}]{phi2}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_a697319de6c7f30be61b3f952043a836c}
+\hypertarget{hm_tri_mesh_8c_abb7a03205d6d9767bb702e84048879f6}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Mean\-Relative\-Error@{hm\-Tri\-Mesh\-Mean\-Relative\-Error}}
+\index{hm\-Tri\-Mesh\-Mean\-Relative\-Error@{hm\-Tri\-Mesh\-Mean\-Relative\-Error}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Mean\-Relative\-Error}]{\setlength{\rightskip}{0pt plus 5cm}double hm\-Tri\-Mesh\-Mean\-Relative\-Error (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh, }
+\item[{double $\ast$}]{phi1, }
+\item[{double $\ast$}]{phi2}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_abb7a03205d6d9767bb702e84048879f6}
+\hypertarget{hm_tri_mesh_8c_ad57fca68a2c3293d8a94c329cea76382}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Read\-O\-B\-J@{hm\-Tri\-Mesh\-Read\-O\-B\-J}}
+\index{hm\-Tri\-Mesh\-Read\-O\-B\-J@{hm\-Tri\-Mesh\-Read\-O\-B\-J}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Read\-O\-B\-J}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Read\-O\-B\-J (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh, }
+\item[{const char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_ad57fca68a2c3293d8a94c329cea76382}
+\hypertarget{hm_tri_mesh_8c_a94fe27953eb8030538a09f320defb51a}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Reference\-Data@{hm\-Tri\-Mesh\-Reference\-Data}}
+\index{hm\-Tri\-Mesh\-Reference\-Data@{hm\-Tri\-Mesh\-Reference\-Data}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Reference\-Data}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Reference\-Data (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh, }
+\item[{size\-\_\-t}]{n\-Vertices, }
+\item[{double $\ast$}]{vertices, }
+\item[{size\-\_\-t}]{n\-Faces, }
+\item[{size\-\_\-t $\ast$}]{faces}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_a94fe27953eb8030538a09f320defb51a}
+\hypertarget{hm_tri_mesh_8c_a41d3b0a8052634a2b5cc44e0cd58a467}{\index{hm\-Tri\-Mesh.\-c@{hm\-Tri\-Mesh.\-c}!hm\-Tri\-Mesh\-Write\-O\-B\-J@{hm\-Tri\-Mesh\-Write\-O\-B\-J}}
+\index{hm\-Tri\-Mesh\-Write\-O\-B\-J@{hm\-Tri\-Mesh\-Write\-O\-B\-J}!hmTriMesh.c@{hm\-Tri\-Mesh.\-c}}
+\paragraph[{hm\-Tri\-Mesh\-Write\-O\-B\-J}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Mesh\-Write\-O\-B\-J (
+\begin{DoxyParamCaption}
+\item[{const {\bf hm\-Tri\-Mesh} $\ast$}]{mesh, }
+\item[{const char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_mesh_8c_a41d3b0a8052634a2b5cc44e0cd58a467}

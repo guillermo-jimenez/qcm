@@ -1,0 +1,392 @@
+\hypertarget{classhm_vec3}{\subsection{hm\-Vec3 Class Reference}
+\label{classhm_vec3}\index{hm\-Vec3@{hm\-Vec3}}
+}
+
+
+Vector in Euclidean 3-\/space.  
+
+
+
+
+{\ttfamily \#include $<$hm\-Vec3.\-h$>$}
+
+\subsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_a3ed2e56643859ddca199341139b22abb}{hm\-Vec3\-Set} (\hyperlink{classhm_vec3}{hm\-Vec3} u, double x, double y, double z)
+\begin{DoxyCompactList}\small\item\em Initializes vector with specified components. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_a3ed200349a4473088a3b48c1bf9e9840}{hm\-Vec3\-From\-Array} (\hyperlink{classhm_vec3}{hm\-Vec3} u, const double $\ast$x)
+\begin{DoxyCompactList}\small\item\em Initializes vector from the first three components of an array. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_ad89688c03eb724c8ad3d864db05245b2}{hm\-Vec3\-Add} (\hyperlink{classhm_vec3}{hm\-Vec3} w, const \hyperlink{classhm_vec3}{hm\-Vec3} u, const \hyperlink{classhm_vec3}{hm\-Vec3} v)
+\begin{DoxyCompactList}\small\item\em Computes sum $w=u+v$ of two vectors $u$ and $v$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_a7072b43a1bc62f162699b501edf19c2b}{hm\-Vec3\-Inc} (\hyperlink{classhm_vec3}{hm\-Vec3} u, const \hyperlink{classhm_vec3}{hm\-Vec3} v)
+\begin{DoxyCompactList}\small\item\em Replaces the vector $u$ with the vector $u+v$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_a58177b02f8f049a3124775f8823dfc43}{hm\-Vec3\-Sub} (\hyperlink{classhm_vec3}{hm\-Vec3} w, const \hyperlink{classhm_vec3}{hm\-Vec3} u, const \hyperlink{classhm_vec3}{hm\-Vec3} v)
+\begin{DoxyCompactList}\small\item\em Computes difference $w=u-v$ of two vectors $u$ and $v$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_abe0c701cc9e659ff4c1a3d4c7f1ea74d}{hm\-Vec3\-Dec} (\hyperlink{classhm_vec3}{hm\-Vec3} u, const \hyperlink{classhm_vec3}{hm\-Vec3} v)
+\begin{DoxyCompactList}\small\item\em Replaces the vector $u$ with the vector $u-v$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_a97ed7299caacf34be0e6e45a6448978e}{hm\-Vec3\-Negate} (\hyperlink{classhm_vec3}{hm\-Vec3} u)
+\begin{DoxyCompactList}\small\item\em Replaces the vector $u$ with the vector $-u$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_a58bb1f57f250511da6d5957ec9fbe6fd}{hm\-Vec3\-Mul} (\hyperlink{classhm_vec3}{hm\-Vec3} w, double a, const \hyperlink{classhm_vec3}{hm\-Vec3} u)
+\begin{DoxyCompactList}\small\item\em Multiples a vector $u$ by a constant factor $a$ to get the new vector $w=au$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_a73cbf744c1e5c75e216cfe28d6cbe92a}{hm\-Vec3\-Scale} (\hyperlink{classhm_vec3}{hm\-Vec3} u, double a)
+\begin{DoxyCompactList}\small\item\em Replaces a vector $u$ with the rescaled vector $au$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- double \hyperlink{classhm_vec3_ab380b4d6e2dfd94a0f8ea49675597756}{hm\-Vec3\-Dot} (const \hyperlink{classhm_vec3}{hm\-Vec3} u, const \hyperlink{classhm_vec3}{hm\-Vec3} v)
+\begin{DoxyCompactList}\small\item\em Computes Euclidean inner product $a = u \cdot v $ of two vectors $u$ and $v$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_aa2432f88c9417292ccc76e723338d9d0}{hm\-Vec3\-Cross} (\hyperlink{classhm_vec3}{hm\-Vec3} w, const \hyperlink{classhm_vec3}{hm\-Vec3} u, const \hyperlink{classhm_vec3}{hm\-Vec3} v)
+\begin{DoxyCompactList}\small\item\em Computes cross product $w = u \times v$ of two vectors $u$ and $v$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- double \hyperlink{classhm_vec3_aa4ea41ac84331582f4ba368b31555fe5}{hm\-Vec3\-Norm} (const \hyperlink{classhm_vec3}{hm\-Vec3} u)
+\begin{DoxyCompactList}\small\item\em Computes Euclidean length $a = ||u|| = \sqrt{u \cdot u}$ of a vector $u$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- double \hyperlink{classhm_vec3_acb99ba855b555a5012a39bc4d58a3ad9}{hm\-Vec3\-Norm2} (const \hyperlink{classhm_vec3}{hm\-Vec3} u)
+\begin{DoxyCompactList}\small\item\em Computes squared Euclidean length $a = ||u||^2 = u \cdot u$ of a vector $u$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_a1a468ab82b0d74a3cfbf147a398eee7f}{hm\-Vec3\-Normalize} (\hyperlink{classhm_vec3}{hm\-Vec3} u)
+\begin{DoxyCompactList}\small\item\em Divides a vector $u$ by its length. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_ae800a2d05652e47b4b28b18301267f28}{hm\-Vec3\-Unit} (\hyperlink{classhm_vec3}{hm\-Vec3} w, const \hyperlink{classhm_vec3}{hm\-Vec3} u)
+\begin{DoxyCompactList}\small\item\em Computes unit length vector $w = u/|u|$ parallel to $u$. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_afb00c0d45967c46bed0cfb4c9fa476ba}{hm\-Vec3\-Print} (const \hyperlink{classhm_vec3}{hm\-Vec3} u)
+\begin{DoxyCompactList}\small\item\em Prints the vector $u$ to stdout. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{classhm_vec3_a41ae74e4783908c95c599afbc1c889ee}{hm\-Vec3\-Print\-Err} (const \hyperlink{classhm_vec3}{hm\-Vec3} u)
+\begin{DoxyCompactList}\small\item\em Prints the vector $u$ to stderr. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+Vector in Euclidean 3-\/space. 
+
+\subsubsection{Member Function Documentation}
+\hypertarget{classhm_vec3_ad89688c03eb724c8ad3d864db05245b2}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Add@{hm\-Vec3\-Add}}
+\index{hm\-Vec3\-Add@{hm\-Vec3\-Add}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Add}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Add (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{w, }
+\item[{const {\bf hm\-Vec3}}]{u, }
+\item[{const {\bf hm\-Vec3}}]{v}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_ad89688c03eb724c8ad3d864db05245b2}
+
+
+Computes sum $w=u+v$ of two vectors $u$ and $v$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Sum of u and v. \\
+\hline
+{\em u} & First summand. \\
+\hline
+{\em v} & Second summand. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_aa2432f88c9417292ccc76e723338d9d0}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Cross@{hm\-Vec3\-Cross}}
+\index{hm\-Vec3\-Cross@{hm\-Vec3\-Cross}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Cross}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Cross (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{w, }
+\item[{const {\bf hm\-Vec3}}]{u, }
+\item[{const {\bf hm\-Vec3}}]{v}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_aa2432f88c9417292ccc76e723338d9d0}
+
+
+Computes cross product $w = u \times v$ of two vectors $u$ and $v$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Cross product. \\
+\hline
+{\em u} & First argument. \\
+\hline
+{\em v} & Second argument. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_abe0c701cc9e659ff4c1a3d4c7f1ea74d}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Dec@{hm\-Vec3\-Dec}}
+\index{hm\-Vec3\-Dec@{hm\-Vec3\-Dec}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Dec}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Dec (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{u, }
+\item[{const {\bf hm\-Vec3}}]{v}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_abe0c701cc9e659ff4c1a3d4c7f1ea74d}
+
+
+Replaces the vector $u$ with the vector $u-v$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & Initial vector. \\
+\hline
+{\em v} & Decrement. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_ab380b4d6e2dfd94a0f8ea49675597756}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Dot@{hm\-Vec3\-Dot}}
+\index{hm\-Vec3\-Dot@{hm\-Vec3\-Dot}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Dot}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- double hm\-Vec3\-Dot (
+\begin{DoxyParamCaption}
+\item[{const {\bf hm\-Vec3}}]{u, }
+\item[{const {\bf hm\-Vec3}}]{v}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_ab380b4d6e2dfd94a0f8ea49675597756}
+
+
+Computes Euclidean inner product $a = u \cdot v $ of two vectors $u$ and $v$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & First argument. \\
+\hline
+{\em v} & Second argument. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Inner product. 
+\end{DoxyReturn}
+\hypertarget{classhm_vec3_a3ed200349a4473088a3b48c1bf9e9840}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-From\-Array@{hm\-Vec3\-From\-Array}}
+\index{hm\-Vec3\-From\-Array@{hm\-Vec3\-From\-Array}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-From\-Array}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-From\-Array (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{u, }
+\item[{const double $\ast$}]{x}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_a3ed200349a4473088a3b48c1bf9e9840}
+
+
+Initializes vector from the first three components of an array. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & Target object. \\
+\hline
+{\em x} & Array of at least three doubles. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_a7072b43a1bc62f162699b501edf19c2b}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Inc@{hm\-Vec3\-Inc}}
+\index{hm\-Vec3\-Inc@{hm\-Vec3\-Inc}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Inc}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Inc (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{u, }
+\item[{const {\bf hm\-Vec3}}]{v}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_a7072b43a1bc62f162699b501edf19c2b}
+
+
+Replaces the vector $u$ with the vector $u+v$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & Initial vector. \\
+\hline
+{\em v} & Increment. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_a58bb1f57f250511da6d5957ec9fbe6fd}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Mul@{hm\-Vec3\-Mul}}
+\index{hm\-Vec3\-Mul@{hm\-Vec3\-Mul}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Mul}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Mul (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{w, }
+\item[{double}]{a, }
+\item[{const {\bf hm\-Vec3}}]{u}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_a58bb1f57f250511da6d5957ec9fbe6fd}
+
+
+Multiples a vector $u$ by a constant factor $a$ to get the new vector $w=au$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Scaled vector. \\
+\hline
+{\em a} & Scale. \\
+\hline
+{\em u} & Initial vector. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_a97ed7299caacf34be0e6e45a6448978e}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Negate@{hm\-Vec3\-Negate}}
+\index{hm\-Vec3\-Negate@{hm\-Vec3\-Negate}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Negate}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Negate (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{u}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_a97ed7299caacf34be0e6e45a6448978e}
+
+
+Replaces the vector $u$ with the vector $-u$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & Argument. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_aa4ea41ac84331582f4ba368b31555fe5}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Norm@{hm\-Vec3\-Norm}}
+\index{hm\-Vec3\-Norm@{hm\-Vec3\-Norm}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Norm}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- double hm\-Vec3\-Norm (
+\begin{DoxyParamCaption}
+\item[{const {\bf hm\-Vec3}}]{u}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_aa4ea41ac84331582f4ba368b31555fe5}
+
+
+Computes Euclidean length $a = ||u|| = \sqrt{u \cdot u}$ of a vector $u$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & Argument. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Norm. 
+\end{DoxyReturn}
+\hypertarget{classhm_vec3_acb99ba855b555a5012a39bc4d58a3ad9}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Norm2@{hm\-Vec3\-Norm2}}
+\index{hm\-Vec3\-Norm2@{hm\-Vec3\-Norm2}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Norm2}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- double hm\-Vec3\-Norm2 (
+\begin{DoxyParamCaption}
+\item[{const {\bf hm\-Vec3}}]{u}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_acb99ba855b555a5012a39bc4d58a3ad9}
+
+
+Computes squared Euclidean length $a = ||u||^2 = u \cdot u$ of a vector $u$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & Argument. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Norm. 
+\end{DoxyReturn}
+\hypertarget{classhm_vec3_a1a468ab82b0d74a3cfbf147a398eee7f}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Normalize@{hm\-Vec3\-Normalize}}
+\index{hm\-Vec3\-Normalize@{hm\-Vec3\-Normalize}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Normalize}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Normalize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{u}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_a1a468ab82b0d74a3cfbf147a398eee7f}
+
+
+Divides a vector $u$ by its length. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & Argument. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_afb00c0d45967c46bed0cfb4c9fa476ba}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Print@{hm\-Vec3\-Print}}
+\index{hm\-Vec3\-Print@{hm\-Vec3\-Print}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Print}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Print (
+\begin{DoxyParamCaption}
+\item[{const {\bf hm\-Vec3}}]{u}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_afb00c0d45967c46bed0cfb4c9fa476ba}
+
+
+Prints the vector $u$ to stdout. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & Argument. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_a41ae74e4783908c95c599afbc1c889ee}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Print\-Err@{hm\-Vec3\-Print\-Err}}
+\index{hm\-Vec3\-Print\-Err@{hm\-Vec3\-Print\-Err}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Print\-Err}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Print\-Err (
+\begin{DoxyParamCaption}
+\item[{const {\bf hm\-Vec3}}]{u}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_a41ae74e4783908c95c599afbc1c889ee}
+
+
+Prints the vector $u$ to stderr. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & Argument. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_a73cbf744c1e5c75e216cfe28d6cbe92a}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Scale@{hm\-Vec3\-Scale}}
+\index{hm\-Vec3\-Scale@{hm\-Vec3\-Scale}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Scale}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Scale (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{u, }
+\item[{double}]{a}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_a73cbf744c1e5c75e216cfe28d6cbe92a}
+
+
+Replaces a vector $u$ with the rescaled vector $au$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & Vector. \\
+\hline
+{\em a} & Scale. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_a3ed2e56643859ddca199341139b22abb}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Set@{hm\-Vec3\-Set}}
+\index{hm\-Vec3\-Set@{hm\-Vec3\-Set}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Set}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Set (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{u, }
+\item[{double}]{x, }
+\item[{double}]{y, }
+\item[{double}]{z}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_a3ed2e56643859ddca199341139b22abb}
+
+
+Initializes vector with specified components. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em u} & Target object. \\
+\hline
+{\em x} & x-\/coordinate. \\
+\hline
+{\em y} & y-\/coordinate. \\
+\hline
+{\em z} & z-\/coordinate. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_a58177b02f8f049a3124775f8823dfc43}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Sub@{hm\-Vec3\-Sub}}
+\index{hm\-Vec3\-Sub@{hm\-Vec3\-Sub}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Sub}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Sub (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{w, }
+\item[{const {\bf hm\-Vec3}}]{u, }
+\item[{const {\bf hm\-Vec3}}]{v}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_a58177b02f8f049a3124775f8823dfc43}
+
+
+Computes difference $w=u-v$ of two vectors $u$ and $v$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Difference. \\
+\hline
+{\em u} & Minuend. \\
+\hline
+{\em v} & Subtrahend. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classhm_vec3_ae800a2d05652e47b4b28b18301267f28}{\index{hm\-Vec3@{hm\-Vec3}!hm\-Vec3\-Unit@{hm\-Vec3\-Unit}}
+\index{hm\-Vec3\-Unit@{hm\-Vec3\-Unit}!hmVec3@{hm\-Vec3}}
+\paragraph[{hm\-Vec3\-Unit}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vec3\-Unit (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vec3}}]{w, }
+\item[{const {\bf hm\-Vec3}}]{u}
+\end{DoxyParamCaption}
+)}}\label{classhm_vec3_ae800a2d05652e47b4b28b18301267f28}
+
+
+Computes unit length vector $w = u/|u|$ parallel to $u$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Normalized vector. \\
+\hline
+{\em u} & Argument. \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/include/\hyperlink{hm_vec3_8h}{hm\-Vec3.\-h}\end{DoxyCompactItemize}

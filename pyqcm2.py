@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import division
 
 from os import system
@@ -46,10 +48,7 @@ from vtk import vtkIdList
 from scipy.sparse.linalg import spsolve
 from mvpoly.rbf import RBFThinPlateSpline
 
-
-
-
-
+from PointPicker import PointSelector
 
 
 class PyQCM(object):
@@ -58,16 +57,6 @@ class PyQCM(object):
     __polydata                      = None
     __points                        = None
     __polygons                      = None
-
-    __scalars                       = None
-    __normals                       = None
-
-    __npoints                       = None
-    __npolygons                     = None
-    __ndim                          = None
-    __nscalars                      = None
-    __nedges_mesh                   = None
-    __scalars_names                 = None
 
     __septum                        = None
     __apex                          = None
@@ -78,7 +67,7 @@ class PyQCM(object):
     __output_path                   = None
 
 
-    def __init__(self, path, septum, apex, output_path=None):
+    def __init__(self, path, septum=None, apex=None, output_path=None):
         self.__septum               = septum
         self.__apex                 = apex
 
@@ -144,6 +133,60 @@ class PyQCM(object):
             polygons[1,i]           = pointIds.GetId(1)
             polygons[2,i]           = pointIds.GetId(2)
 
+        selected = True
+        
+        while(selected):
+            if self.septum is None:
+                if self.apex is None:
+#                     print("Apical and septal points not selected. Click inside "  + \
+#                           "the visualization, direct your pointer to the apical " + \
+#                           "point and press 'p'. The apex will be highlighted as " + \
+#                           "a red point. Afterwards, direct your pointer to the "  + \
+#                           "septal point and press 'p', which will be highlighted "+ \
+#                           "as a green point. If you missplaced any of the "       + \
+#                           "points, select a third point in a random position and "+ \
+#                           "start anew by pressing 'q'. Once those points are "    + \
+#                           "selected, press 'q' and the execution will continue.")
+                    ps = PointSelector()
+                    ps.DoSelection(self.polydata)
+
+                    if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
+                        selected = False
+
+                        self.__apex     = ps.GetSelectedPointIds().GetId(1)
+                        self.__septum   = ps.GetSelectedPointIds().GetId(0)
+
+                else:
+#                     print("The septal point is not provided. Click inside "       + \
+#                           "the visualization, direct your pointer to the septal " + \
+#                           "point and press 'p'. The septum will be highlighted "  + \
+#                           "as a red point. If you missplaced the "                + \
+#                           "point, select a second point in a random position and "+ \
+#                           "start anew by pressing 'q'. Once those points are "    + \
+#                           "selected, press 'q' and the execution will continue.")
+                    ps = PointSelector()
+                    ps.DoSelection(self.polydata)
+
+                    if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
+                        selected = False
+
+                        self.__septum   = ps.GetSelectedPointIds().GetId(0)
+            else:
+                if self.apex is None:
+#                     print("The apical point is not provided. Click inside "       + \
+#                           "the visualization, direct your pointer to the apical " + \
+#                           "point and press 'p'. The apex will be highlighted "    + \
+#                           "as a red point. If you missplaced the "                + \
+#                           "point, select a second point in a random position and "+ \
+#                           "start anew by pressing 'q'. Once those points are "    + \
+#                           "selected, press 'q' and the execution will continue.")
+                    ps = PointSelector()
+                    ps.DoSelection(self.polydata)
+
+                    if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
+                        selected = False
+
+                        self.__apex     = ps.GetSelectedPointIds().GetId(0)
 
         self.__points               = points
         self.__polygons             = polygons
@@ -595,6 +638,94 @@ class PyQCM(object):
 
         self.__write_output()
 
+
+    def closest_boundary_point(self, objectivePoint=None):
+################################################################################
+##### ONLY FOR EAM - NEEDS DERERMINATION OF LOW NUMBER OF POINTS WHEN MORE DATA
+#####                IS AVAILABLE
+# start = time.time()
+# 
+# djikstra = vtk.vtkDijkstraGraphGeodesicPath()
+# 
+# geodesic_distance = []
+# 
+# djikstra.SetInputData(EAM.polydata)
+# djikstra.SetStartVertex(15)
+# 
+# for i in range(len(EAM.boundary)):
+#     start = time.time()
+#     djikstra.SetEndVertex(EAM.boundary[i])
+#     djikstra.Update()
+# 
+#     A = djikstra.GetOutput()
+# 
+#     cumsum = 0
+#     for i in range(A.GetNumberOfPoints() - 1):
+#         cumsum += sqrt((A.GetPoint(i + 1)[0] - A.GetPoint(i)[0])**2 + (A.GetPoint(i + 1)[1] - A.GetPoint(i)[1])**2 + (A.GetPoint(i + 1)[2] - A.GetPoint(i)[2])**2)
+# 
+#     geodesic_distance.append(cumsum)
+# 
+#     output_location = EAM.boundary[where(geodesic_distance==min(geodesic_distance))]
+# 
+# print(time.time() - start)
+################################################################################
+
+        if objectivePoint is None:
+            selected = True
+            
+            while(selected):
+                ps = PointSelector()
+                ps.DoSelection(self.polydata)
+
+                if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
+                    selected = False
+
+                    objectivePoint  = ps.GetSelectedPointIds().GetId(0)
+
+
+        output_point = None
+
+        if objectivePoint in self.boundary:
+            output_point        = where(self.boundary==objectivePoint)
+
+            if len(output_point) == 1:
+                if len(output_point[0]) == 1:
+                    output_point = output_point[0][0]
+                else:
+                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+            else:
+                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+
+        else:
+            print(" *  Provided point not found in the boundary. Selecting \n"
+                  "    closest point available...")
+
+            try:
+                searched_point  = self.points[:, objectivePoint]
+            except:
+                raise Exception("Septal point provided out of data bounds the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.")
+
+            if len(self.boundary.shape) == 1:
+                searched_point  = repmat(searched_point, self.boundary.size, 1)
+                searched_point  = searched_point.transpose()
+            else:
+                raise Exception("It seems you have multiple boundaries. Contact the package maintainer.")
+
+            distanceToObjectivePoint    = (self.points[:, self.boundary] - searched_point)
+            distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0))
+            output_point                = where(distanceToObjectivePoint == distanceToObjectivePoint.min())
+
+            if len(output_point) == 1:
+                if len(output_point[0]) == 1:
+                    output_point   = output_point[0][0]
+                else:
+                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+            else:
+                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+
+        return self.boundary[output_point]
+
+
     def __write_output(self):
         if ((self.homeomorphism is not None)
             and (self.points is not None)
@@ -630,7 +761,7 @@ class PyQCM(object):
 
                 path                    = self.output_path
 
-
+            self.__output_path          = path
             writer.SetFileName(path)
 
             for i in xrange(self.polydata.GetNumberOfPoints()):

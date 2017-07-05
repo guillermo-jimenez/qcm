@@ -1,0 +1,122 @@
+\hypertarget{structhm_dense_matrix}{\subsection{hm\-Dense\-Matrix Struct Reference}
+\label{structhm_dense_matrix}\index{hm\-Dense\-Matrix@{hm\-Dense\-Matrix}}
+}
+
+
+Real dense matrix.  
+
+
+
+
+{\ttfamily \#include $<$hm\-Dense\-Matrix.\-h$>$}
+
+\subsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{structhm_dense_matrix_ad66d67e9c81627f60987dfa5418ed9b0}{hm\-Dense\-Matrix\-Initialize} (\hyperlink{structhm_dense_matrix}{hm\-Dense\-Matrix} $\ast$matrix, size\-\_\-t \hyperlink{structhm_dense_matrix_a7fbc9f4a4303c885a43e849d118e843f}{n\-Rows}, size\-\_\-t \hyperlink{structhm_dense_matrix_a7078245a8b4311640e4e0d4b231cfedb}{n\-Columns})
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_dense_matrix_af57810a94ff9a34a689abf05fd7ac09a}{hm\-Dense\-Matrix\-Destroy} (\hyperlink{structhm_dense_matrix}{hm\-Dense\-Matrix} $\ast$matrix)
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_dense_matrix_af0112a828cc38df4a63ff851bf53f4ee}{hm\-Dense\-Matrix\-Copy} (\hyperlink{structhm_dense_matrix}{hm\-Dense\-Matrix} $\ast$matrix1, const \hyperlink{structhm_dense_matrix}{hm\-Dense\-Matrix} $\ast$matrix2)
+\begin{DoxyCompactList}\small\item\em Replaces matrix1 with a copy of matrix2. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsubsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+size\-\_\-t \hyperlink{structhm_dense_matrix_a7fbc9f4a4303c885a43e849d118e843f}{n\-Rows}
+\begin{DoxyCompactList}\small\item\em Number of rows (equal to data-\/$>$nrow). \end{DoxyCompactList}\item 
+size\-\_\-t \hyperlink{structhm_dense_matrix_a7078245a8b4311640e4e0d4b231cfedb}{n\-Columns}
+\begin{DoxyCompactList}\small\item\em Number of columns (equal to data-\/$>$ncol). \end{DoxyCompactList}\item 
+double $\ast$ \hyperlink{structhm_dense_matrix_a2098158062e3e63fce7d2575b324c386}{values}
+\begin{DoxyCompactList}\small\item\em Values of entries (points to data-\/$>$x). \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+Real dense matrix. 
+
+\subsubsection{Member Function Documentation}
+\hypertarget{structhm_dense_matrix_af0112a828cc38df4a63ff851bf53f4ee}{\index{hm\-Dense\-Matrix@{hm\-Dense\-Matrix}!hm\-Dense\-Matrix\-Copy@{hm\-Dense\-Matrix\-Copy}}
+\index{hm\-Dense\-Matrix\-Copy@{hm\-Dense\-Matrix\-Copy}!hmDenseMatrix@{hm\-Dense\-Matrix}}
+\paragraph[{hm\-Dense\-Matrix\-Copy}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Dense\-Matrix\-Copy (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Dense\-Matrix} $\ast$}]{matrix1, }
+\item[{const {\bf hm\-Dense\-Matrix} $\ast$}]{matrix2}
+\end{DoxyParamCaption}
+)}}\label{structhm_dense_matrix_af0112a828cc38df4a63ff851bf53f4ee}
+
+
+Replaces matrix1 with a copy of matrix2. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em matrix1} & Target object. \\
+\hline
+{\em matrix2} & Source object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_dense_matrix_af57810a94ff9a34a689abf05fd7ac09a}{\index{hm\-Dense\-Matrix@{hm\-Dense\-Matrix}!hm\-Dense\-Matrix\-Destroy@{hm\-Dense\-Matrix\-Destroy}}
+\index{hm\-Dense\-Matrix\-Destroy@{hm\-Dense\-Matrix\-Destroy}!hmDenseMatrix@{hm\-Dense\-Matrix}}
+\paragraph[{hm\-Dense\-Matrix\-Destroy}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Dense\-Matrix\-Destroy (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Dense\-Matrix} $\ast$}]{matrix}
+\end{DoxyParamCaption}
+)}}\label{structhm_dense_matrix_af57810a94ff9a34a689abf05fd7ac09a}
+
+
+Destructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em matrix} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_dense_matrix_ad66d67e9c81627f60987dfa5418ed9b0}{\index{hm\-Dense\-Matrix@{hm\-Dense\-Matrix}!hm\-Dense\-Matrix\-Initialize@{hm\-Dense\-Matrix\-Initialize}}
+\index{hm\-Dense\-Matrix\-Initialize@{hm\-Dense\-Matrix\-Initialize}!hmDenseMatrix@{hm\-Dense\-Matrix}}
+\paragraph[{hm\-Dense\-Matrix\-Initialize}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Dense\-Matrix\-Initialize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Dense\-Matrix} $\ast$}]{matrix, }
+\item[{size\-\_\-t}]{n\-Rows, }
+\item[{size\-\_\-t}]{n\-Columns}
+\end{DoxyParamCaption}
+)}}\label{structhm_dense_matrix_ad66d67e9c81627f60987dfa5418ed9b0}
+
+
+Constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em matrix} & Target object. \\
+\hline
+{\em n\-Rows} & Number of rows. \\
+\hline
+{\em n\-Columns} & Number of columns. \\
+\hline
+\end{DoxyParams}
+
+
+\subsubsection{Field Documentation}
+\hypertarget{structhm_dense_matrix_a7078245a8b4311640e4e0d4b231cfedb}{\index{hm\-Dense\-Matrix@{hm\-Dense\-Matrix}!n\-Columns@{n\-Columns}}
+\index{n\-Columns@{n\-Columns}!hmDenseMatrix@{hm\-Dense\-Matrix}}
+\paragraph[{n\-Columns}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t n\-Columns}}\label{structhm_dense_matrix_a7078245a8b4311640e4e0d4b231cfedb}
+
+
+Number of columns (equal to data-\/$>$ncol). 
+
+\hypertarget{structhm_dense_matrix_a7fbc9f4a4303c885a43e849d118e843f}{\index{hm\-Dense\-Matrix@{hm\-Dense\-Matrix}!n\-Rows@{n\-Rows}}
+\index{n\-Rows@{n\-Rows}!hmDenseMatrix@{hm\-Dense\-Matrix}}
+\paragraph[{n\-Rows}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t n\-Rows}}\label{structhm_dense_matrix_a7fbc9f4a4303c885a43e849d118e843f}
+
+
+Number of rows (equal to data-\/$>$nrow). 
+
+\hypertarget{structhm_dense_matrix_a2098158062e3e63fce7d2575b324c386}{\index{hm\-Dense\-Matrix@{hm\-Dense\-Matrix}!values@{values}}
+\index{values@{values}!hmDenseMatrix@{hm\-Dense\-Matrix}}
+\paragraph[{values}]{\setlength{\rightskip}{0pt plus 5cm}double$\ast$ values}}\label{structhm_dense_matrix_a2098158062e3e63fce7d2575b324c386}
+
+
+Values of entries (points to data-\/$>$x). 
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/include/\hyperlink{hm_dense_matrix_8h}{hm\-Dense\-Matrix.\-h}\end{DoxyCompactItemize}

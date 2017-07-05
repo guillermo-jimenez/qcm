@@ -1,0 +1,232 @@
+\hypertarget{structhm_vector_size_t}{\subsection{hm\-Vector\-Size\-T Struct Reference}
+\label{structhm_vector_size_t}\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}}
+}
+
+
+Variable-\/sized vector of size\-\_\-t values.  
+
+
+
+
+{\ttfamily \#include $<$hm\-Vector\-Size\-T.\-h$>$}
+
+\subsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{structhm_vector_size_t_ac8aa99bbff6fa3edfba85628f892a278}{hm\-Vector\-Size\-T\-Initialize} (\hyperlink{structhm_vector_size_t}{hm\-Vector\-Size\-T} $\ast$vector)
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_vector_size_t_acbd454b4a04c5d4e539f0fadea2998c0}{hm\-Vector\-Size\-T\-Destroy} (\hyperlink{structhm_vector_size_t}{hm\-Vector\-Size\-T} $\ast$vector)
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_vector_size_t_ae6175d79345791c2d7a07dee5bb04e8d}{hm\-Vector\-Size\-T\-Resize} (\hyperlink{structhm_vector_size_t}{hm\-Vector\-Size\-T} $\ast$vector, size\-\_\-t \hyperlink{structhm_vector_size_t_a854352f53b148adc24983a58a1866d66}{size})
+\begin{DoxyCompactList}\small\item\em Changes the vector length. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{structhm_vector_size_t_af3a372c8a7ecdb995a7238bd72457d3a}{hm\-Vector\-Size\-T\-Set\-Entry} (\hyperlink{structhm_vector_size_t}{hm\-Vector\-Size\-T} $\ast$vector, size\-\_\-t index, size\-\_\-t value)
+\begin{DoxyCompactList}\small\item\em Sets an entry to the specified value. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- size\-\_\-t \hyperlink{structhm_vector_size_t_a9555fbbf74015441b9051deb26fffdb9}{hm\-Vector\-Size\-T\-Get\-Entry} (\hyperlink{structhm_vector_size_t}{hm\-Vector\-Size\-T} $\ast$vector, size\-\_\-t index)
+\begin{DoxyCompactList}\small\item\em Gets the value of an entry. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_vector_size_t_a0c83492eb7aa195dc618be11d29fd884}{hm\-Vector\-Size\-T\-Push\-Back} (\hyperlink{structhm_vector_size_t}{hm\-Vector\-Size\-T} $\ast$vector, size\-\_\-t value)
+\begin{DoxyCompactList}\small\item\em Appends a new element. \end{DoxyCompactList}\item 
+size\-\_\-t \hyperlink{structhm_vector_size_t_aca0ad1a1a70c6694cdf6713b29167da2}{hm\-Vector\-Size\-T\-Pop\-Back} (\hyperlink{structhm_vector_size_t}{hm\-Vector\-Size\-T} $\ast$vector)
+\begin{DoxyCompactList}\small\item\em Removes the last element from the end and returns its value. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_vector_size_t_a665e43d5091fbf81d7ce818ef7c5ebe6}{hm\-Vector\-Size\-T\-Sort} (\hyperlink{structhm_vector_size_t}{hm\-Vector\-Size\-T} $\ast$vector)
+\begin{DoxyCompactList}\small\item\em Sorts entries. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsubsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+size\-\_\-t \hyperlink{structhm_vector_size_t_a854352f53b148adc24983a58a1866d66}{size}
+\begin{DoxyCompactList}\small\item\em Logical length. \end{DoxyCompactList}\item 
+size\-\_\-t \hyperlink{structhm_vector_size_t_ad69ae78713b41381c4d71371aae6e63e}{storage}
+\begin{DoxyCompactList}\small\item\em Amount of physical memory allocated for storage. \end{DoxyCompactList}\item 
+size\-\_\-t $\ast$ \hyperlink{structhm_vector_size_t_a80584cc4032a43c83261c16ace4513fc}{entries}
+\begin{DoxyCompactList}\small\item\em Entry values. \mbox{[}1 x storage\mbox{]}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+Variable-\/sized vector of size\-\_\-t values. 
+
+Represents a vector of size\-\_\-t value which may change in length, stored in a contiguous block of memory. Elements can be accessed in constant time and appended in amortized constant time. Accessing entries outside the range 0-\/(size-\/1) results in a runtime assertion; this behavior can be disabled by compiling with the flag -\/\-D\-N\-D\-E\-B\-U\-G 
+
+\subsubsection{Member Function Documentation}
+\hypertarget{structhm_vector_size_t_acbd454b4a04c5d4e539f0fadea2998c0}{\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}!hm\-Vector\-Size\-T\-Destroy@{hm\-Vector\-Size\-T\-Destroy}}
+\index{hm\-Vector\-Size\-T\-Destroy@{hm\-Vector\-Size\-T\-Destroy}!hmVectorSizeT@{hm\-Vector\-Size\-T}}
+\paragraph[{hm\-Vector\-Size\-T\-Destroy}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Size\-T\-Destroy (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Size\-T} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_size_t_acbd454b4a04c5d4e539f0fadea2998c0}
+
+
+Destructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_vector_size_t_a9555fbbf74015441b9051deb26fffdb9}{\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}!hm\-Vector\-Size\-T\-Get\-Entry@{hm\-Vector\-Size\-T\-Get\-Entry}}
+\index{hm\-Vector\-Size\-T\-Get\-Entry@{hm\-Vector\-Size\-T\-Get\-Entry}!hmVectorSizeT@{hm\-Vector\-Size\-T}}
+\paragraph[{hm\-Vector\-Size\-T\-Get\-Entry}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- size\-\_\-t hm\-Vector\-Size\-T\-Get\-Entry (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Size\-T} $\ast$}]{vector, }
+\item[{size\-\_\-t}]{index}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_size_t_a9555fbbf74015441b9051deb26fffdb9}
+
+
+Gets the value of an entry. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+{\em index} & Index in the range 0-\/(size-\/1). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Entry value. 
+\end{DoxyReturn}
+\hypertarget{structhm_vector_size_t_ac8aa99bbff6fa3edfba85628f892a278}{\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}!hm\-Vector\-Size\-T\-Initialize@{hm\-Vector\-Size\-T\-Initialize}}
+\index{hm\-Vector\-Size\-T\-Initialize@{hm\-Vector\-Size\-T\-Initialize}!hmVectorSizeT@{hm\-Vector\-Size\-T}}
+\paragraph[{hm\-Vector\-Size\-T\-Initialize}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Size\-T\-Initialize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Size\-T} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_size_t_ac8aa99bbff6fa3edfba85628f892a278}
+
+
+Constructor. 
+
+Builds an empty vector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_vector_size_t_aca0ad1a1a70c6694cdf6713b29167da2}{\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}!hm\-Vector\-Size\-T\-Pop\-Back@{hm\-Vector\-Size\-T\-Pop\-Back}}
+\index{hm\-Vector\-Size\-T\-Pop\-Back@{hm\-Vector\-Size\-T\-Pop\-Back}!hmVectorSizeT@{hm\-Vector\-Size\-T}}
+\paragraph[{hm\-Vector\-Size\-T\-Pop\-Back}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t hm\-Vector\-Size\-T\-Pop\-Back (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Size\-T} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_size_t_aca0ad1a1a70c6694cdf6713b29167da2}
+
+
+Removes the last element from the end and returns its value. 
+
+Allows an hm\-Vector to be used as a stack.
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+value Value of final entry. 
+\end{DoxyReturn}
+\hypertarget{structhm_vector_size_t_a0c83492eb7aa195dc618be11d29fd884}{\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}!hm\-Vector\-Size\-T\-Push\-Back@{hm\-Vector\-Size\-T\-Push\-Back}}
+\index{hm\-Vector\-Size\-T\-Push\-Back@{hm\-Vector\-Size\-T\-Push\-Back}!hmVectorSizeT@{hm\-Vector\-Size\-T}}
+\paragraph[{hm\-Vector\-Size\-T\-Push\-Back}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Size\-T\-Push\-Back (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Size\-T} $\ast$}]{vector, }
+\item[{size\-\_\-t}]{value}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_size_t_a0c83492eb7aa195dc618be11d29fd884}
+
+
+Appends a new element. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+{\em value} & Value of new entry. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_vector_size_t_ae6175d79345791c2d7a07dee5bb04e8d}{\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}!hm\-Vector\-Size\-T\-Resize@{hm\-Vector\-Size\-T\-Resize}}
+\index{hm\-Vector\-Size\-T\-Resize@{hm\-Vector\-Size\-T\-Resize}!hmVectorSizeT@{hm\-Vector\-Size\-T}}
+\paragraph[{hm\-Vector\-Size\-T\-Resize}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Size\-T\-Resize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Size\-T} $\ast$}]{vector, }
+\item[{size\-\_\-t}]{size}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_size_t_ae6175d79345791c2d7a07dee5bb04e8d}
+
+
+Changes the vector length. 
+
+No guarantees are provided for the entry values of the new vector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+{\em size} & New size. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_vector_size_t_af3a372c8a7ecdb995a7238bd72457d3a}{\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}!hm\-Vector\-Size\-T\-Set\-Entry@{hm\-Vector\-Size\-T\-Set\-Entry}}
+\index{hm\-Vector\-Size\-T\-Set\-Entry@{hm\-Vector\-Size\-T\-Set\-Entry}!hmVectorSizeT@{hm\-Vector\-Size\-T}}
+\paragraph[{hm\-Vector\-Size\-T\-Set\-Entry}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vector\-Size\-T\-Set\-Entry (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Size\-T} $\ast$}]{vector, }
+\item[{size\-\_\-t}]{index, }
+\item[{size\-\_\-t}]{value}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_size_t_af3a372c8a7ecdb995a7238bd72457d3a}
+
+
+Sets an entry to the specified value. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+{\em index} & Index in the range 0-\/(size-\/1). \\
+\hline
+{\em value} & New value. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_vector_size_t_a665e43d5091fbf81d7ce818ef7c5ebe6}{\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}!hm\-Vector\-Size\-T\-Sort@{hm\-Vector\-Size\-T\-Sort}}
+\index{hm\-Vector\-Size\-T\-Sort@{hm\-Vector\-Size\-T\-Sort}!hmVectorSizeT@{hm\-Vector\-Size\-T}}
+\paragraph[{hm\-Vector\-Size\-T\-Sort}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Size\-T\-Sort (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Size\-T} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_size_t_a665e43d5091fbf81d7ce818ef7c5ebe6}
+
+
+Sorts entries. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+\end{DoxyParams}
+
+
+\subsubsection{Field Documentation}
+\hypertarget{structhm_vector_size_t_a80584cc4032a43c83261c16ace4513fc}{\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}!entries@{entries}}
+\index{entries@{entries}!hmVectorSizeT@{hm\-Vector\-Size\-T}}
+\paragraph[{entries}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t$\ast$ entries}}\label{structhm_vector_size_t_a80584cc4032a43c83261c16ace4513fc}
+
+
+Entry values. \mbox{[}1 x storage\mbox{]}. 
+
+\hypertarget{structhm_vector_size_t_a854352f53b148adc24983a58a1866d66}{\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}!size@{size}}
+\index{size@{size}!hmVectorSizeT@{hm\-Vector\-Size\-T}}
+\paragraph[{size}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t size}}\label{structhm_vector_size_t_a854352f53b148adc24983a58a1866d66}
+
+
+Logical length. 
+
+\hypertarget{structhm_vector_size_t_ad69ae78713b41381c4d71371aae6e63e}{\index{hm\-Vector\-Size\-T@{hm\-Vector\-Size\-T}!storage@{storage}}
+\index{storage@{storage}!hmVectorSizeT@{hm\-Vector\-Size\-T}}
+\paragraph[{storage}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t storage}}\label{structhm_vector_size_t_ad69ae78713b41381c4d71371aae6e63e}
+
+
+Amount of physical memory allocated for storage. 
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/include/\hyperlink{hm_vector_size_t_8h}{hm\-Vector\-Size\-T.\-h}\end{DoxyCompactItemize}
