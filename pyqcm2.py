@@ -643,6 +643,7 @@ class PyQCM(object):
 ################################################################################
 ##### ONLY FOR EAM - NEEDS DERERMINATION OF LOW NUMBER OF POINTS WHEN MORE DATA
 #####                IS AVAILABLE
+################################################################################
 # start = time.time()
 # 
 # djikstra = vtk.vtkDijkstraGraphGeodesicPath()
@@ -661,7 +662,9 @@ class PyQCM(object):
 # 
 #     cumsum = 0
 #     for i in range(A.GetNumberOfPoints() - 1):
-#         cumsum += sqrt((A.GetPoint(i + 1)[0] - A.GetPoint(i)[0])**2 + (A.GetPoint(i + 1)[1] - A.GetPoint(i)[1])**2 + (A.GetPoint(i + 1)[2] - A.GetPoint(i)[2])**2)
+#         cumsum += sqrt((A.GetPoint(i + 1)[0] - A.GetPoint(i)[0])**2 
+#                        + (A.GetPoint(i + 1)[1] - A.GetPoint(i)[1])**2 
+#                        + (A.GetPoint(i + 1)[2] - A.GetPoint(i)[2])**2)
 # 
 #     geodesic_distance.append(cumsum)
 # 
