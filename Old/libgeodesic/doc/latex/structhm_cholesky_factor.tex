@@ -1,0 +1,193 @@
+\hypertarget{structhm_cholesky_factor}{\subsection{hm\-Cholesky\-Factor Struct Reference}
+\label{structhm_cholesky_factor}\index{hm\-Cholesky\-Factor@{hm\-Cholesky\-Factor}}
+}
+
+
+Cholesky factor $L$ for a real symmetric positive-\/definite sparse matrix $A = LL^T$.  
+
+
+
+
+{\ttfamily \#include $<$hm\-Cholesky\-Factor.\-h$>$}
+
+\subsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{structhm_cholesky_factor_acff2cd111a95bb6d3682c0e346761ef4}{hm\-Cholesky\-Factor\-Initialize} (\hyperlink{structhm_cholesky_factor}{hm\-Cholesky\-Factor} $\ast$factor)
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_cholesky_factor_ae3c91c19927d39bb83009549a035e2be}{hm\-Cholesky\-Factor\-Destroy} (\hyperlink{structhm_cholesky_factor}{hm\-Cholesky\-Factor} $\ast$factor)
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_cholesky_factor_a24b6925adf8a5db40c21bcec0a0d44d5}{hm\-Cholesky\-Factor\-Copy} (\hyperlink{structhm_cholesky_factor}{hm\-Cholesky\-Factor} $\ast$factor1, \hyperlink{structhm_cholesky_factor}{hm\-Cholesky\-Factor} $\ast$factor2)
+\begin{DoxyCompactList}\small\item\em Replaces factor1 with a copy of factor2. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_cholesky_factor_a753275af638618f3df7d7bece7b587be}{hm\-Cholesky\-Factor\-Reorder} (\hyperlink{structhm_cholesky_factor}{hm\-Cholesky\-Factor} $\ast$factor, \hyperlink{structhm_sparse_matrix}{hm\-Sparse\-Matrix} $\ast$matrix)
+\begin{DoxyCompactList}\small\item\em Computes a fill-\/reducing matrix reordering. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_cholesky_factor_a04ecfa1b1b701cf950eb527b9d27001c}{hm\-Cholesky\-Factor\-Symbolic} (\hyperlink{structhm_cholesky_factor}{hm\-Cholesky\-Factor} $\ast$factor, \hyperlink{structhm_sparse_matrix}{hm\-Sparse\-Matrix} $\ast$matrix)
+\begin{DoxyCompactList}\small\item\em Performs symbolic Cholesky factorization. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_cholesky_factor_a543e36da6914329c6e102e64d41d7625}{hm\-Cholesky\-Factor\-Numerical} (\hyperlink{structhm_cholesky_factor}{hm\-Cholesky\-Factor} $\ast$factor, \hyperlink{structhm_sparse_matrix}{hm\-Sparse\-Matrix} $\ast$matrix)
+\begin{DoxyCompactList}\small\item\em Computes numerical Cholesky factorization. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_cholesky_factor_a60a8b00fb422f4aa9116ed9644236301}{hm\-Cholesky\-Factor\-Backsolve} (\hyperlink{structhm_cholesky_factor}{hm\-Cholesky\-Factor} $\ast$factor, \hyperlink{structhm_dense_matrix}{hm\-Dense\-Matrix} $\ast$x, const \hyperlink{structhm_dense_matrix}{hm\-Dense\-Matrix} $\ast$b)
+\begin{DoxyCompactList}\small\item\em Solves a system $Ax=b$ by applying backsubstitution on the Cholesky factor $L$ of $A$. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsubsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+cholmod\-\_\-factor $\ast$ \hyperlink{structhm_cholesky_factor_a250b811bd821fb2bd729fe56388e6f76}{data}
+\begin{DoxyCompactList}\small\item\em Cholesky factor in C\-H\-O\-L\-M\-O\-D format. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+Cholesky factor $L$ for a real symmetric positive-\/definite sparse matrix $A = LL^T$. 
+
+
+
+\subsubsection{Member Function Documentation}
+\hypertarget{structhm_cholesky_factor_a60a8b00fb422f4aa9116ed9644236301}{\index{hm\-Cholesky\-Factor@{hm\-Cholesky\-Factor}!hm\-Cholesky\-Factor\-Backsolve@{hm\-Cholesky\-Factor\-Backsolve}}
+\index{hm\-Cholesky\-Factor\-Backsolve@{hm\-Cholesky\-Factor\-Backsolve}!hmCholeskyFactor@{hm\-Cholesky\-Factor}}
+\paragraph[{hm\-Cholesky\-Factor\-Backsolve}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Cholesky\-Factor\-Backsolve (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Cholesky\-Factor} $\ast$}]{factor, }
+\item[{{\bf hm\-Dense\-Matrix} $\ast$}]{x, }
+\item[{const {\bf hm\-Dense\-Matrix} $\ast$}]{b}
+\end{DoxyParamCaption}
+)}}\label{structhm_cholesky_factor_a60a8b00fb422f4aa9116ed9644236301}
+
+
+Solves a system $Ax=b$ by applying backsubstitution on the Cholesky factor $L$ of $A$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em factor} & Target object. \\
+\hline
+{\em x} & Solution vector. Must be initialized, but not necessarily with the dimensions of the solution. \\
+\hline
+{\em b} & Data vector. Must have dimensions compatible with the Cholesky factor. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_cholesky_factor_a24b6925adf8a5db40c21bcec0a0d44d5}{\index{hm\-Cholesky\-Factor@{hm\-Cholesky\-Factor}!hm\-Cholesky\-Factor\-Copy@{hm\-Cholesky\-Factor\-Copy}}
+\index{hm\-Cholesky\-Factor\-Copy@{hm\-Cholesky\-Factor\-Copy}!hmCholeskyFactor@{hm\-Cholesky\-Factor}}
+\paragraph[{hm\-Cholesky\-Factor\-Copy}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Cholesky\-Factor\-Copy (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Cholesky\-Factor} $\ast$}]{factor1, }
+\item[{{\bf hm\-Cholesky\-Factor} $\ast$}]{factor2}
+\end{DoxyParamCaption}
+)}}\label{structhm_cholesky_factor_a24b6925adf8a5db40c21bcec0a0d44d5}
+
+
+Replaces factor1 with a copy of factor2. 
+
+Useful for reusing a symbolic factorization from a matrix with the same sparsity pattern.
+
+
+\begin{DoxyParams}{Parameters}
+{\em factor1} & Target object. \\
+\hline
+{\em factor2} & Source object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_cholesky_factor_ae3c91c19927d39bb83009549a035e2be}{\index{hm\-Cholesky\-Factor@{hm\-Cholesky\-Factor}!hm\-Cholesky\-Factor\-Destroy@{hm\-Cholesky\-Factor\-Destroy}}
+\index{hm\-Cholesky\-Factor\-Destroy@{hm\-Cholesky\-Factor\-Destroy}!hmCholeskyFactor@{hm\-Cholesky\-Factor}}
+\paragraph[{hm\-Cholesky\-Factor\-Destroy}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Cholesky\-Factor\-Destroy (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Cholesky\-Factor} $\ast$}]{factor}
+\end{DoxyParamCaption}
+)}}\label{structhm_cholesky_factor_ae3c91c19927d39bb83009549a035e2be}
+
+
+Destructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em factor} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_cholesky_factor_acff2cd111a95bb6d3682c0e346761ef4}{\index{hm\-Cholesky\-Factor@{hm\-Cholesky\-Factor}!hm\-Cholesky\-Factor\-Initialize@{hm\-Cholesky\-Factor\-Initialize}}
+\index{hm\-Cholesky\-Factor\-Initialize@{hm\-Cholesky\-Factor\-Initialize}!hmCholeskyFactor@{hm\-Cholesky\-Factor}}
+\paragraph[{hm\-Cholesky\-Factor\-Initialize}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Cholesky\-Factor\-Initialize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Cholesky\-Factor} $\ast$}]{factor}
+\end{DoxyParamCaption}
+)}}\label{structhm_cholesky_factor_acff2cd111a95bb6d3682c0e346761ef4}
+
+
+Constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em factor} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_cholesky_factor_a543e36da6914329c6e102e64d41d7625}{\index{hm\-Cholesky\-Factor@{hm\-Cholesky\-Factor}!hm\-Cholesky\-Factor\-Numerical@{hm\-Cholesky\-Factor\-Numerical}}
+\index{hm\-Cholesky\-Factor\-Numerical@{hm\-Cholesky\-Factor\-Numerical}!hmCholeskyFactor@{hm\-Cholesky\-Factor}}
+\paragraph[{hm\-Cholesky\-Factor\-Numerical}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Cholesky\-Factor\-Numerical (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Cholesky\-Factor} $\ast$}]{factor, }
+\item[{{\bf hm\-Sparse\-Matrix} $\ast$}]{matrix}
+\end{DoxyParamCaption}
+)}}\label{structhm_cholesky_factor_a543e36da6914329c6e102e64d41d7625}
+
+
+Computes numerical Cholesky factorization. 
+
+Should be called only after symbolic factorization.
+
+
+\begin{DoxyParams}{Parameters}
+{\em factor} & Target object. \\
+\hline
+{\em matrix} & Matrix to be factored. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_cholesky_factor_a753275af638618f3df7d7bece7b587be}{\index{hm\-Cholesky\-Factor@{hm\-Cholesky\-Factor}!hm\-Cholesky\-Factor\-Reorder@{hm\-Cholesky\-Factor\-Reorder}}
+\index{hm\-Cholesky\-Factor\-Reorder@{hm\-Cholesky\-Factor\-Reorder}!hmCholeskyFactor@{hm\-Cholesky\-Factor}}
+\paragraph[{hm\-Cholesky\-Factor\-Reorder}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Cholesky\-Factor\-Reorder (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Cholesky\-Factor} $\ast$}]{factor, }
+\item[{{\bf hm\-Sparse\-Matrix} $\ast$}]{matrix}
+\end{DoxyParamCaption}
+)}}\label{structhm_cholesky_factor_a753275af638618f3df7d7bece7b587be}
+
+
+Computes a fill-\/reducing matrix reordering. 
+
+When using H\-S\-L\-\_\-\-M\-A87, the reordering scheme can be specified in the file \hyperlink{hm_constants_8h}{hm\-Constants.\-h}. When using C\-H\-O\-L\-M\-O\-D, this routine is ignored since the reordering is computed at the same time as the symbolic factorization (in \hyperlink{structhm_cholesky_factor_a04ecfa1b1b701cf950eb527b9d27001c}{hm\-Cholesky\-Factor\-Symbolic()}).
+
+
+\begin{DoxyParams}{Parameters}
+{\em factor} & Target object. \\
+\hline
+{\em matrix} & Matrix to be reordering. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_cholesky_factor_a04ecfa1b1b701cf950eb527b9d27001c}{\index{hm\-Cholesky\-Factor@{hm\-Cholesky\-Factor}!hm\-Cholesky\-Factor\-Symbolic@{hm\-Cholesky\-Factor\-Symbolic}}
+\index{hm\-Cholesky\-Factor\-Symbolic@{hm\-Cholesky\-Factor\-Symbolic}!hmCholeskyFactor@{hm\-Cholesky\-Factor}}
+\paragraph[{hm\-Cholesky\-Factor\-Symbolic}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Cholesky\-Factor\-Symbolic (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Cholesky\-Factor} $\ast$}]{factor, }
+\item[{{\bf hm\-Sparse\-Matrix} $\ast$}]{matrix}
+\end{DoxyParamCaption}
+)}}\label{structhm_cholesky_factor_a04ecfa1b1b701cf950eb527b9d27001c}
+
+
+Performs symbolic Cholesky factorization. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em factor} & Target object. \\
+\hline
+{\em matrix} & Matrix to be factored. \\
+\hline
+\end{DoxyParams}
+
+
+\subsubsection{Field Documentation}
+\hypertarget{structhm_cholesky_factor_a250b811bd821fb2bd729fe56388e6f76}{\index{hm\-Cholesky\-Factor@{hm\-Cholesky\-Factor}!data@{data}}
+\index{data@{data}!hmCholeskyFactor@{hm\-Cholesky\-Factor}}
+\paragraph[{data}]{\setlength{\rightskip}{0pt plus 5cm}cholmod\-\_\-factor$\ast$ data}}\label{structhm_cholesky_factor_a250b811bd821fb2bd729fe56388e6f76}
+
+
+Cholesky factor in C\-H\-O\-L\-M\-O\-D format. 
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/include/\hyperlink{hm_cholesky_factor_8h}{hm\-Cholesky\-Factor.\-h}\end{DoxyCompactItemize}

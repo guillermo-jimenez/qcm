@@ -1,0 +1,228 @@
+\hypertarget{structhm_tri_distance}{\subsection{hm\-Tri\-Distance Struct Reference}
+\label{structhm_tri_distance}\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}}
+}
+
+
+Distance function on a triangle mesh.  
+
+
+
+
+{\ttfamily \#include $<$hm\-Tri\-Distance.\-h$>$}
+
+\subsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{structhm_tri_distance_a8a899fd136486c1e60e30769bbae0261}{hm\-Tri\-Distance\-Initialize} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$\hyperlink{structhm_tri_distance_a6a9fc819eb7899fe7efd9203a89ce059}{distance})
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_tri_distance_abd2454b513ff310597c08a72be5f2193}{hm\-Tri\-Distance\-Destroy} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$\hyperlink{structhm_tri_distance_a6a9fc819eb7899fe7efd9203a89ce059}{distance})
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_tri_distance_ab8619d4051e27e72dc8c58b8863bde07}{hm\-Tri\-Distance\-Estimate\-Time} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$\hyperlink{structhm_tri_distance_a6a9fc819eb7899fe7efd9203a89ce059}{distance})
+\begin{DoxyCompactList}\small\item\em Estimates a good value for the duration of heat flow. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_tri_distance_af47ea95819dacb5bd20f0b1336097680}{hm\-Tri\-Distance\-Set\-Boundary\-Conditions} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$\hyperlink{structhm_tri_distance_a6a9fc819eb7899fe7efd9203a89ce059}{distance}, double \hyperlink{structhm_tri_distance_ac4f3253165198d2d4e0cf5812cba22af}{boundary\-Conditions})
+\begin{DoxyCompactList}\small\item\em Specifies boundary conditions. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_tri_distance_a681250be3575802920a769e15cd6b102}{hm\-Tri\-Distance\-Build} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$\hyperlink{structhm_tri_distance_a6a9fc819eb7899fe7efd9203a89ce059}{distance})
+\begin{DoxyCompactList}\small\item\em Performs precomputation required for distance computation. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_tri_distance_a7c0c446b080b5ee164c2494650b12590}{hm\-Tri\-Distance\-Update\-Time} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$\hyperlink{structhm_tri_distance_a6a9fc819eb7899fe7efd9203a89ce059}{distance}, double \hyperlink{structhm_tri_distance_ab2d5aa7fce1a14d8bddfb2c333ea9679}{time})
+\begin{DoxyCompactList}\small\item\em Rebuilds data structures for a new flow time parameter $t$. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_tri_distance_aa5107690159127c6715c85fd5847871b}{hm\-Tri\-Distance\-Update} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$\hyperlink{structhm_tri_distance_a6a9fc819eb7899fe7efd9203a89ce059}{distance})
+\begin{DoxyCompactList}\small\item\em Updates the distance function using the current source set $\gamma$. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsubsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$ \hyperlink{structhm_tri_distance_a09f4d4f3d7f5ded5ba8de7d34a088a38}{surface}
+\begin{DoxyCompactList}\small\item\em Mesh of the domain $M$. ({\bfseries Note\-:} since this member may reference an external object, it is not automatically deallocated upon destruction.) \end{DoxyCompactList}\item 
+double \hyperlink{structhm_tri_distance_ab2d5aa7fce1a14d8bddfb2c333ea9679}{time}
+\begin{DoxyCompactList}\small\item\em Integration time $t$ for heat flow. \end{DoxyCompactList}\item 
+double \hyperlink{structhm_tri_distance_ac4f3253165198d2d4e0cf5812cba22af}{boundary\-Conditions}
+\begin{DoxyCompactList}\small\item\em Interpolates between domain boundary conditions; 0 means pure Neumann, 1 means pure Dirichlet. \end{DoxyCompactList}\item 
+\hyperlink{structhm_dense_matrix}{hm\-Dense\-Matrix} \hyperlink{structhm_tri_distance_a5d82697941d1a917e535f65a6a7505c9}{is\-Source}
+\begin{DoxyCompactList}\small\item\em Source set, equal to 1 at source vertices; 0 otherwise. \mbox{[}surface-\/$>$n\-Vertices x 1\mbox{]}. \end{DoxyCompactList}\item 
+\hyperlink{structhm_dense_matrix}{hm\-Dense\-Matrix} \hyperlink{structhm_tri_distance_a6a9fc819eb7899fe7efd9203a89ce059}{distance}
+\begin{DoxyCompactList}\small\item\em Distance values $\phi$. \mbox{[}surface-\/$>$n\-Vertices x 1\mbox{]}. \end{DoxyCompactList}\item 
+char \hyperlink{structhm_tri_distance_a55cc7b4c411cfefc0601bba6b089cb71}{verbose}
+\begin{DoxyCompactList}\small\item\em Flags whether to use verbose output (timing information, etc.). \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+Distance function on a triangle mesh. 
+
+Represents the geodesic distance function $\phi: M \rightarrow \mathbb{R}$ to a given set $\gamma$ on a surface $M$. The domain $M$ is represented by a \hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} -- note that no guarantees can be made about the solution unless this mesh is {\itshape manifold} (i.\-e., every edge contained in at most two triangles; every vertex contained in a single ring of triangles) and {\itshape oriented} (i.\-e., all triangles specified in a consistent winding order -- either clockwise or counter-\/clockwise). The source set is specified by setting values in \hyperlink{structhm_tri_distance_a5d82697941d1a917e535f65a6a7505c9}{hm\-Tri\-Distance\-::is\-Source}. Once the distance function has been initialized, it can be rapidly (re-\/)computed for a new source set $\gamma$ by calling \hyperlink{structhm_tri_distance_aa5107690159127c6715c85fd5847871b}{hm\-Tri\-Distance\-Update()}; the solution is stored in \hyperlink{structhm_tri_distance_a6a9fc819eb7899fe7efd9203a89ce059}{hm\-Tri\-Distance\-::distance}. Distance is computed using the method described in Crane, Weischedel, and Wardetzky, {\itshape Geodesics in Heat}, \href{http://arxiv.org/abs/1204.6216}{\tt ar\-Xiv\-:1204.\-6216v1} (2012). 
+
+\subsubsection{Member Function Documentation}
+\hypertarget{structhm_tri_distance_a681250be3575802920a769e15cd6b102}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!hm\-Tri\-Distance\-Build@{hm\-Tri\-Distance\-Build}}
+\index{hm\-Tri\-Distance\-Build@{hm\-Tri\-Distance\-Build}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{hm\-Tri\-Distance\-Build}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Build (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{structhm_tri_distance_a681250be3575802920a769e15cd6b102}
+
+
+Performs precomputation required for distance computation. 
+
+The mesh \hyperlink{structhm_tri_distance_a09f4d4f3d7f5ded5ba8de7d34a088a38}{hm\-Tri\-Distance\-::surface} and parameter \hyperlink{structhm_tri_distance_ab2d5aa7fce1a14d8bddfb2c333ea9679}{hm\-Tri\-Distance\-::time} must be defined. This routine must be run before calling \hyperlink{structhm_tri_distance_aa5107690159127c6715c85fd5847871b}{hm\-Tri\-Distance\-Update()}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em distance} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_tri_distance_abd2454b513ff310597c08a72be5f2193}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!hm\-Tri\-Distance\-Destroy@{hm\-Tri\-Distance\-Destroy}}
+\index{hm\-Tri\-Distance\-Destroy@{hm\-Tri\-Distance\-Destroy}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{hm\-Tri\-Distance\-Destroy}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Destroy (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{structhm_tri_distance_abd2454b513ff310597c08a72be5f2193}
+
+
+Destructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em distance} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_tri_distance_ab8619d4051e27e72dc8c58b8863bde07}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!hm\-Tri\-Distance\-Estimate\-Time@{hm\-Tri\-Distance\-Estimate\-Time}}
+\index{hm\-Tri\-Distance\-Estimate\-Time@{hm\-Tri\-Distance\-Estimate\-Time}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{hm\-Tri\-Distance\-Estimate\-Time}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Estimate\-Time (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{structhm_tri_distance_ab8619d4051e27e72dc8c58b8863bde07}
+
+
+Estimates a good value for the duration of heat flow. 
+
+Uses the simple estimate $t = A/F$ where $A$ is the total surface area and $F$ is the number of triangles in the mesh. The resulting value is stored in \hyperlink{structhm_tri_distance_ab2d5aa7fce1a14d8bddfb2c333ea9679}{hm\-Tri\-Distance\-::time}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em distance} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_tri_distance_a8a899fd136486c1e60e30769bbae0261}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!hm\-Tri\-Distance\-Initialize@{hm\-Tri\-Distance\-Initialize}}
+\index{hm\-Tri\-Distance\-Initialize@{hm\-Tri\-Distance\-Initialize}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{hm\-Tri\-Distance\-Initialize}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Initialize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{structhm_tri_distance_a8a899fd136486c1e60e30769bbae0261}
+
+
+Constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em distance} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_tri_distance_af47ea95819dacb5bd20f0b1336097680}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!hm\-Tri\-Distance\-Set\-Boundary\-Conditions@{hm\-Tri\-Distance\-Set\-Boundary\-Conditions}}
+\index{hm\-Tri\-Distance\-Set\-Boundary\-Conditions@{hm\-Tri\-Distance\-Set\-Boundary\-Conditions}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{hm\-Tri\-Distance\-Set\-Boundary\-Conditions}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Set\-Boundary\-Conditions (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance, }
+\item[{double}]{boundary\-Conditions}
+\end{DoxyParamCaption}
+)}}\label{structhm_tri_distance_af47ea95819dacb5bd20f0b1336097680}
+
+
+Specifies boundary conditions. 
+
+Boundary conditions are specified via a parameter in the range $[0,1]$. A value of zero yields pure Neumann conditions; a value of one yields pure Dirichlet conditions. Values in between interpolate between the two boundary conditions. For most purposes (namely\-: when the surface has no boundary or when an accurate approximation of geodesic distance is desired) this parameter has little effect and optimal performance will be achieved by simply setting it to zero. For surfaces with boundary and large heat flow time (i.\-e., smoothed geodesic distance) a value of 1/2 tends to produce natural-\/looking behavior near the boundary. {\bfseries Note\-:} in order for this parameter to take effect, its value must be set {\itshape before} calling \hyperlink{structhm_tri_distance_a681250be3575802920a769e15cd6b102}{hm\-Tri\-Distance\-Build()}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em distance} & Target object. \\
+\hline
+{\em boundary\-Conditions} & Interpolation parameter. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_tri_distance_aa5107690159127c6715c85fd5847871b}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!hm\-Tri\-Distance\-Update@{hm\-Tri\-Distance\-Update}}
+\index{hm\-Tri\-Distance\-Update@{hm\-Tri\-Distance\-Update}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{hm\-Tri\-Distance\-Update}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Update (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{structhm_tri_distance_aa5107690159127c6715c85fd5847871b}
+
+
+Updates the distance function using the current source set $\gamma$. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em distance} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_tri_distance_a7c0c446b080b5ee164c2494650b12590}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!hm\-Tri\-Distance\-Update\-Time@{hm\-Tri\-Distance\-Update\-Time}}
+\index{hm\-Tri\-Distance\-Update\-Time@{hm\-Tri\-Distance\-Update\-Time}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{hm\-Tri\-Distance\-Update\-Time}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Update\-Time (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance, }
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{structhm_tri_distance_a7c0c446b080b5ee164c2494650b12590}
+
+
+Rebuilds data structures for a new flow time parameter $t$. 
+
+This routine is useful primarily when computing solutions for a variety of flow times $t$ -- it does not need to be called in standard usage.
+
+
+\begin{DoxyParams}{Parameters}
+{\em distance} & Target object. \\
+\hline
+{\em time} & Heat flow integration time. \\
+\hline
+\end{DoxyParams}
+
+
+\subsubsection{Field Documentation}
+\hypertarget{structhm_tri_distance_ac4f3253165198d2d4e0cf5812cba22af}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!boundary\-Conditions@{boundary\-Conditions}}
+\index{boundary\-Conditions@{boundary\-Conditions}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{boundary\-Conditions}]{\setlength{\rightskip}{0pt plus 5cm}double boundary\-Conditions}}\label{structhm_tri_distance_ac4f3253165198d2d4e0cf5812cba22af}
+
+
+Interpolates between domain boundary conditions; 0 means pure Neumann, 1 means pure Dirichlet. 
+
+\hypertarget{structhm_tri_distance_a6a9fc819eb7899fe7efd9203a89ce059}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!distance@{distance}}
+\index{distance@{distance}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{distance}]{\setlength{\rightskip}{0pt plus 5cm}{\bf hm\-Dense\-Matrix} distance}}\label{structhm_tri_distance_a6a9fc819eb7899fe7efd9203a89ce059}
+
+
+Distance values $\phi$. \mbox{[}surface-\/$>$n\-Vertices x 1\mbox{]}. 
+
+\hypertarget{structhm_tri_distance_a5d82697941d1a917e535f65a6a7505c9}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!is\-Source@{is\-Source}}
+\index{is\-Source@{is\-Source}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{is\-Source}]{\setlength{\rightskip}{0pt plus 5cm}{\bf hm\-Dense\-Matrix} is\-Source}}\label{structhm_tri_distance_a5d82697941d1a917e535f65a6a7505c9}
+
+
+Source set, equal to 1 at source vertices; 0 otherwise. \mbox{[}surface-\/$>$n\-Vertices x 1\mbox{]}. 
+
+\hypertarget{structhm_tri_distance_a09f4d4f3d7f5ded5ba8de7d34a088a38}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!surface@{surface}}
+\index{surface@{surface}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{surface}]{\setlength{\rightskip}{0pt plus 5cm}{\bf hm\-Tri\-Mesh}$\ast$ surface}}\label{structhm_tri_distance_a09f4d4f3d7f5ded5ba8de7d34a088a38}
+
+
+Mesh of the domain $M$. ({\bfseries Note\-:} since this member may reference an external object, it is not automatically deallocated upon destruction.) 
+
+\hypertarget{structhm_tri_distance_ab2d5aa7fce1a14d8bddfb2c333ea9679}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!time@{time}}
+\index{time@{time}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{time}]{\setlength{\rightskip}{0pt plus 5cm}double time}}\label{structhm_tri_distance_ab2d5aa7fce1a14d8bddfb2c333ea9679}
+
+
+Integration time $t$ for heat flow. 
+
+Larger values of $t$ result in smoother approximations of geodesic distance. The value that best approximates the true geodesic distance can be estimated by calling \hyperlink{structhm_tri_distance_ab8619d4051e27e72dc8c58b8863bde07}{hm\-Tri\-Distance\-Estimate\-Time()}. \hypertarget{structhm_tri_distance_a55cc7b4c411cfefc0601bba6b089cb71}{\index{hm\-Tri\-Distance@{hm\-Tri\-Distance}!verbose@{verbose}}
+\index{verbose@{verbose}!hmTriDistance@{hm\-Tri\-Distance}}
+\paragraph[{verbose}]{\setlength{\rightskip}{0pt plus 5cm}char verbose}}\label{structhm_tri_distance_a55cc7b4c411cfefc0601bba6b089cb71}
+
+
+Flags whether to use verbose output (timing information, etc.). 
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/include/\hyperlink{hm_tri_distance_8h}{hm\-Tri\-Distance.\-h}\end{DoxyCompactItemize}

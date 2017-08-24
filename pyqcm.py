@@ -1,3 +1,21 @@
+# -*- coding: utf-8 -*-
+
+# Copyright (C) 2017 - Universitat Pompeu Fabra
+# Author - Guillermo Jimenez-Perez  <guillermo.jim.per@gmail.com>
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 from __future__ import division
 
 from os import system
@@ -46,146 +64,221 @@ from vtk import vtkIdList
 from scipy.sparse.linalg import spsolve
 from mvpoly.rbf import RBFThinPlateSpline
 
+from PointPicker import PointSelector
 
 
+class PyQCM(object):
+    __path                          = None
+
+    __polydata                      = None
+    __points                        = None
+    __polygons                      = None
+
+    __scalars                       = None
+    __normals                       = None
+
+    __npoints                       = None
+    __npolygons                     = None
+    __ndim                          = None
+    __nscalars                      = None
+    __nedges_mesh                   = None
+    __scalars_names                 = None
+
+    __septum                        = None
+    __apex                          = None
+    __laplacian                     = None
+    __boundary                      = None
+    __output_polydata               = None
+    __homeomorphism                 = None
+    __output_path                   = None
 
 
+    def __init__(self, path, septum=None, apex=None, output_path=None):
+        self.__septum               = septum
+        self.__apex                 = apex
 
+        # Reading the input VTK file
+        if ((path is not None) and (self.polydata is None)):
+            if isfile(path):
+                self.__path         = path
+            else:
+                raise RuntimeError("File does not exist")
 
-class PyQCM(BaseImage):
-    __path                      = None
+            reader                  = vtkPolyDataReader()
+            reader.SetFileName(self.path)
+            reader.Update()
 
-    __polydata                  = None
-    __points                    = None
-    __polygons                  = None
+            self.__polydata         = reader.GetOutput()
+            self.__polydata.BuildLinks()
 
-    __scalars                   = None
-    __normals                   = None
-
-    __npoints                   = None
-    __npolygons                 = None
-    __ndim                      = None
-    __nscalars                  = None
-    __nedges_mesh               = None
-    __scalars_names             = None
-
-    __septum                    = None
-    __apex                      = None
-    __laplacian                 = None
-    __boundary                  = None
-    __QCM_polydata              = None
-    __QCM_points                = None
-    __QCM_path                  = None
-
-
-    def __init__(self, path, septum, apex, output_path=None):
-        if isfile(path):
-            self.__path         = path
-        else:
-            raise RuntimeError("File does not exist")
-
-        self.__read_polydata()
-        self.__read_points()
-        self.__read_polygons()
-        self.__read_normals()
-        self.__read_scalars()
-        self.__septum           = septum
-        self.__apex             = apex
-
+        # Establishing an output path
         if output_path is None:
-            self.__QCM_path     = self.path
+            self.__output_path      = self.path
         else:
             if output_path is self.path:
                 print(" *  Output path provided coincides with input path.\n"+
                       "    Overwriting the input file is not permitted.\n"+
                       "    Writing in the default location...\n")
-                self.__QCM_path = self.path
+                self.__output_path  = self.path
             else:
-                self.__QCM_path = output_path
+                self.__output_path  = output_path
+
+        # Exporting VTK points to numpy for a more efficient manipulation
+        pointVector                 = self.polydata.GetPoints()
+
+        try:
+            rows                    = len(pointVector.GetPoint(0))
+            cols                    = pointVector.GetNumberOfPoints()
+            points                  = zeros((rows,cols))
+        except:
+            raise Exception("The VTK file provided does not contain any points")
+
+        if pointVector:
+            for i in range(0, pointVector.GetNumberOfPoints()):
+                point_tuple         = pointVector.GetPoint(i)
+
+                points[0,i]         = point_tuple[0]
+                points[1,i]         = point_tuple[1]
+                points[2,i]         = point_tuple[2]
+
+        # Exporting VTK triangles to numpy for a more efficient manipulation
+        polygons                    = None
+
+        for i in xrange(self.polydata.GetNumberOfCells()):
+            pointIds                = self.polydata.GetCell(i).GetPointIds()
+
+            if polygons is None:
+                try:
+                    rows            = pointIds.GetNumberOfIds()
+                    cols            = self.polydata.GetNumberOfCells()
+                    polygons        = zeros((rows,cols), dtype=int)
+                except:
+                    raise Exception("The VTK file provided does not contain a triangulation")
+
+            polygons[0,i]           = pointIds.GetId(0)
+            polygons[1,i]           = pointIds.GetId(1)
+            polygons[2,i]           = pointIds.GetId(2)
+
+        selected = True
+        
+        while(selected):
+            if self.septum is None:
+                if self.apex is None:
+                    print("Apical and septal points not selected. Click inside "  + \
+                          "the visualization, direct your pointer to the apical " + \
+                          "point and press 'p'. The apex will be highlighted as " + \
+                          "a red point. Afterwards, direct your pointer to the "  + \
+                          "septal point and press 'p', which will be highlighted "+ \
+                          "as a green point. If you missplaced any of the "       + \
+                          "points, select a third point in a random position and "+ \
+                          "start anew by pressing 'q'. Once those points are "    + \
+                          "selected, press 'q' and the execution will continue.")
+
+                    ps = PointSelector()
+                    ps.DoSelection(self.polydata)
+
+                    if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
+                        selected = False
+
+                        self.__apex     = ps.GetSelectedPointIds().GetId(1)
+                        self.__septum   = ps.GetSelectedPointIds().GetId(0)
+
+                else:
+                    print("The septal point is not provided. Click inside "       + \
+                          "the visualization, direct your pointer to the septal " + \
+                          "point and press 'p'. The septum will be highlighted "  + \
+                          "as a red point. If you missplaced the "                + \
+                          "point, select a second point in a random position and "+ \
+                          "start anew by pressing 'q'. Once those points are "    + \
+                          "selected, press 'q' and the execution will continue.")
+
+                    ps = PointSelector()
+                    ps.DoSelection(self.polydata)
+
+                    if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
+                        selected = False
+
+                        self.__septum   = ps.GetSelectedPointIds().GetId(0)
+
+                    del(ps)
+
+            else:
+                if self.apex is None:
+                    print("The apical point is not provided. Click inside "       + \
+                          "the visualization, direct your pointer to the apical " + \
+                          "point and press 'p'. The apex will be highlighted "    + \
+                          "as a red point. If you missplaced the "                + \
+                          "point, select a second point in a random position and "+ \
+                          "start anew by pressing 'q'. Once those points are "    + \
+                          "selected, press 'q' and the execution will continue.")
+                    ps = PointSelector()
+                    ps.DoSelection(self.polydata)
+
+                    if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
+                        selected = False
+
+                        self.__apex     = ps.GetSelectedPointIds().GetId(0)
+
+                    del(ps)
+
+        self.__points               = points
+        self.__polygons             = polygons
 
         self.__calc_boundary()
         self.__rearrange()
         self.__calc_laplacian()
-        self.__calc_QCM_points()
-        self.__write_QCM_polydata()
+        self.__calc_homeomorphism()
+        self.__calc_thin_plate_splines()
+        self.__write_output()
 
     @property
     def path(self):
         return self.__path
 
     @property
-    def QCM_path(self):
-        return self.__QCM_path
+    def output_path(self):
+        return self.__output_path
 
     @property
     def polydata(self):
-        """Testing docstring of attribute"""
         return self.__polydata
-
-    @property
-    def ndim(self):
-        return self.__ndim
-
-    @property
-    def nedges_mesh(self):
-        return self.__nedges_mesh
 
     @property
     def points(self):
         return self.__points
 
     @property
-    def npoints(self):
-        return self.__npoints
-
-    @property
     def polygons(self):
         return self.__polygons
 
-    @property
-    def npolygons(self):
-        return self.__npolygons
-
-    @property
-    def scalars(self):
-        return self.__scalars
-
-    @property
-    def scalars_names(self):
-        return self.__scalars_names
-
-    @property
-    def normals(self):
-        return self.__normals
-
-    @QCM_path.setter
-    def QCM_path(self, output_path):
+    @output_path.setter
+    def output_path(self, output_path):
         if output_path is self.path:
             print(" *  Warning! Overwriting the input file is not permitted.\n"
                   "    Aborting...\n")
             return
         else:
-            if self.QCM_path == self.path:
+            if self.output_path == self.path:
                 print(" *  Warning! The file written to the default location will *not*\n"
                       "    be deleted\n")
             else:
                 print(" *  Warning! The file written to the previous working location will \n"
                       "    *not* be deleted\n")
 
-        self.__QCM_path         = output_path
-        self.__write_QCM_polydata()
+        self.__output_path      = output_path
+        self.__write_output()
 
 
     @property
     def septum(self):
         return self.__septum
 
-    @septum.setter
-    def septum(self, septum):
-        if septum >= self.npoints:
-            raise RuntimeError("Septal point provided is out of bounds")
+    # @septum.setter
+    # def septum(self, septum):
+    #     if septum >= self.polydata.GetNumberOfPoints():
+    #         raise RuntimeError("Septal point provided is out of bounds")
 
-        self.rearrange_boundary(septum)
+    #     self.rearrange_boundary(septum)
 
     @property
     def apex(self):
@@ -193,12 +286,12 @@ class PyQCM(BaseImage):
 
     @apex.setter
     def apex(self, apex):
-        if apex >= self.npoints:
+        if apex >= self.polydata.GetNumberOfPoints():
             raise RuntimeError("Apical point provided is out of bounds")
 
         self.__apex             = apex
-        self.__calc_QCM_points()
-        self.__write_QCM_polydata()
+        self.__calc_homeomorphism()
+        self.__write_output()
 
     @property
     def laplacian(self):
@@ -213,300 +306,12 @@ class PyQCM(BaseImage):
         return self.points[:, self.boundary]
 
     @property
-    def QCM_points(self):
-        return self.__QCM_points
+    def homeomorphism(self):
+        return self.__homeomorphism
 
     @property
-    def QCM_polydata(self):
-        return self.__QCM_polydata
-
-
-    def __read_polydata(self):
-        reader                  = vtkPolyDataReader()
-        reader.SetFileName(self.path)
-        reader.Update()
-
-        polydata                = reader.GetOutput()
-        polydata.BuildLinks()
-
-        self.__npoints          = polydata.GetNumberOfPoints()
-        self.__npolygons        = polydata.GetNumberOfPolys()
-        self.__ndim             = polydata.GetPoints().GetData().GetNumberOfComponents()
-        self.__polydata         = polydata
-
-    def __read_polygons(self):
-        rows                    = None
-        cols                    = None
-        polygons                = None
-
-        polys                   = self.polydata.GetPolys()
-
-        for i in xrange(self.polydata.GetNumberOfCells()):
-            triangle            = self.polydata.GetCell(i)
-            pointIds            = triangle.GetPointIds()
-
-            if polygons is None:
-                rows            = pointIds.GetNumberOfIds()
-                cols            = self.polydata.GetNumberOfCells()
-                polygons        = zeros((rows,cols), dtype=int)
-            
-            polygons[0,i]       = pointIds.GetId(0)
-            polygons[1,i]       = pointIds.GetId(1)
-            polygons[2,i]       = pointIds.GetId(2)
-
-        self.__polygons         = polygons
-
-    def __read_points(self):
-        rows                    = None
-        cols                    = None
-        points                  = None
-
-        pointVector             = self.polydata.GetPoints()
-
-        if pointVector:
-            for i in range(0, pointVector.GetNumberOfPoints()):
-                point_tuple     = pointVector.GetPoint(i)
-
-                if points is None:
-                    rows        = len(point_tuple)
-                    cols        = pointVector.GetNumberOfPoints()
-                    points      = zeros((rows,cols))
-                
-                points[0,i]     = point_tuple[0]
-                points[1,i]     = point_tuple[1]
-                points[2,i]     = point_tuple[2]
-
-        self.__points           = points
-
-    def __read_normals(self):
-        rows                    = None
-        cols                    = None
-        normals                 = None
-
-        normalVector            = self.polydata.GetPointData().GetNormals()
-
-        if normalVector:
-            for i in range(0, normalVector.GetNumberOfTuples()):
-                normalTuple     = normalVector.GetTuple(i)
-
-                if normals is None:
-                    rows        = len(normalTuple)
-                    cols        = normalVector.GetNumberOfTuples()
-                    normals     = zeros((rows,cols))
-                
-                normals[0, i]   = normalTuple[0]
-                normals[1, i]   = normalTuple[1]
-                normals[2, i]   = normalTuple[2]
-
-        self.__normals          = normals
-
-    def __read_scalars(self):
-        point_data              = self.polydata.GetPointData()
-        scalars                 = None
-        nscalars                = 0
-
-        for i in xrange(point_data.GetNumberOfArrays()):
-            scalar_name         = point_data.GetArrayName(i)
-            scalar_array        = point_data.GetArray(i)
-            scalar_dtype        = scalar_array.GetDataTypeAsString()
-
-            if scalar_array.GetNumberOfComponents() is 1:
-                aux_dtype       = dtype([(scalar_name, scalar_dtype)])
-                aux             = zeros((1, scalar_array.GetNumberOfTuples()), 
-                                        dtype=scalar_dtype)
-                nscalars        = nscalars + 1
-
-                for j in xrange(scalar_array.GetNumberOfTuples()):
-                    aux[0, j]   = scalar_array.GetTuple1(j)
-
-                aux             = array(aux, dtype=aux_dtype)
-
-                if scalars is None:
-                    scalars     = aux
-                else:
-                    scalars     = self.__join_struct_arrays(scalars, aux)
-
-        self.__nscalars         = nscalars
-        self.__scalars          = scalars
-        self.__scalars_names    = scalars.dtype.names
-
-    def __join_struct_arrays(array1, array2, *args):
-        new_dtype = []
-
-        descriptor = []
-        for field in array1.dtype.names:
-            (typ, _) = array1.dtype.fields[field]
-            descriptor.append((field, typ))
-        new_dtype.extend(tuple(descriptor))
-
-        descriptor = []
-        for field in array2.dtype.names:
-            (typ, _) = array2.dtype.fields[field]
-            descriptor.append((field, typ))
-        new_dtype.extend(tuple(descriptor))
-        
-        for arr in args:
-            descriptor = []
-            for field in arr.dtype.names:
-                (typ, _) = arr.dtype.fields[field]
-                descriptor.append((field, typ))
-            new_dtype.extend(tuple(descriptor))
-
-        new_rec_array = np.zeros(len(arrays[0]), dtype = new_dtype)
-
-        for name in array1.dtype.names:
-            new_rec_array[name] = array1[name]
-
-        for name in array2.dtype.names:
-            new_rec_array[name] = array2[name]
-
-        for arr in args:
-            for name in arr.dtype.names:
-                new_rec_array[name] = arr[name]
-
-        return new_rec_array
-
-    def __write_QCM_polydata(self):
-        if ((self.QCM_points is not None)
-            and (self.points is not None)
-            and (self.scalars is not None)
-            and (self.polygons is not None)):
-
-            newPolyData         = vtkPolyData()
-            newPointData        = vtkPoints()
-            writer              = vtkPolyDataWriter()
-
-            if self.QCM_path is self.path:
-                print(" *  Writing to default location: ")
-
-                path                = None
-
-                directory, filename = split(self.path)
-                filename, extension = splitext(filename)
-
-                if isdir(join(directory, 'QCM')):
-                    path            = join(directory, 'QCM', str(filename + '_QCM' + extension))
-                else:
-                    mkdir(join(directory, 'QCM'))
-
-                    if isdir(join(directory, 'QCM')):
-                        path        = join(directory, 'QCM', str(filename + '_QCM' + extension))
-                    else:
-                        path        = join(directory, str(filename + '_QCM' + extension))
-
-                print("    " + path + "\n")
-
-            else:
-                if splitext(self.QCM_path)[1] is '':
-                    self.__QCM_path = self.QCM_path + ".vtk"
-
-                path                = self.QCM_path
-
-
-            writer.SetFileName(path)
-
-            for i in xrange(self.npoints):
-                newPointData.InsertPoint(i, (self.QCM_points[0, i], self.QCM_points[1, i], 0.0))
-
-            newPolyData.SetPoints(newPointData)
-            newPolyData.SetPolys(self.polydata.GetPolys())
-            if self.polydata.GetPointData().GetScalars() is None:
-                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(0))
-            else:
-                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetScalars())
-
-            writer.SetInputData(newPolyData)
-            writer.Write()
-
-            self.__QCM_polydata  = newPolyData
-
-            system("perl -pi -e 's/,/./g' %s " % path)
-
-        else:
-            raise RuntimeError("Information provided insufficient")
-
-    def __calc_laplacian(self):
-        numDims                 = self.polygons.shape[0]
-        numPoints               = self.points.shape[1]
-        numPolygons             = self.polygons.shape[1]
-
-        sparseMatrix            = csr_matrix((numPoints, numPoints))
-
-        for i in range(0, numDims):
-            i1                  = (i + 0)%3
-            i2                  = (i + 1)%3
-            i3                  = (i + 2)%3
-
-            distP2P1            = self.points[:, self.polygons[i2, :]] - self.points[:, self.polygons[i1, :]]
-            distP3P1            = self.points[:, self.polygons[i3, :]] - self.points[:, self.polygons[i1, :]]
-
-            distP2P1            = distP2P1 / repmat(sqrt((distP2P1**2).sum(0)), 3, 1)
-            distP3P1            = distP3P1 / repmat(sqrt((distP3P1**2).sum(0)), 3, 1)
-
-            angles              = arccos((distP2P1 * distP3P1).sum(0))
-
-            iterData1           = csr_matrix((1/tan(angles), 
-                                                    (self.polygons[i2,:], 
-                                                     self.polygons[i3,:])), 
-                                                    shape=(numPoints, numPoints))
-
-            iterData2           = csr_matrix((1/tan(angles), (self.polygons[i3,:], self.polygons[i2,:])), shape=(numPoints, numPoints))
-
-            sparseMatrix        = sparseMatrix + iterData1 + iterData2
-
-        diagonal                = sparseMatrix.sum(0)
-        diagonalSparse          = spdiags(diagonal, 0, numPoints, numPoints)
-        self.__laplacian        = diagonalSparse - sparseMatrix
-
-    def __calc_QCM_points(self):
-        if self.laplacian is not None:
-            if self.boundary is not None:
-                (nzi, nzj)      = find(self.laplacian)[0:2]
-
-                for point in self.boundary:
-                    positions   = where(nzi==point)[0]
-
-                    self.laplacian[nzi[positions], nzj[positions]] = 0
-
-                    self.laplacian[point, point] = 1
-
-                angles                  = self.__calc_boundary_node_angles()
-                Z                       = zeros((2, angles.size))
-                Z[0,:]                  = cos(angles)
-                Z[1,:]                  = sin(angles)
-
-                boundaryConstrain = zeros((2, self.npoints))
-                boundaryConstrain[:, self.boundary] = Z
-
-                self.__QCM_points = spsolve(self.laplacian, boundaryConstrain.transpose()).transpose()
-
-                self.__calc_thin_plate_splines()
-
-    def __calc_thin_plate_splines(self):
-        if self.QCM_points is not None:
-            if self.apex is not None:
-                boundaryPoints  = self.QCM_points[:,self.boundary]
-                source          = zeros((boundaryPoints.shape[0],
-                                               boundaryPoints.shape[1] + 1))
-                destination     = zeros((boundaryPoints.shape[0],
-                                               boundaryPoints.shape[1] + 1))
-
-                source[:, 0:source.shape[1] - 1]        = boundaryPoints
-                source[:, source.shape[1] - 1]          = self.QCM_points[:, self.apex]
-
-                destination[:, 0:source.shape[1] - 1]   = boundaryPoints
-                destination[:, 0:source.shape[1] - 1]   = boundaryPoints
-
-                x = source[0,:]
-                y = source[1,:]
-                d = destination[0,:] + 1j*destination[1,:]
-
-                thinPlateInterpolation = RBFThinPlateSpline(x,y,d)
-
-                result = thinPlateInterpolation(self.QCM_points[0,:], self.QCM_points[1,:])
-
-                self.__QCM_points[0,:] = result.real
-                self.__QCM_points[1,:] = result.imag
+    def output_polydata(self):
+        return self.__output_polydata
 
     def __calc_boundary(self):
         startingPoint           = None
@@ -622,36 +427,116 @@ class PyQCM(BaseImage):
 
         self.__boundary         = boundary
 
+
+    def __calc_laplacian(self):
+        numPoints           = self.polydata.GetNumberOfPoints()
+        numPolygons         = self.polydata.GetNumberOfPolys()
+        numDims             = self.polydata.GetPoints().GetData().GetNumberOfComponents()
+        sparseMatrix        = csr_matrix((numPoints, numPoints))
+
+        for i in range(0, numDims):
+            i1              = (i + 0)%3
+            i2              = (i + 1)%3
+            i3              = (i + 2)%3
+
+            vectP2P1        = (self.points[:, self.polygons[i2, :]] 
+                              - self.points[:, self.polygons[i1, :]])
+            vectP3P1        = (self.points[:, self.polygons[i3, :]] 
+                              - self.points[:, self.polygons[i1, :]])
+
+            vectP2P1        = vectP2P1 / repmat(sqrt((vectP2P1**2).sum(0)), 
+                                                numDims, 1)
+            vectP3P1        = vectP3P1 / repmat(sqrt((vectP3P1**2).sum(0)), 
+                                                numDims, 1)
+
+            angles          = arccos((vectP2P1 * vectP3P1).sum(0))
+
+            iterData1       = csr_matrix((1/tan(angles), (self.polygons[i2,:], 
+                                          self.polygons[i3,:])), 
+                                         shape=(numPoints, numPoints))
+
+            iterData2       = csr_matrix((1/tan(angles), (self.polygons[i3,:], 
+                                          self.polygons[i2,:])), 
+                                         shape=(numPoints, numPoints))
+
+            sparseMatrix    = sparseMatrix + iterData1 + iterData2
+
+        diagonal            = sparseMatrix.sum(0)
+        diagonalSparse      = spdiags(diagonal, 0, numPoints, numPoints)
+        self.__laplacian    = diagonalSparse - sparseMatrix
+
+    
+    def __calc_homeomorphism(self):
+        if (self.laplacian is not None) and (self.boundary is not None):
+            # Finds non-zero elements in the laplacian matrix
+            (nzi, nzj)      = find(self.laplacian)[0:2]
+            homeomorphism_laplacian = self.laplacian
+
+            for point in self.boundary:
+                positions   = where(nzi==point)[0]
+
+                homeomorphism_laplacian[nzi[positions], nzj[positions]] = 0
+                homeomorphism_laplacian[point, point] = 1
+
+            # Finds a distribution of the boundary points around a circle
+            boundaryNext            = roll(self.boundary, -1)
+            boundaryNextPoints      = self.points[:, boundaryNext]
+            distanceToNext          = boundaryNextPoints - self.points[:, self.boundary]
+
+            euclideanNorm           = sqrt((distanceToNext**2).sum(0))
+            perimeter               = euclideanNorm.sum()
+
+            fraction                = euclideanNorm/perimeter
+
+            angles                  = cumsum(2*pi*fraction)
+            angles                  = roll(angles, 1)
+            angles[0]               = 0
+
+            # Creates the constrain for the homeomorphism
+            Z                       = zeros((2, angles.size))
+            Z[0,:]                  = cos(angles)
+            Z[1,:]                  = sin(angles)
+
+            boundaryConstrain       = zeros((2, self.polydata.GetNumberOfPoints()))
+            boundaryConstrain[:, self.boundary] = Z
+
+            self.__homeomorphism    = spsolve(homeomorphism_laplacian, 
+                                              boundaryConstrain.transpose()).transpose()
+
+    def __calc_thin_plate_splines(self):
+        if (self.homeomorphism is not None) and (self.apex is not None):
+            boundaryPoints  = self.homeomorphism[:,self.boundary]
+            source          = zeros((boundaryPoints.shape[0],
+                                     boundaryPoints.shape[1] + 1))
+            destination     = zeros((boundaryPoints.shape[0],
+                                     boundaryPoints.shape[1] + 1))
+
+            source[:, 0:source.shape[1] - 1]        = boundaryPoints
+            source[:, source.shape[1] - 1]          = self.homeomorphism[:, self.apex]
+
+            destination[:, 0:source.shape[1] - 1]   = boundaryPoints
+            destination[:, 0:source.shape[1] - 1]   = boundaryPoints
+
+            # For a faster calculation, the mvpoly package has been used. The
+            # Thin Plate Splines has been calculated using the X coordinate of
+            # the points in the real part of a complex number and the Y
+            # coordinate of the point as the imaginary part. After the 
+            # interpolation, the separate real and imaginary parts have been
+            # recovered, encoding the new (X,Y) positions after the relaxation.
+            x = source[0,:]
+            y = source[1,:]
+            d = destination[0,:] + 1j*destination[1,:]
+
+            thinPlateInterpolation = RBFThinPlateSpline(x,y,d)
+
+            result = thinPlateInterpolation(self.homeomorphism[0,:], self.homeomorphism[1,:])
+
+            self.__homeomorphism[0,:] = result.real
+            self.__homeomorphism[1,:] = result.imag
+
     def flip_boundary(self):
         self.__boundary         = flipud(self.boundary)
         self.__boundary         = roll(self.boundary, 1)
-
-    def get_boundary_node_distances(self):
-        boundaryNext            = roll(self.boundary, -1)
-        boundaryNextPoints      = self.points[:, boundaryNext]
-
-        distanceToNext          = boundaryNextPoints - self.boundary_points
-
-        return sqrt((distanceToNext**2).sum(0))
-
-    def get_boundary_perimeter(self):
-        return self.get_boundary_node_distances().sum()
-
-    def get_boundary_node_distances_fraction(self):
-        euclideanNorm           = self.get_boundary_node_distances()
-        perimeter               = euclideanNorm.sum()
-
-        return euclideanNorm/perimeter
-
-    def __calc_boundary_node_angles(self):
-        circleLength            = 2*pi
-        fraction                = self.get_boundary_node_distances_fraction()
-
-        angles                  = cumsum(circleLength*fraction)
-        angles                  = roll(angles, 1)
-        angles[0]               = 0
-
-        return angles
 
     def __rearrange(self, objectivePoint=None):
         septalIndex             = None
@@ -708,32 +593,108 @@ class PyQCM(BaseImage):
 
             self.__boundary     = roll(self.boundary, -closestPointIndex)
 
+    # def rearrange_boundary(self, objectivePoint):
+    #     """Rearranges the boundary aroung a new point identifier
+    #     """
+    #     old_septum              = self.septum
+    #     septalIndex             = None
+    #     closestPoint            = None
+
+    #     if objectivePoint == self.septum:
+    #         return
+
+    #     if objectivePoint in self.boundary:
+    #         septalIndex         = objectivePoint
+    #         closestPoint        = objectivePoint
+    #         closestPointIndex   = where(self.boundary==objectivePoint)
+
+    #         if len(closestPointIndex) == 1:
+    #             if len(closestPointIndex[0]) == 1:
+    #                 closestPointIndex = closestPointIndex[0][0]
+    #             else:
+    #                 raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+    #         else:
+    #             raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+
+    #     else:
+    #         print(" *  Provided point not found in the boundary. Selecting \n"
+    #               "    closest point available...")
+
+    #         try:
+    #             searched_point  = self.points[:, objectivePoint]
+    #         except:
+    #             raise Exception("Septal point provided out of data bounds the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.")
+
+    #         if len(self.boundary.shape) == 1:
+    #             searched_point  = repmat(searched_point, self.boundary.size, 1)
+    #             searched_point  = searched_point.transpose()
+    #         else:
+    #             raise Exception("It seems you have multiple boundaries. Contact the package maintainer.")
+
+    #         distanceToObjectivePoint    = (self.points[:, self.boundary] - searched_point)
+    #         distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0))
+    #         closestPointIndex           = where(distanceToObjectivePoint == distanceToObjectivePoint.min())
+
+    #         if len(closestPointIndex) == 1:
+    #             if len(closestPointIndex[0]) == 1:
+    #                 closestPointIndex   = closestPointIndex[0][0]
+    #             else:
+    #                 raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+    #         else:
+    #             raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+
+    #         septalIndex                 = self.boundary[closestPointIndex]
+
+    #     self.__boundary                 = roll(self.boundary, -closestPointIndex)
+
+    #     center  = asarray([0, 0]) # The center of the disk will always be a 
+    #     vector1 = asarray([1, 0]) # point (0,0) and the septum a vector (1,0), 
+    #                                # as induced by the boundary conditions
+    #     vector2 = self.homeomorphism[:, septalIndex] - center
+
+    #     angle   = arccos(dot(vector1, vector2)/(norm(vector1)*norm(vector2)))
+
+    #     # If the y coordinate of the vector w.r.t. the rotation will take place
+    #     # is negative, the rotation must be done counterclock-wise
+    #     if vector2[1] > 0:
+    #         angle = -angle
+
+    #     rotation_matrix                 = asarray([[cos(angle), -sin(angle)],
+    #                                                [sin(angle), cos(angle)]])
+
+    #     self.__septum                   = septalIndex
+    #     self.__homeomorphism               = rotation_matrix.dot(self.homeomorphism)
+
+    #     self.__write_output()
 
 
-    def rearrange_boundary(self, objectivePoint):
-        """Rearranges the boundary aroung a new point identifier
-        """
-        old_septum              = self.septum
-        septalIndex             = None
-        closestPoint            = None
+    def closest_boundary_point(self, objectivePoint=None):
+        if objectivePoint is None:
+            selected = True
+            
+            while(selected):
+                ps = PointSelector()
+                ps.DoSelection(self.polydata)
 
-        if objectivePoint == self.septum:
-            return
+                if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
+                    selected = False
+
+                    objectivePoint  = ps.GetSelectedPointIds().GetId(0)
+
+
+        output_point = None
 
         if objectivePoint in self.boundary:
-            septalIndex         = objectivePoint
-            closestPoint        = objectivePoint
-            closestPointIndex   = where(self.boundary==objectivePoint)
+            output_point        = where(self.boundary==objectivePoint)
 
-            if len(closestPointIndex) == 1:
-                if len(closestPointIndex[0]) == 1:
-                    closestPointIndex = closestPointIndex[0][0]
+            if len(output_point) == 1:
+                if len(output_point[0]) == 1:
+                    output_point = output_point[0][0]
                 else:
                     raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
             else:
                 raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
 
-            # self.__boundary = roll(self.boundary, -septalIndex)
         else:
             print(" *  Provided point not found in the boundary. Selecting \n"
                   "    closest point available...")
@@ -751,62 +712,101 @@ class PyQCM(BaseImage):
 
             distanceToObjectivePoint    = (self.points[:, self.boundary] - searched_point)
             distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0))
-            closestPointIndex           = where(distanceToObjectivePoint == distanceToObjectivePoint.min())
+            output_point                = where(distanceToObjectivePoint == distanceToObjectivePoint.min())
 
-            if len(closestPointIndex) == 1:
-                if len(closestPointIndex[0]) == 1:
-                    closestPointIndex   = closestPointIndex[0][0]
+            if len(output_point) == 1:
+                if len(output_point[0]) == 1:
+                    output_point   = output_point[0][0]
                 else:
                     raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
             else:
                 raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
 
-            septalIndex                 = self.boundary[closestPointIndex]
+        return self.boundary[output_point]
 
-        self.__boundary                 = roll(self.boundary, -closestPointIndex)
 
-        center  = asarray([0, 0]) # The center of the disk will always be a 
-        vector1 = asarray([1, 0]) # point (0,0) and the septum a vector (1,0), 
-                                   # as induced by the boundary conditions
-        vector2 = self.QCM_points[:, septalIndex] - center
+    def __write_output(self):
+        if ((self.homeomorphism is not None)
+            and (self.points is not None)
+            and (self.polygons is not None)):
 
-        angle   = arccos(dot(vector1, vector2)/(norm(vector1)*norm(vector2)))
+            newPolyData         = vtkPolyData()
+            newPointData        = vtkPoints()
+            writer              = vtkPolyDataWriter()
 
-        # If the y coordinate of the vector w.r.t. the rotation will take place
-        # is negative, the rotation must be done counterclock-wise
-        if vector2[1] > 0:
-            angle = -angle
+            if self.output_path is self.path:
+                print(" *  Writing to default location: ")
 
-        rotation_matrix                 = asarray([[cos(angle), -sin(angle)],
-                                                   [sin(angle), cos(angle)]])
+                path                = None
 
-        self.__septum                   = septalIndex
-        self.__QCM_points               = rotation_matrix.dot(self.QCM_points)
+                directory, filename = split(self.path)
+                filename, extension = splitext(filename)
 
-        self.__write_QCM_polydata()
+                if isdir(join(directory, 'QCM')):
+                    path            = join(directory, 'QCM', str(filename + '_QCM' + extension))
+                else:
+                    mkdir(join(directory, 'QCM'))
+
+                    if isdir(join(directory, 'QCM')):
+                        path        = join(directory, 'QCM', str(filename + '_QCM' + extension))
+                    else:
+                        path        = join(directory, str(filename + '_QCM' + extension))
+
+                print("    " + path + "\n")
+
+            else:
+                if splitext(self.output_path)[1] is '':
+                    self.__output_path  = self.output_path + ".vtk"
+
+                path                    = self.output_path
+
+            self.__output_path          = path
+            writer.SetFileName(path)
+
+            for i in xrange(self.polydata.GetNumberOfPoints()):
+                newPointData.InsertPoint(i, (self.homeomorphism[0, i], self.homeomorphism[1, i], 0.0))
+
+            newPolyData.SetPoints(newPointData)
+            newPolyData.SetPolys(self.polydata.GetPolys())
+
+            if self.polydata.GetPointData().GetScalars() is None:
+                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(0))
+            else:
+                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetScalars())
+                
+            bool_scalars = False
+
+            for i in range(self.polydata.GetPointData().GetNumberOfArrays()):
+                if self.polydata.GetPointData().GetScalars() is None:
+                    if self.polydata.GetPointData().GetArray(i).GetName() == 'Bipolar':
+                        newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(i))
+                        bool_scalars = True
+                    else:
+                        newPolyData.GetPointData().AddArray(self.polydata.GetPointData().GetArray(i))
+                else:
+                    if (self.polydata.GetPointData().GetArray(i).GetName() 
+                        == self.polydata.GetPointData().GetScalars().GetName()):
+                        newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(i))
+                    else:
+                        newPolyData.GetPointData().AddArray(self.polydata.GetPointData().GetArray(i))
+                
+                
+            writer.SetInputData(newPolyData)
+            writer.Write()
+
+            self.__output_polydata  = newPolyData
+
+            # In case the host computer converts decimal points (.) to decimal
+            # commas (,), such as in Spanish locales.
+            system("perl -pi -e 's/,/./g' %s " % path)
+
+        else:
+            raise RuntimeError("Information provided insufficient")
 
     def __str__(self):
         s = "'" + self.__class__.__name__ + "' object at '" + self.path + "'.\n"
-        s = s + "Number of dimensions: " + str(self.ndim) + "\n"
-        s = s + "Number of points: " + str(self.npoints) + "\n"
-        s = s + "Number of polygons: " + str(self.npolygons) + "\n"
-        s = s + "Number of edges of the polygons: " + str(self.nedges_mesh) + "\n"
-        s = s + "Scalar information: " + str(self.scalars_names)
-        s = s + "Output file location: " + str(self.QCM_path)
+        s = s + "Number of dimensions: " + str(self.polydata.GetPoints().GetData().GetNumberOfComponents()) + "\n"
+        s = s + "Number of points: " + str(self.polydata.GetNumberOfPoints()) + "\n"
+        s = s + "Number of polygons: " + str(self.polydata.GetNumberOfCells()) + "\n"
+        s = s + "Output file location: " + str(self.output_path)
         return s
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

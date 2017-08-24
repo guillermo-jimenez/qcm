@@ -29,7 +29,6 @@ from vtk import vtkCellArray;
 from vtk import vtkDoubleArray;
 from vtk import vtkTriangle;
 
-
 import vtk
 import time
 import numpy

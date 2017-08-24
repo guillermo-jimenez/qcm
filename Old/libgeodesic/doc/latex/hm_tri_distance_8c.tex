@@ -1,0 +1,149 @@
+\hypertarget{hm_tri_distance_8c}{\subsection{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/hm\-Tri\-Distance.c File Reference}
+\label{hm_tri_distance_8c}\index{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/hm\-Tri\-Distance.\-c@{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/hm\-Tri\-Distance.\-c}}
+}
+{\ttfamily \#include \char`\"{}hm\-Tri\-Distance.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hm\-Vec3.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hm\-Utility.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hm\-Constants.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hm\-Vector\-Size\-T.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$float.\-h$>$}\\*
+{\ttfamily \#include $<$math.\-h$>$}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$sys/time.\-h$>$}\\*
+\subsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{hm_tri_distance_8c_a8a899fd136486c1e60e30769bbae0261}{hm\-Tri\-Distance\-Initialize} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance)
+\item 
+void \hyperlink{hm_tri_distance_8c_abd2454b513ff310597c08a72be5f2193}{hm\-Tri\-Distance\-Destroy} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance)
+\item 
+void \hyperlink{hm_tri_distance_8c_ab8619d4051e27e72dc8c58b8863bde07}{hm\-Tri\-Distance\-Estimate\-Time} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance)
+\item 
+void \hyperlink{hm_tri_distance_8c_af47ea95819dacb5bd20f0b1336097680}{hm\-Tri\-Distance\-Set\-Boundary\-Conditions} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance, double boundary\-Conditions)
+\item 
+void \hyperlink{hm_tri_distance_8c_a681250be3575802920a769e15cd6b102}{hm\-Tri\-Distance\-Build} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance)
+\item 
+void \hyperlink{hm_tri_distance_8c_aa5107690159127c6715c85fd5847871b}{hm\-Tri\-Distance\-Update} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance)
+\item 
+void \hyperlink{hm_tri_distance_8c_a689490e736916ce9a0709e5b09f4c47e}{hm\-Tri\-Distance\-Solve\-Heat\-Equation} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance)
+\item 
+void \hyperlink{hm_tri_distance_8c_a2cd9df8d3ec2357e1b2259aa49d2d7e5}{hm\-Tri\-Distance\-Compute\-Potential} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance)
+\item 
+void \hyperlink{hm_tri_distance_8c_ae03f4c566d7418f21cfb5c30a6366626}{hm\-Tri\-Distance\-Solve\-Poisson\-Equation} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance)
+\item 
+void \hyperlink{hm_tri_distance_8c_ab3bedaf011215b7cd8e400c6b12ab266}{hm\-Tri\-Distance\-Build\-Matrices} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance)
+\item 
+void \hyperlink{hm_tri_distance_8c_aa12b2ce9620d890016ed91e31d2549db}{hm\-Tri\-Distance\-Factor\-Matrices} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance)
+\item 
+void \hyperlink{hm_tri_distance_8c_a7c0c446b080b5ee164c2494650b12590}{hm\-Tri\-Distance\-Update\-Time} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance, double time)
+\item 
+void \hyperlink{hm_tri_distance_8c_ace8d173448fdd66f9518fa5ec41d0e6b}{hm\-Tri\-Distance\-Start\-Timing} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance)
+\item 
+void \hyperlink{hm_tri_distance_8c_a590929d6d2ea5bbbea8d91562dc6b474}{hm\-Tri\-Distance\-Stop\-Timing} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance, const char $\ast$label)
+\end{DoxyCompactItemize}
+
+
+\subsubsection{Function Documentation}
+\hypertarget{hm_tri_distance_8c_a681250be3575802920a769e15cd6b102}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Build@{hm\-Tri\-Distance\-Build}}
+\index{hm\-Tri\-Distance\-Build@{hm\-Tri\-Distance\-Build}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Build}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Build (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_a681250be3575802920a769e15cd6b102}
+\hypertarget{hm_tri_distance_8c_ab3bedaf011215b7cd8e400c6b12ab266}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Build\-Matrices@{hm\-Tri\-Distance\-Build\-Matrices}}
+\index{hm\-Tri\-Distance\-Build\-Matrices@{hm\-Tri\-Distance\-Build\-Matrices}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Build\-Matrices}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Build\-Matrices (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_ab3bedaf011215b7cd8e400c6b12ab266}
+\hypertarget{hm_tri_distance_8c_a2cd9df8d3ec2357e1b2259aa49d2d7e5}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Compute\-Potential@{hm\-Tri\-Distance\-Compute\-Potential}}
+\index{hm\-Tri\-Distance\-Compute\-Potential@{hm\-Tri\-Distance\-Compute\-Potential}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Compute\-Potential}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Compute\-Potential (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_a2cd9df8d3ec2357e1b2259aa49d2d7e5}
+\hypertarget{hm_tri_distance_8c_abd2454b513ff310597c08a72be5f2193}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Destroy@{hm\-Tri\-Distance\-Destroy}}
+\index{hm\-Tri\-Distance\-Destroy@{hm\-Tri\-Distance\-Destroy}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Destroy}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Destroy (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_abd2454b513ff310597c08a72be5f2193}
+\hypertarget{hm_tri_distance_8c_ab8619d4051e27e72dc8c58b8863bde07}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Estimate\-Time@{hm\-Tri\-Distance\-Estimate\-Time}}
+\index{hm\-Tri\-Distance\-Estimate\-Time@{hm\-Tri\-Distance\-Estimate\-Time}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Estimate\-Time}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Estimate\-Time (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_ab8619d4051e27e72dc8c58b8863bde07}
+\hypertarget{hm_tri_distance_8c_aa12b2ce9620d890016ed91e31d2549db}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Factor\-Matrices@{hm\-Tri\-Distance\-Factor\-Matrices}}
+\index{hm\-Tri\-Distance\-Factor\-Matrices@{hm\-Tri\-Distance\-Factor\-Matrices}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Factor\-Matrices}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Factor\-Matrices (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_aa12b2ce9620d890016ed91e31d2549db}
+\hypertarget{hm_tri_distance_8c_a8a899fd136486c1e60e30769bbae0261}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Initialize@{hm\-Tri\-Distance\-Initialize}}
+\index{hm\-Tri\-Distance\-Initialize@{hm\-Tri\-Distance\-Initialize}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Initialize}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Initialize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_a8a899fd136486c1e60e30769bbae0261}
+\hypertarget{hm_tri_distance_8c_af47ea95819dacb5bd20f0b1336097680}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Set\-Boundary\-Conditions@{hm\-Tri\-Distance\-Set\-Boundary\-Conditions}}
+\index{hm\-Tri\-Distance\-Set\-Boundary\-Conditions@{hm\-Tri\-Distance\-Set\-Boundary\-Conditions}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Set\-Boundary\-Conditions}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Set\-Boundary\-Conditions (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance, }
+\item[{double}]{boundary\-Conditions}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_af47ea95819dacb5bd20f0b1336097680}
+\hypertarget{hm_tri_distance_8c_a689490e736916ce9a0709e5b09f4c47e}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Solve\-Heat\-Equation@{hm\-Tri\-Distance\-Solve\-Heat\-Equation}}
+\index{hm\-Tri\-Distance\-Solve\-Heat\-Equation@{hm\-Tri\-Distance\-Solve\-Heat\-Equation}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Solve\-Heat\-Equation}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Solve\-Heat\-Equation (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_a689490e736916ce9a0709e5b09f4c47e}
+\hypertarget{hm_tri_distance_8c_ae03f4c566d7418f21cfb5c30a6366626}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Solve\-Poisson\-Equation@{hm\-Tri\-Distance\-Solve\-Poisson\-Equation}}
+\index{hm\-Tri\-Distance\-Solve\-Poisson\-Equation@{hm\-Tri\-Distance\-Solve\-Poisson\-Equation}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Solve\-Poisson\-Equation}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Solve\-Poisson\-Equation (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_ae03f4c566d7418f21cfb5c30a6366626}
+\hypertarget{hm_tri_distance_8c_ace8d173448fdd66f9518fa5ec41d0e6b}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Start\-Timing@{hm\-Tri\-Distance\-Start\-Timing}}
+\index{hm\-Tri\-Distance\-Start\-Timing@{hm\-Tri\-Distance\-Start\-Timing}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Start\-Timing}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Start\-Timing (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_ace8d173448fdd66f9518fa5ec41d0e6b}
+\hypertarget{hm_tri_distance_8c_a590929d6d2ea5bbbea8d91562dc6b474}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Stop\-Timing@{hm\-Tri\-Distance\-Stop\-Timing}}
+\index{hm\-Tri\-Distance\-Stop\-Timing@{hm\-Tri\-Distance\-Stop\-Timing}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Stop\-Timing}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Stop\-Timing (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance, }
+\item[{const char $\ast$}]{label}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_a590929d6d2ea5bbbea8d91562dc6b474}
+\hypertarget{hm_tri_distance_8c_aa5107690159127c6715c85fd5847871b}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Update@{hm\-Tri\-Distance\-Update}}
+\index{hm\-Tri\-Distance\-Update@{hm\-Tri\-Distance\-Update}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Update}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Update (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_aa5107690159127c6715c85fd5847871b}
+\hypertarget{hm_tri_distance_8c_a7c0c446b080b5ee164c2494650b12590}{\index{hm\-Tri\-Distance.\-c@{hm\-Tri\-Distance.\-c}!hm\-Tri\-Distance\-Update\-Time@{hm\-Tri\-Distance\-Update\-Time}}
+\index{hm\-Tri\-Distance\-Update\-Time@{hm\-Tri\-Distance\-Update\-Time}!hmTriDistance.c@{hm\-Tri\-Distance.\-c}}
+\paragraph[{hm\-Tri\-Distance\-Update\-Time}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Tri\-Distance\-Update\-Time (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance, }
+\item[{double}]{time}
+\end{DoxyParamCaption}
+)}}\label{hm_tri_distance_8c_a7c0c446b080b5ee164c2494650b12590}
