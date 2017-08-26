@@ -80,7 +80,7 @@ class PointSelector:
 
     def __init__(self): #initialize variables
         self.marker_radius = 1;
-        self.marker_colors = [(1,0,0), (0,1,0), (0,0,1), (1,1,0)] #different colors for different markers
+        self.marker_colors = [(1,0,0), (0,1,0), (1,1,0), (0,0,1)] #different colors for different markers
         self.selected_points = vtkPoints()
         self.selected_point_ids = vtkIdList()
         self.window_size = (800,600)
@@ -91,8 +91,9 @@ class PointSelector:
     def GetSelectedPoints(self): #returns vtkPoints in the order of clicks
         return self.selected_points
         
-    def DoSelection(self, shape): #open rendering window and start selection
+    def DoSelection(self, shape): #open rendering window and start 
         self.selected_points.Reset()
+        self.selected_point_ids.Reset()
 
         mapper = vtkPolyDataMapper()
         mapper.SetInputData(shape)
@@ -104,7 +105,7 @@ class PointSelector:
         pointPicker = PointPicker()
         pointPicker.AddPickList(actor)
         pointPicker.PickFromListOn()
-        
+
         pointPicker.SetParameters(self.selected_points, self.selected_point_ids, self.marker_radius, self.marker_colors)
 
         renderer = vtkRenderer();
@@ -125,8 +126,9 @@ class PointSelector:
         interactor.Start();
 
 
-        
+
         render_window = interactor.GetRenderWindow()
         render_window.Finalize()
-        interactor.TerminateApp()
-        del(window, interactor)
+        # interactor.TerminateApp()
+        # del(window, interactor)
+
