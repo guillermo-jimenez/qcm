@@ -1,0 +1,232 @@
+\hypertarget{structhm_vector_pair_size_t_double}{\subsection{hm\-Vector\-Pair\-Size\-T\-Double Struct Reference}
+\label{structhm_vector_pair_size_t_double}\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}}
+}
+
+
+Variable-\/sized vector of (size\-\_\-t,double) pairs.  
+
+
+
+
+{\ttfamily \#include $<$hm\-Vector\-Pair\-Size\-T\-Double.\-h$>$}
+
+\subsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{structhm_vector_pair_size_t_double_adc7db0d27a3303f101280d5cca849544}{hm\-Vector\-Pair\-Size\-T\-Double\-Initialize} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector)
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_vector_pair_size_t_double_aa43cd0f2f6952dc98be353c0d78015ba}{hm\-Vector\-Pair\-Size\-T\-Double\-Destroy} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector)
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_vector_pair_size_t_double_a2f6cb58029369bad2a0b4f9d3792e77a}{hm\-Vector\-Pair\-Size\-T\-Double\-Resize} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector, size\-\_\-t \hyperlink{structhm_vector_pair_size_t_double_a854352f53b148adc24983a58a1866d66}{size})
+\begin{DoxyCompactList}\small\item\em Changes the vector length. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- void \hyperlink{structhm_vector_pair_size_t_double_a79fdaf4a031f099789346dd86f863212}{hm\-Vector\-Pair\-Size\-T\-Double\-Set\-Entry} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector, size\-\_\-t index, \hyperlink{structhm_pair_size_t_double}{hm\-Pair\-Size\-T\-Double} value)
+\begin{DoxyCompactList}\small\item\em Sets an entry to the specified value. \end{DoxyCompactList}\item 
+static \-\_\-\-\_\-inline\-\_\-\-\_\- \hyperlink{structhm_pair_size_t_double}{hm\-Pair\-Size\-T\-Double} \hyperlink{structhm_vector_pair_size_t_double_ae394f23cd44b8276842573475b40b4fb}{hm\-Vector\-Pair\-Size\-T\-Double\-Get\-Entry} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector, size\-\_\-t index)
+\begin{DoxyCompactList}\small\item\em Gets the value of an entry. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_vector_pair_size_t_double_a30b058623bd848f4f5c1c320cbb494f1}{hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector, \hyperlink{structhm_pair_size_t_double}{hm\-Pair\-Size\-T\-Double} value)
+\begin{DoxyCompactList}\small\item\em Appends a new element. \end{DoxyCompactList}\item 
+\hyperlink{structhm_pair_size_t_double}{hm\-Pair\-Size\-T\-Double} \hyperlink{structhm_vector_pair_size_t_double_a7852d46a9a74998d8e1087e97adf0043}{hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector)
+\begin{DoxyCompactList}\small\item\em Removes the last element from the end and returns its value. \end{DoxyCompactList}\item 
+void \hyperlink{structhm_vector_pair_size_t_double_accc85d682163cd80e24353b58cd8347d}{hm\-Vector\-Pair\-Size\-T\-Double\-Sort} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector)
+\begin{DoxyCompactList}\small\item\em Sorts entries. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsubsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+size\-\_\-t \hyperlink{structhm_vector_pair_size_t_double_a854352f53b148adc24983a58a1866d66}{size}
+\begin{DoxyCompactList}\small\item\em Logical length. \end{DoxyCompactList}\item 
+size\-\_\-t \hyperlink{structhm_vector_pair_size_t_double_ad69ae78713b41381c4d71371aae6e63e}{storage}
+\begin{DoxyCompactList}\small\item\em Amount of physical memory allocated for storage. \end{DoxyCompactList}\item 
+\hyperlink{structhm_pair_size_t_double}{hm\-Pair\-Size\-T\-Double} $\ast$ \hyperlink{structhm_vector_pair_size_t_double_abf41d9d474c700f3b5ca2400cf24801e}{entries}
+\begin{DoxyCompactList}\small\item\em Entry values. \mbox{[}1 x storage\mbox{]}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsubsection{Detailed Description}
+Variable-\/sized vector of (size\-\_\-t,double) pairs. 
+
+Represents a vector which may change in length, stored in a contiguous block of memory. Elements can be accessed in constant time and appended in amortized constant time. Accessing entries outside the range 0-\/(size-\/1) results in a runtime assertion; this behavior can be disabled by compiling with the flag -\/\-D\-N\-D\-E\-B\-U\-G 
+
+\subsubsection{Member Function Documentation}
+\hypertarget{structhm_vector_pair_size_t_double_aa43cd0f2f6952dc98be353c0d78015ba}{\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}!hm\-Vector\-Pair\-Size\-T\-Double\-Destroy@{hm\-Vector\-Pair\-Size\-T\-Double\-Destroy}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Destroy@{hm\-Vector\-Pair\-Size\-T\-Double\-Destroy}!hmVectorPairSizeTDouble@{hm\-Vector\-Pair\-Size\-T\-Double}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Destroy}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Pair\-Size\-T\-Double\-Destroy (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_pair_size_t_double_aa43cd0f2f6952dc98be353c0d78015ba}
+
+
+Destructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_vector_pair_size_t_double_ae394f23cd44b8276842573475b40b4fb}{\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}!hm\-Vector\-Pair\-Size\-T\-Double\-Get\-Entry@{hm\-Vector\-Pair\-Size\-T\-Double\-Get\-Entry}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Get\-Entry@{hm\-Vector\-Pair\-Size\-T\-Double\-Get\-Entry}!hmVectorPairSizeTDouble@{hm\-Vector\-Pair\-Size\-T\-Double}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Get\-Entry}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- {\bf hm\-Pair\-Size\-T\-Double} hm\-Vector\-Pair\-Size\-T\-Double\-Get\-Entry (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector, }
+\item[{size\-\_\-t}]{index}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_pair_size_t_double_ae394f23cd44b8276842573475b40b4fb}
+
+
+Gets the value of an entry. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+{\em index} & Index in the range 0-\/(size-\/1). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Entry value. 
+\end{DoxyReturn}
+\hypertarget{structhm_vector_pair_size_t_double_adc7db0d27a3303f101280d5cca849544}{\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}!hm\-Vector\-Pair\-Size\-T\-Double\-Initialize@{hm\-Vector\-Pair\-Size\-T\-Double\-Initialize}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Initialize@{hm\-Vector\-Pair\-Size\-T\-Double\-Initialize}!hmVectorPairSizeTDouble@{hm\-Vector\-Pair\-Size\-T\-Double}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Initialize}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Pair\-Size\-T\-Double\-Initialize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_pair_size_t_double_adc7db0d27a3303f101280d5cca849544}
+
+
+Constructor. 
+
+Builds an empty vector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_vector_pair_size_t_double_a7852d46a9a74998d8e1087e97adf0043}{\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}!hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back@{hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back@{hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back}!hmVectorPairSizeTDouble@{hm\-Vector\-Pair\-Size\-T\-Double}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back}]{\setlength{\rightskip}{0pt plus 5cm}{\bf hm\-Pair\-Size\-T\-Double} hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_pair_size_t_double_a7852d46a9a74998d8e1087e97adf0043}
+
+
+Removes the last element from the end and returns its value. 
+
+Allows an hm\-Vector to be used as a stack.
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+value Value of final entry. 
+\end{DoxyReturn}
+\hypertarget{structhm_vector_pair_size_t_double_a30b058623bd848f4f5c1c320cbb494f1}{\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}!hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back@{hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back@{hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back}!hmVectorPairSizeTDouble@{hm\-Vector\-Pair\-Size\-T\-Double}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector, }
+\item[{{\bf hm\-Pair\-Size\-T\-Double}}]{value}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_pair_size_t_double_a30b058623bd848f4f5c1c320cbb494f1}
+
+
+Appends a new element. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+{\em value} & Value of new entry. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_vector_pair_size_t_double_a2f6cb58029369bad2a0b4f9d3792e77a}{\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}!hm\-Vector\-Pair\-Size\-T\-Double\-Resize@{hm\-Vector\-Pair\-Size\-T\-Double\-Resize}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Resize@{hm\-Vector\-Pair\-Size\-T\-Double\-Resize}!hmVectorPairSizeTDouble@{hm\-Vector\-Pair\-Size\-T\-Double}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Resize}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Pair\-Size\-T\-Double\-Resize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector, }
+\item[{size\-\_\-t}]{size}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_pair_size_t_double_a2f6cb58029369bad2a0b4f9d3792e77a}
+
+
+Changes the vector length. 
+
+No guarantees are provided for the entry values of the new vector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+{\em size} & New size. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_vector_pair_size_t_double_a79fdaf4a031f099789346dd86f863212}{\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}!hm\-Vector\-Pair\-Size\-T\-Double\-Set\-Entry@{hm\-Vector\-Pair\-Size\-T\-Double\-Set\-Entry}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Set\-Entry@{hm\-Vector\-Pair\-Size\-T\-Double\-Set\-Entry}!hmVectorPairSizeTDouble@{hm\-Vector\-Pair\-Size\-T\-Double}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Set\-Entry}]{\setlength{\rightskip}{0pt plus 5cm}static \-\_\-\-\_\-inline\-\_\-\-\_\- void hm\-Vector\-Pair\-Size\-T\-Double\-Set\-Entry (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector, }
+\item[{size\-\_\-t}]{index, }
+\item[{{\bf hm\-Pair\-Size\-T\-Double}}]{value}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_pair_size_t_double_a79fdaf4a031f099789346dd86f863212}
+
+
+Sets an entry to the specified value. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+{\em index} & Index in the range 0-\/(size-\/1). \\
+\hline
+{\em value} & New value. \\
+\hline
+\end{DoxyParams}
+\hypertarget{structhm_vector_pair_size_t_double_accc85d682163cd80e24353b58cd8347d}{\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}!hm\-Vector\-Pair\-Size\-T\-Double\-Sort@{hm\-Vector\-Pair\-Size\-T\-Double\-Sort}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Sort@{hm\-Vector\-Pair\-Size\-T\-Double\-Sort}!hmVectorPairSizeTDouble@{hm\-Vector\-Pair\-Size\-T\-Double}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Sort}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Pair\-Size\-T\-Double\-Sort (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{structhm_vector_pair_size_t_double_accc85d682163cd80e24353b58cd8347d}
+
+
+Sorts entries. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vector} & Target object. \\
+\hline
+\end{DoxyParams}
+
+
+\subsubsection{Field Documentation}
+\hypertarget{structhm_vector_pair_size_t_double_abf41d9d474c700f3b5ca2400cf24801e}{\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}!entries@{entries}}
+\index{entries@{entries}!hmVectorPairSizeTDouble@{hm\-Vector\-Pair\-Size\-T\-Double}}
+\paragraph[{entries}]{\setlength{\rightskip}{0pt plus 5cm}{\bf hm\-Pair\-Size\-T\-Double}$\ast$ entries}}\label{structhm_vector_pair_size_t_double_abf41d9d474c700f3b5ca2400cf24801e}
+
+
+Entry values. \mbox{[}1 x storage\mbox{]}. 
+
+\hypertarget{structhm_vector_pair_size_t_double_a854352f53b148adc24983a58a1866d66}{\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}!size@{size}}
+\index{size@{size}!hmVectorPairSizeTDouble@{hm\-Vector\-Pair\-Size\-T\-Double}}
+\paragraph[{size}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t size}}\label{structhm_vector_pair_size_t_double_a854352f53b148adc24983a58a1866d66}
+
+
+Logical length. 
+
+\hypertarget{structhm_vector_pair_size_t_double_ad69ae78713b41381c4d71371aae6e63e}{\index{hm\-Vector\-Pair\-Size\-T\-Double@{hm\-Vector\-Pair\-Size\-T\-Double}!storage@{storage}}
+\index{storage@{storage}!hmVectorPairSizeTDouble@{hm\-Vector\-Pair\-Size\-T\-Double}}
+\paragraph[{storage}]{\setlength{\rightskip}{0pt plus 5cm}size\-\_\-t storage}}\label{structhm_vector_pair_size_t_double_ad69ae78713b41381c4d71371aae6e63e}
+
+
+Amount of physical memory allocated for storage. 
+
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/include/\hyperlink{hm_vector_pair_size_t_double_8h}{hm\-Vector\-Pair\-Size\-T\-Double.\-h}\end{DoxyCompactItemize}

@@ -1,0 +1,167 @@
+\hypertarget{main_8c}{\subsection{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/main.c File Reference}
+\label{main_8c}\index{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/main.\-c@{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/main.\-c}}
+}
+{\ttfamily \#include $<$stdio.\-h$>$}\\*
+{\ttfamily \#include $<$time.\-h$>$}\\*
+{\ttfamily \#include $<$math.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}hm\-Tri\-Distance.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hm\-Context.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hm\-Utility.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hm\-Vector\-Size\-T.\-h\char`\"{}}\\*
+\subsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{main_8c_abd026d66eb3f6c848745631aa7ed8993}{parse\-Command\-Line\-Arguments} (int argc, char $\ast$$\ast$argv, char $\ast$$\ast$input\-Mesh, char $\ast$$\ast$input\-Sources, char $\ast$$\ast$output\-Mesh\-Prefix, char $\ast$$\ast$output\-Distance\-Prefix, char $\ast$$\ast$input\-Reference, double $\ast$smoothness, double $\ast$boundary\-Conditions, char $\ast$verbose)
+\item 
+void \hyperlink{main_8c_a1b5a1d3071ab7a7222af534a20a6aba6}{print\-Help} (int argc, char $\ast$$\ast$argv)
+\item 
+void \hyperlink{main_8c_ab934ed3745a2e6bd3e1e9335428fc44a}{print\-Version} (int argc, char $\ast$$\ast$argv)
+\item 
+void \hyperlink{main_8c_a4c6b41b41f8214e5b662ef5e78ffe737}{read\-Mesh} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance, \hyperlink{structhm_tri_mesh}{hm\-Tri\-Mesh} $\ast$mesh, const char $\ast$filename)
+\item 
+void \hyperlink{main_8c_ac43f1575c2305026f66c1a8ca7694b57}{read\-Sources} (int $\ast$n\-Source\-Sets, \hyperlink{structhm_vector_size_t}{hm\-Vector\-Size\-T} $\ast$$\ast$source\-Sets, const char $\ast$filename)
+\item 
+void \hyperlink{main_8c_a97b602120f6a3819d1a721358633784b}{read\-Reference\-Values} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance, int $\ast$n\-Reference\-Columns, double $\ast$$\ast$$\ast$reference\-Values, char $\ast$$\ast$$\ast$reference\-Names, const char $\ast$filename)
+\item 
+void \hyperlink{main_8c_a01945f9f42435cb670fbfe34a63eda5a}{destroy\-Source\-Sets} (int n\-Source\-Sets, \hyperlink{structhm_vector_size_t}{hm\-Vector\-Size\-T} $\ast$$\ast$source\-Sets)
+\item 
+void \hyperlink{main_8c_a5098e8e88335678889e9bec483fd8d58}{destroy\-Reference\-Values} (int n\-Reference\-Columns, double $\ast$$\ast$$\ast$reference\-Values, char $\ast$$\ast$$\ast$reference\-Names)
+\item 
+void \hyperlink{main_8c_a10dba993f519bcec6cc755b24054efa8}{write\-Mesh} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance, const char $\ast$filename, int index)
+\item 
+void \hyperlink{main_8c_a8603f63ba168bf22465761fe9793bab0}{write\-Distances} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance, const char $\ast$prefix, int index)
+\item 
+void \hyperlink{main_8c_aec9c7d753c2943fb9ebf442d07015789}{set\-Sources} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance, \hyperlink{structhm_vector_size_t}{hm\-Vector\-Size\-T} $\ast$source\-Sets, int index)
+\item 
+void \hyperlink{main_8c_a9a877e439e66c5e6ff9780ef7a49eb28}{compare\-Distance} (\hyperlink{structhm_tri_distance}{hm\-Tri\-Distance} $\ast$distance, int n\-Reference\-Columns, double $\ast$$\ast$reference\-Values, char $\ast$$\ast$reference\-Names, const char $\ast$prefix)
+\item 
+int \hyperlink{main_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main} (int argc, char $\ast$$\ast$argv)
+\end{DoxyCompactItemize}
+
+
+\subsubsection{Function Documentation}
+\hypertarget{main_8c_a9a877e439e66c5e6ff9780ef7a49eb28}{\index{main.\-c@{main.\-c}!compare\-Distance@{compare\-Distance}}
+\index{compare\-Distance@{compare\-Distance}!main.c@{main.\-c}}
+\paragraph[{compare\-Distance}]{\setlength{\rightskip}{0pt plus 5cm}void compare\-Distance (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance, }
+\item[{int}]{n\-Reference\-Columns, }
+\item[{double $\ast$$\ast$}]{reference\-Values, }
+\item[{char $\ast$$\ast$}]{reference\-Names, }
+\item[{const char $\ast$}]{prefix}
+\end{DoxyParamCaption}
+)}}\label{main_8c_a9a877e439e66c5e6ff9780ef7a49eb28}
+\hypertarget{main_8c_a5098e8e88335678889e9bec483fd8d58}{\index{main.\-c@{main.\-c}!destroy\-Reference\-Values@{destroy\-Reference\-Values}}
+\index{destroy\-Reference\-Values@{destroy\-Reference\-Values}!main.c@{main.\-c}}
+\paragraph[{destroy\-Reference\-Values}]{\setlength{\rightskip}{0pt plus 5cm}void destroy\-Reference\-Values (
+\begin{DoxyParamCaption}
+\item[{int}]{n\-Reference\-Columns, }
+\item[{double $\ast$$\ast$$\ast$}]{reference\-Values, }
+\item[{char $\ast$$\ast$$\ast$}]{reference\-Names}
+\end{DoxyParamCaption}
+)}}\label{main_8c_a5098e8e88335678889e9bec483fd8d58}
+\hypertarget{main_8c_a01945f9f42435cb670fbfe34a63eda5a}{\index{main.\-c@{main.\-c}!destroy\-Source\-Sets@{destroy\-Source\-Sets}}
+\index{destroy\-Source\-Sets@{destroy\-Source\-Sets}!main.c@{main.\-c}}
+\paragraph[{destroy\-Source\-Sets}]{\setlength{\rightskip}{0pt plus 5cm}void destroy\-Source\-Sets (
+\begin{DoxyParamCaption}
+\item[{int}]{n\-Source\-Sets, }
+\item[{{\bf hm\-Vector\-Size\-T} $\ast$$\ast$}]{source\-Sets}
+\end{DoxyParamCaption}
+)}}\label{main_8c_a01945f9f42435cb670fbfe34a63eda5a}
+\hypertarget{main_8c_a3c04138a5bfe5d72780bb7e82a18e627}{\index{main.\-c@{main.\-c}!main@{main}}
+\index{main@{main}!main.c@{main.\-c}}
+\paragraph[{main}]{\setlength{\rightskip}{0pt plus 5cm}int main (
+\begin{DoxyParamCaption}
+\item[{int}]{argc, }
+\item[{char $\ast$$\ast$}]{argv}
+\end{DoxyParamCaption}
+)}}\label{main_8c_a3c04138a5bfe5d72780bb7e82a18e627}
+\hypertarget{main_8c_abd026d66eb3f6c848745631aa7ed8993}{\index{main.\-c@{main.\-c}!parse\-Command\-Line\-Arguments@{parse\-Command\-Line\-Arguments}}
+\index{parse\-Command\-Line\-Arguments@{parse\-Command\-Line\-Arguments}!main.c@{main.\-c}}
+\paragraph[{parse\-Command\-Line\-Arguments}]{\setlength{\rightskip}{0pt plus 5cm}int parse\-Command\-Line\-Arguments (
+\begin{DoxyParamCaption}
+\item[{int}]{argc, }
+\item[{char $\ast$$\ast$}]{argv, }
+\item[{char $\ast$$\ast$}]{input\-Mesh, }
+\item[{char $\ast$$\ast$}]{input\-Sources, }
+\item[{char $\ast$$\ast$}]{output\-Mesh\-Prefix, }
+\item[{char $\ast$$\ast$}]{output\-Distance\-Prefix, }
+\item[{char $\ast$$\ast$}]{input\-Reference, }
+\item[{double $\ast$}]{smoothness, }
+\item[{double $\ast$}]{boundary\-Conditions, }
+\item[{char $\ast$}]{verbose}
+\end{DoxyParamCaption}
+)}}\label{main_8c_abd026d66eb3f6c848745631aa7ed8993}
+\hypertarget{main_8c_a1b5a1d3071ab7a7222af534a20a6aba6}{\index{main.\-c@{main.\-c}!print\-Help@{print\-Help}}
+\index{print\-Help@{print\-Help}!main.c@{main.\-c}}
+\paragraph[{print\-Help}]{\setlength{\rightskip}{0pt plus 5cm}void print\-Help (
+\begin{DoxyParamCaption}
+\item[{int}]{argc, }
+\item[{char $\ast$$\ast$}]{argv}
+\end{DoxyParamCaption}
+)}}\label{main_8c_a1b5a1d3071ab7a7222af534a20a6aba6}
+\hypertarget{main_8c_ab934ed3745a2e6bd3e1e9335428fc44a}{\index{main.\-c@{main.\-c}!print\-Version@{print\-Version}}
+\index{print\-Version@{print\-Version}!main.c@{main.\-c}}
+\paragraph[{print\-Version}]{\setlength{\rightskip}{0pt plus 5cm}void print\-Version (
+\begin{DoxyParamCaption}
+\item[{int}]{argc, }
+\item[{char $\ast$$\ast$}]{argv}
+\end{DoxyParamCaption}
+)}}\label{main_8c_ab934ed3745a2e6bd3e1e9335428fc44a}
+\hypertarget{main_8c_a4c6b41b41f8214e5b662ef5e78ffe737}{\index{main.\-c@{main.\-c}!read\-Mesh@{read\-Mesh}}
+\index{read\-Mesh@{read\-Mesh}!main.c@{main.\-c}}
+\paragraph[{read\-Mesh}]{\setlength{\rightskip}{0pt plus 5cm}void read\-Mesh (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance, }
+\item[{{\bf hm\-Tri\-Mesh} $\ast$}]{mesh, }
+\item[{const char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}}\label{main_8c_a4c6b41b41f8214e5b662ef5e78ffe737}
+\hypertarget{main_8c_a97b602120f6a3819d1a721358633784b}{\index{main.\-c@{main.\-c}!read\-Reference\-Values@{read\-Reference\-Values}}
+\index{read\-Reference\-Values@{read\-Reference\-Values}!main.c@{main.\-c}}
+\paragraph[{read\-Reference\-Values}]{\setlength{\rightskip}{0pt plus 5cm}void read\-Reference\-Values (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance, }
+\item[{int $\ast$}]{n\-Reference\-Columns, }
+\item[{double $\ast$$\ast$$\ast$}]{reference\-Values, }
+\item[{char $\ast$$\ast$$\ast$}]{reference\-Names, }
+\item[{const char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}}\label{main_8c_a97b602120f6a3819d1a721358633784b}
+\hypertarget{main_8c_ac43f1575c2305026f66c1a8ca7694b57}{\index{main.\-c@{main.\-c}!read\-Sources@{read\-Sources}}
+\index{read\-Sources@{read\-Sources}!main.c@{main.\-c}}
+\paragraph[{read\-Sources}]{\setlength{\rightskip}{0pt plus 5cm}void read\-Sources (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{n\-Source\-Sets, }
+\item[{{\bf hm\-Vector\-Size\-T} $\ast$$\ast$}]{source\-Sets, }
+\item[{const char $\ast$}]{filename}
+\end{DoxyParamCaption}
+)}}\label{main_8c_ac43f1575c2305026f66c1a8ca7694b57}
+\hypertarget{main_8c_aec9c7d753c2943fb9ebf442d07015789}{\index{main.\-c@{main.\-c}!set\-Sources@{set\-Sources}}
+\index{set\-Sources@{set\-Sources}!main.c@{main.\-c}}
+\paragraph[{set\-Sources}]{\setlength{\rightskip}{0pt plus 5cm}void set\-Sources (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance, }
+\item[{{\bf hm\-Vector\-Size\-T} $\ast$}]{source\-Sets, }
+\item[{int}]{index}
+\end{DoxyParamCaption}
+)}}\label{main_8c_aec9c7d753c2943fb9ebf442d07015789}
+\hypertarget{main_8c_a8603f63ba168bf22465761fe9793bab0}{\index{main.\-c@{main.\-c}!write\-Distances@{write\-Distances}}
+\index{write\-Distances@{write\-Distances}!main.c@{main.\-c}}
+\paragraph[{write\-Distances}]{\setlength{\rightskip}{0pt plus 5cm}void write\-Distances (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance, }
+\item[{const char $\ast$}]{prefix, }
+\item[{int}]{index}
+\end{DoxyParamCaption}
+)}}\label{main_8c_a8603f63ba168bf22465761fe9793bab0}
+\hypertarget{main_8c_a10dba993f519bcec6cc755b24054efa8}{\index{main.\-c@{main.\-c}!write\-Mesh@{write\-Mesh}}
+\index{write\-Mesh@{write\-Mesh}!main.c@{main.\-c}}
+\paragraph[{write\-Mesh}]{\setlength{\rightskip}{0pt plus 5cm}void write\-Mesh (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Tri\-Distance} $\ast$}]{distance, }
+\item[{const char $\ast$}]{filename, }
+\item[{int}]{index}
+\end{DoxyParamCaption}
+)}}\label{main_8c_a10dba993f519bcec6cc755b24054efa8}

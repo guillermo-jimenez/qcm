@@ -22,6 +22,9 @@
 
 from __future__ import division
 
+from os import system
+from os import mkdir
+
 from os.path import isfile
 from os.path import splitext
 from os.path import split
@@ -423,6 +426,10 @@ def polydataReader(path):
 
 
 def vtkPointsToNumpy(polydata):
+    """ """
+
+    print("TO-DO: DOCUMENTATION")
+
     try:
         pointVector             = polydata.GetPoints()
     except:
@@ -447,6 +454,10 @@ def vtkPointsToNumpy(polydata):
 
 
 def vtkCellsToNumpy(polydata):
+    """ """
+
+    print("TO-DO: DOCUMENTATION")
+
     try:
         pointVector             = polydata.GetPoints()
     except:
@@ -745,27 +756,70 @@ def closestBoundaryId(polydata, objectivePointId, boundary=None, polygons=None, 
 
 
 
-        # else:
-        #     for i in range(0, len(boundary)):
 
-        #     if len(boundary.shape) == 1:
-        #         for i in boundary.shape[0]:
-                    
-        #         septalPoint     = repmat(septalPoint, self.boundary.size, 1)
-        #         septalPoint     = septalPoint.transpose()
-        #     else:
-        #         for i in boundary.shape[1]:
+def outputLocation(input_path, output_path=None, folder_name=None):
+    """ """
+
+    print("TO-DO: DOCUMENTATION")
+
+    path                    = None
+
+    if output_path is input_path:
+        print(" *  Output path provided coincides with input path.\n"+
+              "    Overwriting the input file is not permitted.\n"+
+              "    Writing in the default location...\n")
+
+    if output_path is None:
+        output_path         = input_path
+
+    if folder_name is None:
+        folder_name         = 'Results'
+
+    if output_path is input_path:
+        print(" *  Writing to default location: ")
+
+        directory, filename = split(input_path)
+        filename, extension = splitext(filename)
+
+        if isdir(join(directory, folder_name)):
+            path            = join(directory, folder_name, 
+                                   str(filename + '_' + folder_name + extension))
+        else:
+            mkdir(join(directory, folder_name))
+
+            if isdir(join(directory, folder_name)):
+                path        = join(directory, folder_name, 
+                                   str(filename + '_' + folder_name + extension))
+            else:
+                path        = join(directory, str(filename + '_' + folder_name + extension))
+
+        print("    " + path + "\n")
+
+    else:
+        directory, filename = split(output_path)
+
+        if not isdir(directory):
+            raise RuntimeError("Folder does not exist")
+
+        if splitext(output_path)[1] is '':
+            output_path  = output_path + ".vtk"
+
+        path                    = output_path
+
+    return path
 
 
-        #     distanceToObjectivePoint    = (self.points[:, self.boundary] - septalPoint)
-        #     distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0))
-        #     closestPointIndex           = where(distanceToObjectivePoint == distanceToObjectivePoint.min())
+def vtkWriterSpanishLocale(path):
+    """ """
 
-        #     if len(closestPointIndex) == 1:
-        #         if len(closestPointIndex[0]) == 1:
-        #             closestPointIndex   = closestPointIndex[0][0]
-        #         else:
-        #             raise Exception("Mesh or boundary contains repeated point IDs")
-        #     else:
-        #         raise Exception("Mesh or boundary contains repeated point IDs")
+    print("TO-DO: DOCUMENTATION")
+
+    # In case the host computer converts decimal points (.) to decimal
+    # commas (,), such as in Spanish locales.
+    system("perl -pi -e 's/,/./g' %s " % path)
+
+
+
+
+
 

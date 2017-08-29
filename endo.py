@@ -18,6 +18,8 @@
 
 from __future__ import division
 
+import time
+
 from os import system
 from os import mkdir
 
@@ -29,6 +31,8 @@ from os.path import join
 
 from numpy import int
 from numpy import dtype
+
+from scipy.interpolate import Rbf
 
 from numpy.matlib import repmat
 
@@ -73,6 +77,7 @@ class PyQCM(object):
     __points                        = None
     __polygons                      = None
 
+    __batch_size                    = None
     __septum                        = None
     __apex                          = None
     __laplacian                     = None
@@ -83,14 +88,16 @@ class PyQCM(object):
     __output_path                   = None
 
 
-    def __init__(self, path, septum=None, apex=None, output_path=None):
+    def __init__(self, path, septum=None, apex=None, batch_size=1000, output_path=None):
         self.__path                 = path
+        self.__batch_size           = batch_size
         self.__polydata             = utils.polydataReader(self.path)
         self.__points               = utils.vtkPointsToNumpy(self.polydata)
         self.__polygons             = utils.vtkCellsToNumpy(self.polydata)
         self.__laplacian            = utils.cotangentWeightsLaplacianMatrix(self.polydata, self.points, self.polygons)
-        self.__adjacencyMatrix      = utils.adjacencyMatrix(self.polydata, self.polygons)
-        self.__boundary             = utils.boundaryExtractor(self.polydata, self.polygons, self.adjacencyMatrix)
+        self.__adjacency_matrix     = utils.adjacencyMatrix(self.polydata, self.polygons)
+        self.__boundary             = utils.boundaryExtractor(self.polydata, self.polygons, self.adjacency_matrix)
+        self.__output_path          = utils.outputLocation(self.path, self.output_path)
 
         landmarks                   = []
         reverse                     = False
@@ -135,23 +142,10 @@ class PyQCM(object):
             self.__boundary = flipud(self.boundary)
             self.__boundary = roll(self.boundary, 1)
 
-        # self.__calc_homeomorphism()
-        # self.__calc_thin_plate_splines()
-
-        # # Establishing an output path
-        # if output_path is None:
-        #     self.__output_path      = self.path
-        # else:
-        #     if output_path is self.path:
-        #         print(" *  Output path provided coincides with input path.\n"+
-        #               "    Overwriting the input file is not permitted.\n"+
-        #               "    Writing in the default location...\n")
-        #         self.__output_path  = self.path
-        #     else:
-        #         self.__output_path  = output_path
-
-
-        # self.__write_output()
+        self.__calc_homeomorphism()
+        self.__calc_thin_plate_splines()
+        self.__write_output()
+        utils.vtkWriterSpanishLocale(self.output_path)
 
 
     @property
@@ -161,6 +155,17 @@ class PyQCM(object):
     @property
     def output_path(self):
         return self.__output_path
+
+    @property
+    def batch_size(self):
+        return self.__batch_size
+
+    @batch_size.setter
+    def batch_size(self, batch_size):
+        try:
+            self.__batch_size = int(batch_size)
+        except:
+            raise Exception("Non-number provided")
 
     @property
     def polydata(self):
@@ -175,8 +180,8 @@ class PyQCM(object):
         return self.__polygons
 
     @property
-    def adjacencyMatrix(self):
-        return self.__adjacencyMatrix
+    def adjacency_matrix(self):
+        return self.__adjacency_matrix
 
     @output_path.setter
     def output_path(self, output_path):
@@ -240,7 +245,7 @@ class PyQCM(object):
     def __calc_homeomorphism(self):
         """ """
 
-        print("TO-DO: DOCUMENTATION")
+        start = time.time()
 
         if (self.laplacian is not None) and (self.boundary is not None):
             numPoints               = self.polydata.GetNumberOfPoints()
@@ -249,8 +254,8 @@ class PyQCM(object):
             homeomorphism_laplacian = diagonalSparse - self.laplacian
 
             # Finds non-zero elements in the laplacian matrix
-            (nzj, nzi)              = find(self.laplacian)[0:2]
-            # (nzj, nzi)              = self.laplacian.nonzero()
+            # (nzj, nzi)              = find(self.laplacian)[0:2]
+            (nzj, nzi)              = self.laplacian.nonzero()
 
             for point in self.boundary:
                 positions           = where(nzi==point)[0]
@@ -283,118 +288,101 @@ class PyQCM(object):
             self.__homeomorphism    = spsolve(homeomorphism_laplacian, 
                                               boundaryConstrain.transpose()).transpose()
 
-    def __calc_thin_plate_splines(self):
-        if (self.homeomorphism is not None) and (self.apex is not None):
-            boundaryPoints  = self.homeomorphism[:,self.boundary]
-            source          = zeros((boundaryPoints.shape[0],
-                                     boundaryPoints.shape[1] + 1))
-            destination     = zeros((boundaryPoints.shape[0],
-                                     boundaryPoints.shape[1] + 1))
 
-            source[:, 0:source.shape[1] - 1]        = boundaryPoints
-            source[:, source.shape[1] - 1]          = self.homeomorphism[:, self.apex]
+    def __calc_thin_plate_splines(self, batch_size=None):
+        if (self.homeomorphism is None) or (self.apex is None):
+            raise Exception("The homeomorphic transformation could not be calculated")
 
-            destination[:, 0:source.shape[1] - 1]   = boundaryPoints
-            destination[:, 0:source.shape[1] - 1]   = boundaryPoints
+        if batch_size is None:
+            batch_size  = self.batch_size
 
-            # For a faster calculation, the mvpoly package has been used. The
-            # Thin Plate Splines has been calculated using the X coordinate of
-            # the points in the real part of a complex number and the Y
-            # coordinate of the point as the imaginary part. After the 
-            # interpolation, the separate real and imaginary parts have been
-            # recovered, encoding the new (X,Y) positions after the relaxation.
-            x = source[0,:]
-            y = source[1,:]
-            d = destination[0,:] + 1j*destination[1,:]
+        boundaryPoints  = self.homeomorphism[:,self.boundary]
+        source          = zeros((boundaryPoints.shape[0],
+                                 boundaryPoints.shape[1] + 1))
+        destination     = zeros((boundaryPoints.shape[0],
+                                 boundaryPoints.shape[1] + 1))
 
-            thinPlateInterpolation = RBFThinPlateSpline(x,y,d)
+        source[:, 0:source.shape[1] - 1]        = boundaryPoints
+        source[:, source.shape[1] - 1]          = self.homeomorphism[:, self.apex]
 
-            result = thinPlateInterpolation(self.homeomorphism[0,:], self.homeomorphism[1,:])
+        destination[:, 0:source.shape[1] - 1]   = boundaryPoints
+        destination[:, 0:source.shape[1] - 1]   = boundaryPoints
 
-            self.__homeomorphism[0,:] = result.real
-            self.__homeomorphism[1,:] = result.imag
+        # For a faster calculation, the mvpoly package has been used. The
+        # Thin Plate Splines has been calculated using the X coordinate of
+        # the points in the real part of a complex number and the Y
+        # coordinate of the point as the imaginary part. After the 
+        # interpolation, the separate real and imaginary parts have been
+        # recovered, encoding the new (X,Y) positions after the relaxation.
+        x = source[0,:]
+        y = source[1,:]
+        d = destination[0,:] + 1j*destination[1,:]
+
+        thinPlateInterpolation = RBFThinPlateSpline(x,y,d)
+        result                      = zeros((1, self.homeomorphism.shape[1]), dtype='complex128')
+
+        # To avoid memory error, smaller batch sizes are used. The result is
+        # independent of the batch size.
+        for i in range(0, self.homeomorphism.shape[1], batch_size):
+            if (i + batch_size) >= self.homeomorphism.shape[1]:
+                result[:,i:]        = thinPlateInterpolation(self.homeomorphism[0,i:],
+                                                             self.homeomorphism[1,i:])
+            else:
+                result[:,i:(i+batch_size)]  = thinPlateInterpolation(self.homeomorphism[0,i:(i+batch_size)],
+                                                                     self.homeomorphism[1,i:(i+batch_size)])
+
+        # Recover the new (X,Y) coordinates from the real and imaginary parts
+        # of the results.
+        self.__homeomorphism[0,:] = result.real
+        self.__homeomorphism[1,:] = result.imag
+
 
     def flip_boundary(self):
         self.__boundary         = flipud(self.boundary)
         self.__boundary         = roll(self.boundary, 1)
 
     def __write_output(self):
-        if ((self.homeomorphism is not None)
-            and (self.points is not None)
-            and (self.polygons is not None)):
+        if ((self.homeomorphism is None) or (self.points is None) or (self.polygons is None)):
+            raise Exception("Something went wrong. Check the input")
 
-            newPolyData         = vtkPolyData()
-            newPointData        = vtkPoints()
-            writer              = vtkPolyDataWriter()
+        newPolyData         = vtkPolyData()
+        newPointData        = vtkPoints()
+        writer              = vtkPolyDataWriter()
+        writer.SetFileName(self.output_path)
 
-            if self.output_path is self.path:
-                print(" *  Writing to default location: ")
+        for i in xrange(self.polydata.GetNumberOfPoints()):
+            newPointData.InsertPoint(i, (self.homeomorphism[0, i], self.homeomorphism[1, i], 0.0))
 
-                path                = None
+        newPolyData.SetPoints(newPointData)
+        newPolyData.SetPolys(self.polydata.GetPolys())
 
-                directory, filename = split(self.path)
-                filename, extension = splitext(filename)
-
-                if isdir(join(directory, 'QCM')):
-                    path            = join(directory, 'QCM', str(filename + '_QCM' + extension))
-                else:
-                    mkdir(join(directory, 'QCM'))
-
-                    if isdir(join(directory, 'QCM')):
-                        path        = join(directory, 'QCM', str(filename + '_QCM' + extension))
-                    else:
-                        path        = join(directory, str(filename + '_QCM' + extension))
-
-                print("    " + path + "\n")
-
-            else:
-                if splitext(self.output_path)[1] is '':
-                    self.__output_path  = self.output_path + ".vtk"
-
-                path                    = self.output_path
-
-            self.__output_path          = path
-            writer.SetFileName(path)
-
-            for i in xrange(self.polydata.GetNumberOfPoints()):
-                newPointData.InsertPoint(i, (self.homeomorphism[0, i], self.homeomorphism[1, i], 0.0))
-
-            newPolyData.SetPoints(newPointData)
-            newPolyData.SetPolys(self.polydata.GetPolys())
-
-            if self.polydata.GetPointData().GetScalars() is None:
-                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(0))
-            else:
-                newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetScalars())
-                
-            bool_scalars = False
-
-            for i in range(self.polydata.GetPointData().GetNumberOfArrays()):
-                if self.polydata.GetPointData().GetScalars() is None:
-                    if self.polydata.GetPointData().GetArray(i).GetName() == 'Bipolar':
-                        newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(i))
-                        bool_scalars = True
-                    else:
-                        newPolyData.GetPointData().AddArray(self.polydata.GetPointData().GetArray(i))
-                else:
-                    if (self.polydata.GetPointData().GetArray(i).GetName() 
-                        == self.polydata.GetPointData().GetScalars().GetName()):
-                        newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(i))
-                    else:
-                        newPolyData.GetPointData().AddArray(self.polydata.GetPointData().GetArray(i))
-                
-                
-            writer.SetInputData(newPolyData)
-            writer.Write()
-
-            self.__output_polydata  = newPolyData
-
-            # In case the host computer converts decimal points (.) to decimal
-            # commas (,), such as in Spanish locales.
-            system("perl -pi -e 's/,/./g' %s " % path)
-
+        if self.polydata.GetPointData().GetScalars() is None:
+            newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(0))
         else:
-            raise RuntimeError("Information provided insufficient")
+            newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetScalars())
+            
+        bool_scalars = False
+
+        for i in range(self.polydata.GetPointData().GetNumberOfArrays()):
+            if self.polydata.GetPointData().GetScalars() is None:
+                if self.polydata.GetPointData().GetArray(i).GetName() == 'Bipolar':
+                    newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(i))
+                    bool_scalars = True
+                else:
+                    newPolyData.GetPointData().AddArray(self.polydata.GetPointData().GetArray(i))
+            else:
+                if (self.polydata.GetPointData().GetArray(i).GetName() 
+                    == self.polydata.GetPointData().GetScalars().GetName()):
+                    newPolyData.GetPointData().SetScalars(self.polydata.GetPointData().GetArray(i))
+                else:
+                    newPolyData.GetPointData().AddArray(self.polydata.GetPointData().GetArray(i))
+            
+            
+        writer.SetInputData(newPolyData)
+        writer.Write()
+
+        self.__output_polydata  = newPolyData
+
 
     def __str__(self):
         s = "'" + self.__class__.__name__ + "' object at '" + self.path + "'.\n"
