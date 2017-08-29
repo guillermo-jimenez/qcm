@@ -2,7 +2,7 @@
 
 """
     Copyright (C) 2017 - Universitat Pompeu Fabra
-    Author - Constantine Butakoff 
+    Authors - Guillermo Jimenez-Perez & Constantine Butakoff 
     Correspondence - Guillermo Jimenez⁻Perez <guillermo.jim.per@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
@@ -78,12 +78,22 @@ class PointPicker(vtkPointPicker):
 #the main class
 class PointSelector:
 
-    def __init__(self): #initialize variables
-        self.marker_radius = 1;
-        self.marker_colors = [(1,0,0), (0,1,0), (0,0,1), (1,1,0)] #different colors for different markers
-        self.selected_points = vtkPoints()
+    def __init__(self, pointIds=None): #initialize variables
+        self.marker_radius      = 1
+        self.marker_colors      = [(1,0,0), (0,1,0), (1,1,0), (0,0,0), (0.5,0.5,0.5), (0.5,0,0)] #different colors for different markers
+        # self.marker_colors      = [(1,0,0), (0,1,0), (1,1,0), (0,0,0), (0.5,1,0.5)] #different colors for different markers
+        self.selected_points    = vtkPoints()
         self.selected_point_ids = vtkIdList()
-        self.window_size = (800,600)
+        self.window_size        = (800,600)
+        self.pointIds           = pointIds
+
+        try:
+            for i in range(0, len(self.pointIds)):
+                self.selected_point_ids.InsertNextId(self.pointIds[i])
+                self.selected_points.InsertNextPoint(shape.GetPoint(self.pointIds[i]))
+        except:
+            raise Exception("pointIds has to be iterable")
+
 
     def GetSelectedPointIds(self): #returns vtkIdList in the order of clicks
         return self.selected_point_ids
@@ -91,8 +101,65 @@ class PointSelector:
     def GetSelectedPoints(self): #returns vtkPoints in the order of clicks
         return self.selected_points
         
-    def DoSelection(self, shape): #open rendering window and start selection
-        self.selected_points.Reset()
+    def DoSelection(self, shape): #open rendering window and start 
+        if self.pointIds is None:
+            self.selected_points.Reset()
+            self.selected_point_ids.Reset()
+        else:
+            renderer = vtkRenderer();
+
+            #check if anything was picked
+            for i in range(0, self.selected_points.GetNumberOfPoints()):
+                if i < len(self.marker_colors):
+                    #create a sphere to mark the location
+                    sphereSource = vtkSphereSource();
+                    sphereSource.SetRadius(self.marker_radius); 
+                    sphereSource.SetCenter(self.selected_points.GetPoint(i));
+                    
+                    mapper = vtkPolyDataMapper()
+                    mapper.SetInputConnection(sphereSource.GetOutputPort())
+
+                    actor = vtkActor()
+                    actor.SetMapper(mapper)
+
+                    #define the color of the sphere (pick from the list)
+                    actor.GetProperty().SetColor(self.marker_colors[i])
+
+                    renderer.AddActor(actor)
+
+            # #create a sphere to mark the location
+            # sphereSource = vtkSphereSource();
+            # sphereSource.SetRadius(self.marker_radius); 
+            # sphereSource.SetCenter(self.selected_points.GetPoint(0));
+            
+            # mapper = vtkPolyDataMapper()
+            # mapper.SetInputConnection(sphereSource.GetOutputPort())
+
+            # actor = vtkActor()
+            # actor.SetMapper(mapper)
+
+            # #define the color of the sphere (pick from the list)
+            # actor.GetProperty().SetColor(self.marker_colors[0])
+
+            # renderer = vtkRenderer();
+            # renderer.AddActor(actor)
+
+            # #create a sphere to mark the location
+            # sphereSource = vtkSphereSource();
+            # sphereSource.SetRadius(self.marker_radius); 
+            # sphereSource.SetCenter(self.selected_points.GetPoint(1));
+            
+            # mapper = vtkPolyDataMapper()
+            # mapper.SetInputConnection(sphereSource.GetOutputPort())
+
+            # actor = vtkActor()
+            # actor.SetMapper(mapper)
+
+            # #define the color of the sphere (pick from the list)
+            # actor.GetProperty().SetColor(self.marker_colors[1])
+
+            # renderer.AddActor(actor)
+
 
         mapper = vtkPolyDataMapper()
         mapper.SetInputData(shape)
@@ -104,11 +171,14 @@ class PointSelector:
         pointPicker = PointPicker()
         pointPicker.AddPickList(actor)
         pointPicker.PickFromListOn()
-        
+
         pointPicker.SetParameters(self.selected_points, self.selected_point_ids, self.marker_radius, self.marker_colors)
 
-        renderer = vtkRenderer();
-        renderer.AddActor(actor)
+        try:
+            renderer.AddActor(actor)
+        except:
+            renderer = vtkRenderer();
+            renderer.AddActor(actor)
 
         window = vtkRenderWindow();
         window.AddRenderer( renderer );
@@ -124,9 +194,6 @@ class PointSelector:
         window.Render()
         interactor.Start();
 
-
-        
         render_window = interactor.GetRenderWindow()
         render_window.Finalize()
-        interactor.TerminateApp()
-        del(window, interactor)
+

@@ -64,8 +64,7 @@ from vtk import vtkIdList
 from scipy.sparse.linalg import spsolve
 from mvpoly.rbf import RBFThinPlateSpline
 
-from PointPicker import PointSelector
-
+import utils
 
 class PyQCM(object):
     __path                          = None
@@ -74,19 +73,10 @@ class PyQCM(object):
     __points                        = None
     __polygons                      = None
 
-    __scalars                       = None
-    __normals                       = None
-
-    __npoints                       = None
-    __npolygons                     = None
-    __ndim                          = None
-    __nscalars                      = None
-    __nedges_mesh                   = None
-    __scalars_names                 = None
-
     __septum                        = None
     __apex                          = None
     __laplacian                     = None
+    __adjacency                     = None
     __boundary                      = None
     __output_polydata               = None
     __homeomorphism                 = None
@@ -94,142 +84,75 @@ class PyQCM(object):
 
 
     def __init__(self, path, septum=None, apex=None, output_path=None):
-        self.__septum               = septum
-        self.__apex                 = apex
+        self.__path                 = path
+        self.__polydata             = utils.polydataReader(self.path)
+        self.__points               = utils.vtkPointsToNumpy(self.polydata)
+        self.__polygons             = utils.vtkCellsToNumpy(self.polydata)
+        self.__laplacian            = utils.cotangentWeightsLaplacianMatrix(self.polydata, self.points, self.polygons)
+        self.__adjacencyMatrix      = utils.adjacencyMatrix(self.polydata, self.polygons)
+        self.__boundary             = utils.boundaryExtractor(self.polydata, self.polygons, self.adjacencyMatrix)
 
-        # Reading the input VTK file
-        if ((path is not None) and (self.polydata is None)):
-            if isfile(path):
-                self.__path         = path
+        landmarks                   = []
+        reverse                     = False
+
+        if septum is None:
+            if apex is None:
+                pass
             else:
-                raise RuntimeError("File does not exist")
-
-            reader                  = vtkPolyDataReader()
-            reader.SetFileName(self.path)
-            reader.Update()
-
-            self.__polydata         = reader.GetOutput()
-            self.__polydata.BuildLinks()
-
-        # Establishing an output path
-        if output_path is None:
-            self.__output_path      = self.path
+                landmarks.append(apex)
+                reverse             = True
         else:
-            if output_path is self.path:
-                print(" *  Output path provided coincides with input path.\n"+
-                      "    Overwriting the input file is not permitted.\n"+
-                      "    Writing in the default location...\n")
-                self.__output_path  = self.path
+            if apex is None:
+                landmarks.append(septum)
             else:
-                self.__output_path  = output_path
+                landmarks.append(septum)
+                landmarks.append(apex)
 
-        # Exporting VTK points to numpy for a more efficient manipulation
-        pointVector                 = self.polydata.GetPoints()
+        landmarks           = utils.landmarkSelector(self.polydata, 2, landmarks)
 
-        try:
-            rows                    = len(pointVector.GetPoint(0))
-            cols                    = pointVector.GetNumberOfPoints()
-            points                  = zeros((rows,cols))
-        except:
-            raise Exception("The VTK file provided does not contain any points")
+        if reverse is True:
+            landmarks.reverse()
 
-        if pointVector:
-            for i in range(0, pointVector.GetNumberOfPoints()):
-                point_tuple         = pointVector.GetPoint(i)
+        boundaryNumber, boundaryId  = utils.closestBoundaryId(self.polydata, landmarks[0], boundary=self.boundary)
+        self.__septum               = self.boundary[boundaryNumber][boundaryId]
+        self.__apex                 = landmarks[1]
 
-                points[0,i]         = point_tuple[0]
-                points[1,i]         = point_tuple[1]
-                points[2,i]         = point_tuple[2]
+        # A partir de aqui, especificar:
+        # * 1 unica boundary valida
+        if len(self.boundary) == 1:
+            self.__boundary         = self.boundary[0]
+            self.__boundary         = roll(self.boundary, -boundaryId)
+        else:
+            raise Exception("This mapping accepts meshes with only one boundary")
 
-        # Exporting VTK triangles to numpy for a more efficient manipulation
-        polygons                    = None
+        O           = mean(self.points[:, self.boundary], axis=1)
+        OA          = asarray(self.points[:, self.boundary[0]] - O)
+        OB          = asarray(self.points[:, self.boundary[1]] - O)
+        OC          = asarray(self.points[:, self.apex] - O)
+        normal      = cross(OA, OB)
 
-        for i in xrange(self.polydata.GetNumberOfCells()):
-            pointIds                = self.polydata.GetCell(i).GetPointIds()
+        if dot(OC, normal) < 0:
+            self.__boundary = flipud(self.boundary)
+            self.__boundary = roll(self.boundary, 1)
 
-            if polygons is None:
-                try:
-                    rows            = pointIds.GetNumberOfIds()
-                    cols            = self.polydata.GetNumberOfCells()
-                    polygons        = zeros((rows,cols), dtype=int)
-                except:
-                    raise Exception("The VTK file provided does not contain a triangulation")
+        # self.__calc_homeomorphism()
+        # self.__calc_thin_plate_splines()
 
-            polygons[0,i]           = pointIds.GetId(0)
-            polygons[1,i]           = pointIds.GetId(1)
-            polygons[2,i]           = pointIds.GetId(2)
+        # # Establishing an output path
+        # if output_path is None:
+        #     self.__output_path      = self.path
+        # else:
+        #     if output_path is self.path:
+        #         print(" *  Output path provided coincides with input path.\n"+
+        #               "    Overwriting the input file is not permitted.\n"+
+        #               "    Writing in the default location...\n")
+        #         self.__output_path  = self.path
+        #     else:
+        #         self.__output_path  = output_path
 
-        selected = True
-        
-        while(selected):
-            if self.septum is None:
-                if self.apex is None:
-                    print("Apical and septal points not selected. Click inside "  + \
-                          "the visualization, direct your pointer to the apical " + \
-                          "point and press 'p'. The apex will be highlighted as " + \
-                          "a red point. Afterwards, direct your pointer to the "  + \
-                          "septal point and press 'p', which will be highlighted "+ \
-                          "as a green point. If you missplaced any of the "       + \
-                          "points, select a third point in a random position and "+ \
-                          "start anew by pressing 'q'. Once those points are "    + \
-                          "selected, press 'q' and the execution will continue.")
 
-                    ps = PointSelector()
-                    ps.DoSelection(self.polydata)
+        # self.__write_output()
 
-                    if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
-                        selected = False
-
-                        self.__apex     = ps.GetSelectedPointIds().GetId(1)
-                        self.__septum   = ps.GetSelectedPointIds().GetId(0)
-
-                else:
-                    print("The septal point is not provided. Click inside "       + \
-                          "the visualization, direct your pointer to the septal " + \
-                          "point and press 'p'. The septum will be highlighted "  + \
-                          "as a red point. If you missplaced the "                + \
-                          "point, select a second point in a random position and "+ \
-                          "start anew by pressing 'q'. Once those points are "    + \
-                          "selected, press 'q' and the execution will continue.")
-
-                    ps = PointSelector()
-                    ps.DoSelection(self.polydata)
-
-                    if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
-                        selected = False
-
-                        self.__septum   = ps.GetSelectedPointIds().GetId(0)
-
-                    del(ps)
-
-            else:
-                if self.apex is None:
-                    print("The apical point is not provided. Click inside "       + \
-                          "the visualization, direct your pointer to the apical " + \
-                          "point and press 'p'. The apex will be highlighted "    + \
-                          "as a red point. If you missplaced the "                + \
-                          "point, select a second point in a random position and "+ \
-                          "start anew by pressing 'q'. Once those points are "    + \
-                          "selected, press 'q' and the execution will continue.")
-                    ps = PointSelector()
-                    ps.DoSelection(self.polydata)
-
-                    if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
-                        selected = False
-
-                        self.__apex     = ps.GetSelectedPointIds().GetId(0)
-
-                    del(ps)
-
-        self.__points               = points
-        self.__polygons             = polygons
-
-        self.__calc_boundary()
-        self.__rearrange()
-        self.__calc_laplacian()
-        self.__calc_homeomorphism()
-        self.__calc_thin_plate_splines()
-        self.__write_output()
 
     @property
     def path(self):
@@ -250,6 +173,10 @@ class PyQCM(object):
     @property
     def polygons(self):
         return self.__polygons
+
+    @property
+    def adjacencyMatrix(self):
+        return self.__adjacencyMatrix
 
     @output_path.setter
     def output_path(self, output_path):
@@ -273,6 +200,10 @@ class PyQCM(object):
     def septum(self):
         return self.__septum
 
+    @property
+    def apex(self):
+        return self.__apex
+
     # @septum.setter
     # def septum(self, septum):
     #     if septum >= self.polydata.GetNumberOfPoints():
@@ -280,18 +211,14 @@ class PyQCM(object):
 
     #     self.rearrange_boundary(septum)
 
-    @property
-    def apex(self):
-        return self.__apex
+    # @apex.setter
+    # def apex(self, apex):
+    #     if apex >= self.polydata.GetNumberOfPoints():
+    #         raise RuntimeError("Apical point provided is out of bounds")
 
-    @apex.setter
-    def apex(self, apex):
-        if apex >= self.polydata.GetNumberOfPoints():
-            raise RuntimeError("Apical point provided is out of bounds")
-
-        self.__apex             = apex
-        self.__calc_homeomorphism()
-        self.__write_output()
+    #     self.__apex             = apex
+    #     self.__calc_homeomorphism()
+    #     self.__write_output()
 
     @property
     def laplacian(self):
@@ -302,10 +229,6 @@ class PyQCM(object):
         return self.__boundary
 
     @property
-    def boundary_points(self):
-        return self.points[:, self.boundary]
-
-    @property
     def homeomorphism(self):
         return self.__homeomorphism
 
@@ -313,170 +236,27 @@ class PyQCM(object):
     def output_polydata(self):
         return self.__output_polydata
 
-    def __calc_boundary(self):
-        startingPoint           = None
-        currentPoint            = None
-        foundBoundary           = False
-        cellId                  = None
-        boundary                = []
-        visitedEdges            = []
-        visitedBoundaryEdges    = []
 
-        for cellId in xrange(self.polydata.GetNumberOfCells()):
-            cellPointIdList     = vtkIdList()
-            cellEdges           = []
-
-            self.polydata.GetCellPoints(cellId, cellPointIdList)
-
-            cellEdges           = [[cellPointIdList.GetId(0), 
-                                    cellPointIdList.GetId(1)], 
-                                   [cellPointIdList.GetId(1), 
-                                    cellPointIdList.GetId(2)], 
-                                   [cellPointIdList.GetId(2), 
-                                    cellPointIdList.GetId(0)]]
-
-            for i in xrange(len(cellEdges)):
-                if (cellEdges[i] in visitedEdges) == False:
-                    visitedEdges.append(cellEdges[i])
-
-                    edgeIdList  = vtkIdList()
-                    edgeIdList.InsertNextId(cellEdges[i][0])
-                    edgeIdList.InsertNextId(cellEdges[i][1])
-
-                    singleCellEdgeNeighborIds = vtkIdList()
-
-                    self.polydata.GetCellEdgeNeighbors(cellId, cellEdges[i][0], cellEdges[i][1], singleCellEdgeNeighborIds)
-
-                    if singleCellEdgeNeighborIds.GetNumberOfIds() == 0:
-                        foundBoundary   = True
-
-                        startingPoint   = cellEdges[i][0]
-                        currentPoint    = cellEdges[i][1]
-
-                        boundary.append(cellEdges[i][0])
-                        boundary.append(cellEdges[i][1])
-
-                        visitedBoundaryEdges.append([currentPoint,startingPoint])
-                        visitedBoundaryEdges.append([startingPoint,currentPoint])
-
-            if foundBoundary == True:
-                break
-
-        if foundBoundary == False:
-            raise Exception("The mesh provided has no boundary not possible to do Quasi-Conformal Mapping on this dataset.")
-
-        while currentPoint != startingPoint:
-            neighboringCells    = vtkIdList()
-
-            self.polydata.GetPointCells(currentPoint, neighboringCells)
-
-            for i in xrange(neighboringCells.GetNumberOfIds()):
-                cell = neighboringCells.GetId(i)
-                triangle = self.polydata.GetCell(cell)
-
-                for j in xrange(triangle.GetNumberOfPoints()):
-                    if triangle.GetPointId(j) == currentPoint:
-                        j1      = (j + 1) % 3
-                        j2      = (j + 2) % 3
-
-                        edge1   = [triangle.GetPointId(j),
-                             triangle.GetPointId(j1)]
-                        edge2   = [triangle.GetPointId(j),
-                             triangle.GetPointId(j2)]
-
-                edgeNeighbors1  = vtkIdList()
-                edgeNeighbors2  = vtkIdList()
-
-                self.polydata.GetCellEdgeNeighbors(cell, edge1[0], edge1[1], edgeNeighbors1)
-
-                self.polydata.GetCellEdgeNeighbors(cell, edge2[0], edge2[1], edgeNeighbors2)
-
-                if edgeNeighbors1.GetNumberOfIds() == 0:
-                    if ([edge1[1], edge1[0]] in visitedBoundaryEdges) == False:
-                        if (edge1[1] in boundary) == False:
-                            boundary.append(edge1[1])
-                        visitedBoundaryEdges.append([edge1[0], edge1[1]])
-                        visitedBoundaryEdges.append([edge1[1], edge1[0]])
-                        currentPoint = edge1[1]
-                        break
-
-                if edgeNeighbors2.GetNumberOfIds() == 0:
-                    if ([edge2[1], edge2[0]] in visitedBoundaryEdges) == False:
-                        if (edge2[1] in boundary) == False:
-                            boundary.append(edge2[1])
-                        visitedBoundaryEdges.append([edge2[0], edge2[1]])
-                        visitedBoundaryEdges.append([edge2[1], edge2[0]])
-                        currentPoint = edge2[1]
-                        break
-
-        boundary    = asarray(boundary, dtype=int)
-
-        center      = mean(self.points[:,boundary], axis=1)
-        vector1     = asarray(self.points[:,boundary[0]] - center)
-        vector2     = asarray(self.points[:,boundary[1]] - center)
-        vectorNormal= cross(vector1, vector2)
-        vectorApex  = self.points[:, self.apex] - center
-
-        if len(center.shape) is not 1:
-            if center.shape[0] is not 3:
-                raise Exception("Something went wrong. Probably forgot to transpose this. Contact maintainer.")
-
-        if dot(vectorApex, vectorNormal) < 0:
-            boundary            = flipud(boundary)
-            boundary            = roll(boundary, 1)
-
-        self.__boundary         = boundary
-
-
-    def __calc_laplacian(self):
-        numPoints           = self.polydata.GetNumberOfPoints()
-        numPolygons         = self.polydata.GetNumberOfPolys()
-        numDims             = self.polydata.GetPoints().GetData().GetNumberOfComponents()
-        sparseMatrix        = csr_matrix((numPoints, numPoints))
-
-        for i in range(0, numDims):
-            i1              = (i + 0)%3
-            i2              = (i + 1)%3
-            i3              = (i + 2)%3
-
-            vectP2P1        = (self.points[:, self.polygons[i2, :]] 
-                              - self.points[:, self.polygons[i1, :]])
-            vectP3P1        = (self.points[:, self.polygons[i3, :]] 
-                              - self.points[:, self.polygons[i1, :]])
-
-            vectP2P1        = vectP2P1 / repmat(sqrt((vectP2P1**2).sum(0)), 
-                                                numDims, 1)
-            vectP3P1        = vectP3P1 / repmat(sqrt((vectP3P1**2).sum(0)), 
-                                                numDims, 1)
-
-            angles          = arccos((vectP2P1 * vectP3P1).sum(0))
-
-            iterData1       = csr_matrix((1/tan(angles), (self.polygons[i2,:], 
-                                          self.polygons[i3,:])), 
-                                         shape=(numPoints, numPoints))
-
-            iterData2       = csr_matrix((1/tan(angles), (self.polygons[i3,:], 
-                                          self.polygons[i2,:])), 
-                                         shape=(numPoints, numPoints))
-
-            sparseMatrix    = sparseMatrix + iterData1 + iterData2
-
-        diagonal            = sparseMatrix.sum(0)
-        diagonalSparse      = spdiags(diagonal, 0, numPoints, numPoints)
-        self.__laplacian    = diagonalSparse - sparseMatrix
-
-    
     def __calc_homeomorphism(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         if (self.laplacian is not None) and (self.boundary is not None):
+            numPoints               = self.polydata.GetNumberOfPoints()
+            diagonal                = self.laplacian.sum(0)
+            diagonalSparse          = spdiags(diagonal, 0, numPoints, numPoints)
+            homeomorphism_laplacian = diagonalSparse - self.laplacian
+
             # Finds non-zero elements in the laplacian matrix
-            (nzi, nzj)      = find(self.laplacian)[0:2]
-            homeomorphism_laplacian = self.laplacian
+            (nzj, nzi)              = find(self.laplacian)[0:2]
+            # (nzj, nzi)              = self.laplacian.nonzero()
 
             for point in self.boundary:
-                positions   = where(nzi==point)[0]
+                positions           = where(nzi==point)[0]
 
                 homeomorphism_laplacian[nzi[positions], nzj[positions]] = 0
-                homeomorphism_laplacian[point, point] = 1
+                homeomorphism_laplacian[point, point]                   = 1
 
             # Finds a distribution of the boundary points around a circle
             boundaryNext            = roll(self.boundary, -1)
@@ -537,193 +317,6 @@ class PyQCM(object):
     def flip_boundary(self):
         self.__boundary         = flipud(self.boundary)
         self.__boundary         = roll(self.boundary, 1)
-
-    def __rearrange(self, objectivePoint=None):
-        septalIndex             = None
-        septalPoint             = None
-        closestPoint            = None
-
-        if objectivePoint is None:
-            if self.septum is None:
-                raise Exception("No septal point provided in function call and no septal point provided in constructor. Aborting arrangement. ")
-            else:
-                septalIndex     = self.septum
-        else:
-            print(" *  Using provided septal point as rearranging point.")
-            self.__septum       = objectivePoint
-            septalIndex         = objectivePoint
-
-        if septalIndex in self.boundary:
-            closestPoint        = septalIndex
-            closestPointIndex   = where(self.boundary==septalIndex)
-
-            if len(closestPointIndex) == 1:
-                if len(closestPointIndex[0]) == 1:
-                    closestPointIndex = closestPointIndex[0][0]
-                else:
-                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-            else:
-                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-
-            self.__boundary     = roll(self.boundary, -closestPointIndex)
-        else:
-            try:
-                septalPoint     = self.points[:, septalIndex]
-            except:
-                raise Exception("Septal point provided out of data bounds the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.")
-
-            if len(self.boundary.shape) == 1:
-                septalPoint     = repmat(septalPoint,
-                                    self.boundary.size, 1)
-                septalPoint     = septalPoint .transpose()
-            else:
-                raise Exception("It seems you have multiple boundaries. Contact the package maintainer.")
-
-            distanceToObjectivePoint    = (self.points[:, self.boundary] - septalPoint)
-            distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0))
-            closestPointIndex           = where(distanceToObjectivePoint == distanceToObjectivePoint.min())
-
-            if len(closestPointIndex) == 1:
-                if len(closestPointIndex[0]) == 1:
-                    closestPointIndex   = closestPointIndex[0][0]
-                else:
-                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-            else:
-                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-
-            self.__boundary     = roll(self.boundary, -closestPointIndex)
-
-    # def rearrange_boundary(self, objectivePoint):
-    #     """Rearranges the boundary aroung a new point identifier
-    #     """
-    #     old_septum              = self.septum
-    #     septalIndex             = None
-    #     closestPoint            = None
-
-    #     if objectivePoint == self.septum:
-    #         return
-
-    #     if objectivePoint in self.boundary:
-    #         septalIndex         = objectivePoint
-    #         closestPoint        = objectivePoint
-    #         closestPointIndex   = where(self.boundary==objectivePoint)
-
-    #         if len(closestPointIndex) == 1:
-    #             if len(closestPointIndex[0]) == 1:
-    #                 closestPointIndex = closestPointIndex[0][0]
-    #             else:
-    #                 raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-    #         else:
-    #             raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-
-    #     else:
-    #         print(" *  Provided point not found in the boundary. Selecting \n"
-    #               "    closest point available...")
-
-    #         try:
-    #             searched_point  = self.points[:, objectivePoint]
-    #         except:
-    #             raise Exception("Septal point provided out of data bounds the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.")
-
-    #         if len(self.boundary.shape) == 1:
-    #             searched_point  = repmat(searched_point, self.boundary.size, 1)
-    #             searched_point  = searched_point.transpose()
-    #         else:
-    #             raise Exception("It seems you have multiple boundaries. Contact the package maintainer.")
-
-    #         distanceToObjectivePoint    = (self.points[:, self.boundary] - searched_point)
-    #         distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0))
-    #         closestPointIndex           = where(distanceToObjectivePoint == distanceToObjectivePoint.min())
-
-    #         if len(closestPointIndex) == 1:
-    #             if len(closestPointIndex[0]) == 1:
-    #                 closestPointIndex   = closestPointIndex[0][0]
-    #             else:
-    #                 raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-    #         else:
-    #             raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-
-    #         septalIndex                 = self.boundary[closestPointIndex]
-
-    #     self.__boundary                 = roll(self.boundary, -closestPointIndex)
-
-    #     center  = asarray([0, 0]) # The center of the disk will always be a 
-    #     vector1 = asarray([1, 0]) # point (0,0) and the septum a vector (1,0), 
-    #                                # as induced by the boundary conditions
-    #     vector2 = self.homeomorphism[:, septalIndex] - center
-
-    #     angle   = arccos(dot(vector1, vector2)/(norm(vector1)*norm(vector2)))
-
-    #     # If the y coordinate of the vector w.r.t. the rotation will take place
-    #     # is negative, the rotation must be done counterclock-wise
-    #     if vector2[1] > 0:
-    #         angle = -angle
-
-    #     rotation_matrix                 = asarray([[cos(angle), -sin(angle)],
-    #                                                [sin(angle), cos(angle)]])
-
-    #     self.__septum                   = septalIndex
-    #     self.__homeomorphism               = rotation_matrix.dot(self.homeomorphism)
-
-    #     self.__write_output()
-
-
-    def closest_boundary_point(self, objectivePoint=None):
-        if objectivePoint is None:
-            selected = True
-            
-            while(selected):
-                ps = PointSelector()
-                ps.DoSelection(self.polydata)
-
-                if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
-                    selected = False
-
-                    objectivePoint  = ps.GetSelectedPointIds().GetId(0)
-
-
-        output_point = None
-
-        if objectivePoint in self.boundary:
-            output_point        = where(self.boundary==objectivePoint)
-
-            if len(output_point) == 1:
-                if len(output_point[0]) == 1:
-                    output_point = output_point[0][0]
-                else:
-                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-            else:
-                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-
-        else:
-            print(" *  Provided point not found in the boundary. Selecting \n"
-                  "    closest point available...")
-
-            try:
-                searched_point  = self.points[:, objectivePoint]
-            except:
-                raise Exception("Septal point provided out of data bounds the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.")
-
-            if len(self.boundary.shape) == 1:
-                searched_point  = repmat(searched_point, self.boundary.size, 1)
-                searched_point  = searched_point.transpose()
-            else:
-                raise Exception("It seems you have multiple boundaries. Contact the package maintainer.")
-
-            distanceToObjectivePoint    = (self.points[:, self.boundary] - searched_point)
-            distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0))
-            output_point                = where(distanceToObjectivePoint == distanceToObjectivePoint.min())
-
-            if len(output_point) == 1:
-                if len(output_point[0]) == 1:
-                    output_point   = output_point[0][0]
-                else:
-                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-            else:
-                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
-
-        return self.boundary[output_point]
-
 
     def __write_output(self):
         if ((self.homeomorphism is not None)

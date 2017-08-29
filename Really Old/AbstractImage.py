@@ -1,5 +1,6 @@
 """
-    Copyright (C) 2017 - Guillermo Jimenez-Perez <guillermo.jim.per@gmail.com>
+    Copyright (C) 2017 - Universitat Pompeu Fabra
+    Author - Guillermo Jimenez-Perez  <guillermo.jim.per@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,487 +16,368 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-
-
-# for subdir, dirs, files in os.walk(rootdir):
-# for file in files:
-
-
-# def docstring_example():
-# """ 
-# Multi-line Docstrings
-
-# Multi-line docstrings consist of a summary line just like a one-line
-# docstring, followed by a blank line, followed by a more elaborate
-# description. The summary line may be used by automatic indexing tools;
-# it is important that it fits on one line and is separated from the rest
-# of the docstring by a blank line. The summary line may be on the same
-# line as the opening quotes or on the next line. The entire docstring is
-# indented the same as the quotes at its first line (see example below).
-
-# Example:
-# def complex(real=0.0, imag=0.0):
-# '''
-# Form a complex number.
-
-# Keyword arguments:
-# real -- the real part (default 0.0)
-# imag -- the imaginary part (default 0.0)
-# ...
-# '''
-
-
-# """
-
 from __future__ import division
 
-import os;
-import numpy;
-import scipy;
+# from abc import ABCMeta, abstractmethod;
 
-from numpy.matlib import repmat;
+from os.path import isfile;
+
 from numpy import int;
-from scipy import roll;
-from scipy import flip;
+from numpy import dtype;
+
 from scipy import zeros;
-from scipy import arccos;
-from scipy import sin;
-from scipy import cos;
-from scipy import sqrt;
-from scipy import asarray;
-from scipy import tan;
-from scipy import pi;
-from scipy import cumsum;
-from scipy import where;
+from scipy import array;
 
-from scipy.sparse import csr_matrix;
-from scipy.sparse import spdiags;
-from scipy.sparse.linalg import spsolve; 
+from vtk import vtkPolyDataReader;
 
-# import time;
-import vtk;
 
-# start = time.time();
+class BaseImage(object):
+    """
+    Data extraction from VTK file, regardless of the specific image 
+    (ventricle, atrium; endocardium, epicardium)
 
-class AbstractImage:
-    """ DOCSTRING """
 
-    __imageType = None;
-    __path = None;
-    __originalPolyData = None;
-    __QCMPolyData = None;
-    __pointData = None;
-    __polygonData = None;
-    __scalarData = None;
-    __normalData = None;
-    __nPoints = None;
-    __nPolygons = None;
-    __septum = None;
-    __laplacianMatrix = None;
-    __constrain = None;
-    __boundary = None;
-    __output = None;
 
-    def __init__(self, path=None, septum=None):
-        if path is None:
-            if septum is not None:
-                self.__septum = septum;
+    Attributes
+    ----------
+
+    path:               str
+        path to the image file
+
+    ndim:               int
+        dimensionality of the VTK image
+
+    npoints:            int
+        number of points in the VTK file
+
+    npolygons:          int
+        number of polygons in the VTK file
+
+    nedges_mesh:        int
+        number of edges of the mesh in the input VTK file. Determines the
+        shape of the mesh; whether it is triangular, quadrilateral or of a
+        higher order
+
+    nscalars:           int
+        number of scalar vectors in the input VTK file
+
+    polydata:           vtkPolyData
+        link to the original vtkPolyData stored in the 'path' variable
+
+    points:             numpy.ndarray
+        coordinates of the point in a numpy array, in shape (ndim, npoints)
+
+    polygons:           numpy.ndarray
+        point identifiers of each of the triangles of the mesh, 
+        in shape (nedges_mesh, npolygons). If a point of a mesh cell wants to
+        be accessed, the specific point ID has to be passed to the points array:
+
+        >>> # (being ob the BaseImage object)
+        >>> ob.nedges_mesh # The mesh is triangular
+        3
+        >>> ob.polygons[:,35] # Let's check the point IDs of the 36th triangle
+        array([286, 715, 69])
+        >>> # If we wanted to check the spatial coordinates of the first node
+        >>> # of the 36th triangle, that is, the 287th node of the set, it
+        >>> # could be accessed by passing the 1st node of the 36th triangle
+        >>> # to the points array:
+        >>> point_of_interest = ob.points[:, ob.polygons[0, 35]]
+        array([  56.53070068, -101.97899628,  179.80900574]) 
+
+    scalars:            numpy.ndarray
+        structured numpy array containing the information of the scalars
+        associated to each point coordinate, in shape (nscalars, npoints). It
+        allows for specific attribute calls. E.g:  if a VTK file with two scalar
+        fields is analyzed, the first being called 'scalars' and the second
+        'LAT', the following statement is valid:
+
+        >>> # (being ob the BaseImage object)
+        >>> ob.scalars['LAT']
+        array([ 0.52275603,  0.94302633,  0.81044762, ...,  0.02766091,
+                0.18389358,  0.62247573])
+
+    scalars_names:      tuple
+        wrapper for 'scalars.dtype.names'. Provides the names of the scalar 
+        arrays contained in the input VTK file
+
+    normals:            numpy.ndarray
+        numpy array containing the normals of each point, in shape 
+        (ndim, npoints)
+
+
+
+    Returns
+    -------
+
+    output:         BaseImage
+        BaseImage object containing the extracted information of the input VTK
+        file
+
+
+
+    See Also
+    --------
+
+    VentricularEndocardium
+
+
+
+    Example
+    -------
+
+    >>> import BaseImage
+    >>> import os
+    >>> path = os.path("/path/to/image.vtk")
+    >>> image1 = BaseImage.BaseImage(path)
+    >>> image1.scalars
+    array([624, 263, 142 ... 124, 412, 416])
+
+    """
+
+    # __metaclass__               = ABCMeta;
+
+    __path                      = None;
+    __polydata                  = None;
+    __points                    = None;
+    __polygons                  = None;
+    __scalars                   = None;
+    __normals                   = None;
+    __npoints                   = None;
+    __npolygons                 = None;
+    __ndim                      = None;
+    __nscalars                  = None;
+    __nedges_mesh               = None;
+    __scalars_names             = None;
+
+    def __init__(self, path):
+        """BaseImage(path)
+
+        Analyzes a ventricular image in vtk format, extracting the point, mesh
+        and scalar information from it. Requires a path as a string to be
+        initialized.
+        """
+
+        if isfile(path):
+            self.__path         = path;
         else:
-            if os.path.isfile(path):
-                self.__path = path;
-            else:
-                raise RuntimeError("File does not exist.");
+            raise RuntimeError("File does not exist");
 
-            self.__ReadPolyData();
-            self.__ReadPointData();
-            self.__ReadPolygonData();
-            self.__ReadNormalData();
-            self.__ReadScalarData();
-            self.__septum = septum;
-            self.__nPoints = self.__pointData.shape[1];
-            self.__nPolygons = self.__polygonData.shape[1];
-            self.__CalculateBoundary();
-            self.RearrangeBoundary();
-            self.__LaplacianMatrix();
-            self.__CalculateLinearTransformation();
+        self.__read_polydata();
+        self.__read_points();
+        self.__read_polygons();
+        self.__read_normals();
+        self.__read_scalars();
+        # self.__calc_laplacian_matrix();
 
-    def __ReadPolyData(self):
-        reader = vtk.vtkPolyDataReader();
-        reader.SetFileName(self.__path);
+    @property
+    def path(self):
+        return self.__path;
+
+    # @path.setter
+    # def path(self, path):
+    #     if isfile(path):
+    #         if self.path is not None:
+    #             print("Overwritting existing data on variable...")
+    #         else:
+    #             print("Loading data...")
+
+    #         self.__init__(path);
+    #     else:
+    #         raise RuntimeError("File does not exist");
+
+    @property
+    def polydata(self):
+        """Testing docstring of attribute"""
+        return self.__polydata;
+
+    @property
+    def ndim(self):
+        return self.__ndim;
+
+    @property
+    def nedges_mesh(self):
+        return self.__nedges_mesh;
+
+    @property
+    def points(self):
+        return self.__points;
+
+    @property
+    def npoints(self):
+        return self.__npoints;
+
+    @property
+    def polygons(self):
+        return self.__polygons;
+
+    @property
+    def npolygons(self):
+        return self.__npolygons;
+
+    @property
+    def scalars(self):
+        return self.__scalars;
+
+    @property
+    def scalars_names(self):
+        return self.__scalars_names;
+
+    @property
+    def normals(self):
+        return self.__normals;
+
+
+    def __read_polydata(self):
+        reader                  = vtkPolyDataReader();
+        reader.SetFileName(self.path);
         reader.Update();
 
-        polyData = reader.GetOutput();
-        polyData.BuildLinks();
+        polydata                = reader.GetOutput();
+        polydata.BuildLinks();
 
-        self.__originalPolyData = polyData;
+        self.__npoints          = polydata.GetNumberOfPoints();
+        self.__npolygons        = polydata.GetNumberOfPolys();
+        self.__ndim             = polydata.GetPoints().GetData().GetNumberOfComponents();
+        self.__polydata         = polydata;
 
-    def __ReadPolygonData(self):
-        rows = None;
-        cols = None;
-        polygons = None;
+    def __read_polygons(self):
+        rows                    = None;
+        cols                    = None;
+        polygons                = None;
 
-        polys = self.__originalPolyData.GetPolys();
+        polys                   = self.polydata.GetPolys();
 
-        for i in xrange(self.__originalPolyData.GetNumberOfCells()):
-            triangle = self.__originalPolyData.GetCell(i);
-            pointIds = triangle.GetPointIds();
+        for i in xrange(self.polydata.GetNumberOfCells()):
+            triangle            = self.polydata.GetCell(i);
+            pointIds            = triangle.GetPointIds();
 
             if polygons is None:
-                rows = pointIds.GetNumberOfIds();
-                cols = self.__originalPolyData.GetNumberOfCells();
-                polygons = scipy.zeros((rows,cols), dtype=numpy.int);
+                rows            = pointIds.GetNumberOfIds();
+                cols            = self.polydata.GetNumberOfCells();
+                polygons        = zeros((rows,cols), dtype=int);
             
-            polygons[0,i] = pointIds.GetId(0);
-            polygons[1,i] = pointIds.GetId(1);
-            polygons[2,i] = pointIds.GetId(2);
+            polygons[0,i]       = pointIds.GetId(0);
+            polygons[1,i]       = pointIds.GetId(1);
+            polygons[2,i]       = pointIds.GetId(2);
 
-        self.__polygonData = polygons;
+        self.__polygons         = polygons;
 
-    def __ReadPointData(self):
-        rows = None;
-        cols = None;
-        points = None;
+    def __read_points(self):
+        rows                    = None;
+        cols                    = None;
+        points                  = None;
 
-        pointVector = self.__originalPolyData.GetPoints();
+        pointVector             = self.polydata.GetPoints();
 
         if pointVector:
             for i in range(0, pointVector.GetNumberOfPoints()):
-                point_tuple = pointVector.GetPoint(i);
+                point_tuple     = pointVector.GetPoint(i);
 
                 if points is None:
-                    rows = len(point_tuple);
-                    cols = pointVector.GetNumberOfPoints();
-                    points = scipy.zeros((rows,cols));
+                    rows        = len(point_tuple);
+                    cols        = pointVector.GetNumberOfPoints();
+                    points      = zeros((rows,cols));
                 
-                points[0,i] = point_tuple[0];
-                points[1,i] = point_tuple[1];
-                points[2,i] = point_tuple[2];
+                points[0,i]     = point_tuple[0];
+                points[1,i]     = point_tuple[1];
+                points[2,i]     = point_tuple[2];
 
-        self.__pointData = points;
+        self.__points           = points;
 
-    def __ReadNormalData(self):
-        rows = None;
-        cols = None;
-        normals = None;
+    def __read_normals(self):
+        rows                    = None;
+        cols                    = None;
+        normals                 = None;
 
-        normalVector = self.__originalPolyData.GetPointData().GetNormals();
+        normalVector            = self.polydata.GetPointData().GetNormals();
 
         if normalVector:
             for i in range(0, normalVector.GetNumberOfTuples()):
-                normalTuple = normalVector.GetTuple(i);
+                normalTuple     = normalVector.GetTuple(i);
 
                 if normals is None:
-                    rows = len(normalTuple);
-                    cols = normalVector.GetNumberOfTuples();
-                    normals = scipy.zeros((rows,cols));
+                    rows        = len(normalTuple);
+                    cols        = normalVector.GetNumberOfTuples();
+                    normals     = zeros((rows,cols));
                 
-                normals[0,i] = normalTuple[0];
-                normals[1,i] = normalTuple[1];
-                normals[2,i] = normalTuple[2];
+                normals[0,i]    = normalTuple[0];
+                normals[1,i]    = normalTuple[1];
+                normals[2,i]    = normalTuple[2];
 
-        self.__normalData = normals;
+        self.__normals          = normals;
 
-    def __ReadScalarData(self):
-        rows = None;
-        cols = None;
-        scalars = None;
+    def __read_scalars(self):
+        point_data              = self.polydata.GetPointData();
+        scalars                 = None;
+        nscalars                = 0;
 
-        scalarVector = self.__originalPolyData.GetPointData().GetScalars();
+        for i in xrange(point_data.GetNumberOfArrays()):
+            scalar_name         = point_data.GetArrayName(i);
+            scalar_array        = point_data.GetArray(i);
+            scalar_dtype        = scalar_array.GetDataTypeAsString();
 
-        if scalarVector:
-            for i in xrange(scalarVector.GetNumberOfTuples()):
-                scalarTuple = scalarVector.GetTuple(i);
+            if scalar_array.GetNumberOfComponents() is 1:
+                aux_dtype       = dtype([(scalar_name, scalar_dtype)])
+                aux             = zeros((1, scalar_array.GetNumberOfTuples()), 
+                                        dtype=scalar_dtype);
+                nscalars        = nscalars + 1;
+
+                for j in xrange(scalar_array.GetNumberOfTuples()):
+                    aux[0, j]   = scalar_array.GetTuple1(j);
+
+                aux             = array(aux, dtype=aux_dtype);
 
                 if scalars is None:
-                    rows = len(scalarTuple);
-                    cols = scalarVector.GetNumberOfTuples();
-                    scalars = scipy.zeros((rows,cols));
-                
-                for j in xrange(len(scalarTuple)):
-                    scalars[j,i] = scalarTuple[j];
-
-        self.__scalarData = scalars;
-
-    def __LaplacianMatrix(self):
-        numDims = self.__polygonData.shape[0];
-        numPoints = self.__pointData.shape[1];
-        numPolygons = self.__polygonData.shape[1];
-        boundary = self.__boundary;
-        boundaryConstrain = scipy.zeros((2,numPoints));
-
-        sparseMatrix = scipy.sparse.csr_matrix((numPoints, numPoints));
-
-        for i in range(0, numDims):
-            i1 = (i + 0)%3;
-            i2 = (i + 1)%3;
-            i3 = (i + 2)%3;
-
-            distP2P1 = self.__pointData[:, self.__polygonData[i2, :]] - self.__pointData[:, self.__polygonData[i1, :]];
-            distP3P1 = self.__pointData[:, self.__polygonData[i3, :]] - self.__pointData[:, self.__polygonData[i1, :]];
-
-            distP2P1 = distP2P1 / numpy.matlib.repmat(scipy.sqrt((distP2P1**2).sum(0)), 3, 1);
-            distP3P1 = distP3P1 / numpy.matlib.repmat(scipy.sqrt((distP3P1**2).sum(0)), 3, 1);
-
-            angles = scipy.arccos((distP2P1 * distP3P1).sum(0));
-
-            iterData1 = scipy.sparse.csr_matrix((1/scipy.tan(angles), (self.__polygonData[i2,:], self.__polygonData[i3,:])), shape=(numPoints, numPoints));
-
-            iterData2 = scipy.sparse.csr_matrix((1/scipy.tan(angles), (self.__polygonData[i3,:], self.__polygonData[i2,:])), shape=(numPoints, numPoints));
-
-            sparseMatrix = sparseMatrix + iterData1 + iterData2;
-
-        diagonal = sparseMatrix.sum(0);
-        diagonalSparse = scipy.sparse.spdiags(diagonal, 0, numPoints, numPoints);
-        self.__laplacianMatrix = diagonalSparse - sparseMatrix;
-
-    def __CalculateLinearTransformation(self):
-        if self.__laplacianMatrix is not None:
-            if self.__boundary is not None:
-                laplacian = self.__laplacianMatrix;
-                (nzi, nzj) = scipy.sparse.find(laplacian)[0:2];
-
-                for point in self.__boundary:
-                    positions = scipy.where(nzi==point)[0];
-
-                    laplacian[nzi[positions], nzj[positions]] = 0;
-
-                    laplacian[point, point] = 1;
-
-                Z = self.GetWithinBoundarySinCos();
-
-                boundaryConstrain = scipy.zeros((2, self.__nPoints));
-                boundaryConstrain[:, self.__boundary] = Z;
-
-                self.__output = scipy.sparse.linalg.spsolve(laplacian, boundaryConstrain.transpose());
-
-    def __CalculateBoundary(self):
-        startingPoint = None;
-        currentPoint = None;
-        foundBoundary = False;
-        cellId = 0;
-        boundary = [];
-        visitedEdges = [];
-        visitedPoints = [];
-        visitedBoundaryEdges = [];
-
-        for cellId in xrange(self.__originalPolyData.GetNumberOfCells()):
-            cellPointIdList = vtk.vtkIdList();
-            cellEdges = [];
-
-            self.__originalPolyData.GetCellPoints(cellId, cellPointIdList);
-
-            cellEdges = [[cellPointIdList.GetId(0), cellPointIdList.GetId(1)], [cellPointIdList.GetId(1), cellPointIdList.GetId(2)], [cellPointIdList.GetId(2), cellPointIdList.GetId(0)]];
-
-            for i in xrange(len(cellEdges)):
-                if (cellEdges[i] in visitedEdges) == False:
-                    visitedEdges.append(cellEdges[i]);
-
-                    edgeIdList = vtk.vtkIdList()
-                    edgeIdList.InsertNextId(cellEdges[i][0]);
-                    edgeIdList.InsertNextId(cellEdges[i][1]);
-
-                    singleCellEdgeNeighborIds = vtk.vtkIdList();
-
-                    self.__originalPolyData.GetCellEdgeNeighbors(cellId, cellEdges[i][0], cellEdges[i][1], singleCellEdgeNeighborIds);
-
-                    if singleCellEdgeNeighborIds.GetNumberOfIds() == 0:
-                        foundBoundary = True;
-
-                        startingPoint = cellEdges[i][0];
-                        currentPoint = cellEdges[i][1];
-
-                        boundary.append(cellEdges[i][0]);
-                        boundary.append(cellEdges[i][1]);
-
-                        visitedBoundaryEdges.append([currentPoint,startingPoint]);
-                        visitedBoundaryEdges.append([startingPoint,currentPoint]);
-
-            if foundBoundary == True:
-                break;
-
-        if foundBoundary == False:
-            raise Exception("The mesh provided has no boundary; not possible to do Quasi-Conformal Mapping on this dataset.");
-
-        while currentPoint != startingPoint:
-            neighboringCells = vtk.vtkIdList();
-
-            self.__originalPolyData.GetPointCells(currentPoint, neighboringCells);
-
-            for i in xrange(neighboringCells.GetNumberOfIds()):
-                cell = neighboringCells.GetId(i);
-                triangle = self.__originalPolyData.GetCell(cell);
-
-                for j in xrange(triangle.GetNumberOfPoints()):
-                    if triangle.GetPointId(j) == currentPoint:
-                        j1 = (j + 1) % 3;
-                        j2 = (j + 2) % 3;
-
-                        edge1 = [triangle.GetPointId(j),
-                             triangle.GetPointId(j1)];
-                        edge2 = [triangle.GetPointId(j),
-                             triangle.GetPointId(j2)];
-
-                edgeNeighbors1 = vtk.vtkIdList();
-                edgeNeighbors2 = vtk.vtkIdList();
-
-                self.__originalPolyData.GetCellEdgeNeighbors(cell, edge1[0], edge1[1], edgeNeighbors1);
-
-                self.__originalPolyData.GetCellEdgeNeighbors(cell, edge2[0], edge2[1], edgeNeighbors2);
-
-                if edgeNeighbors1.GetNumberOfIds() == 0:
-                    if ([edge1[1], edge1[0]] in visitedBoundaryEdges) == False:
-                        if (edge1[1] in boundary) == False:
-                            boundary.append(edge1[1]);
-                        visitedBoundaryEdges.append([edge1[0], edge1[1]]);
-                        visitedBoundaryEdges.append([edge1[1], edge1[0]]);
-                        currentPoint = edge1[1];
-                        break;
-
-                if edgeNeighbors2.GetNumberOfIds() == 0:
-                    if ([edge2[1], edge2[0]] in visitedBoundaryEdges) == False:
-                        if (edge2[1] in boundary) == False:
-                            boundary.append(edge2[1]);
-                        visitedBoundaryEdges.append([edge2[0], edge2[1]]);
-                        visitedBoundaryEdges.append([edge2[1], edge2[0]]);
-                        currentPoint = edge2[1];
-                        break;
-
-        self.__boundary = scipy.asarray(boundary, dtype=int);
-
-    def GetPolyData(self):
-        return self.__originalPolyData;
-
-    def GetPointData(self):
-        return self.__pointData;
-
-    def GetImageType(self):
-        return self.__imageType;
-
-    def GetPath(self):
-        return self.__path;
-
-    def GetNormalData(self):
-        return self.__normalData;
-
-    def GetPolygonData(self):
-        return self.__polygonData;
-
-    def GetNumberOfPoints(self):
-        return self.__nPoints;
-
-    def GetNumberOfPolygons(self):
-        return self.__nPolygons;
-
-    def GetSeptumId(self):
-        return self.__septum;
-
-    def GetLaplacianMatrix(self):
-        return self.__laplacianMatrix;
-
-    def GetBoundary(self):
-        return self.__boundary;
-
-    def GetOutput(self):
-        return self.__output;
-
-    def GetBoundaryPoints(self):
-        return self.__pointData[:, self.__boundary];
-
-    def FlipBoundary(self):
-        self.__boundary = scipy.flip(self.__boundary, 0);
-        self.__boundary = scipy.roll(self.__boundary, 1);
-
-    def GetWithinBoundaryDistances(self):
-        boundaryNext = scipy.roll(self.__boundary, -1);
-        boundaryNextPoints = self.__pointData[:, boundaryNext];
-
-        distanceToNext = boundaryNextPoints - self.GetBoundaryPoints();
-
-        return scipy.sqrt((distanceToNext**2).sum(0));
-
-    def GetPerimeter(self):
-        return self.GetWithinBoundaryDistances().sum();
-
-    def GetWithinBoundaryDistancesAsFraction(self):
-        euclideanNorm = self.GetWithinBoundaryDistances();
-        perimeter = euclideanNorm.sum();
-
-        return euclideanNorm/perimeter;
-
-    def GetWithinBoundaryAngles(self):
-        circleLength = 2*scipy.pi;
-        fraction = self.GetWithinBoundaryDistancesAsFraction();
-
-        angles = scipy.cumsum(circleLength*fraction);
-        angles = scipy.roll(angles, 1);
-        angles[0] = 0;
-
-        return angles;
-
-    def GetWithinBoundarySinCos(self):
-        angles = self.GetWithinBoundaryAngles();
-        Z = scipy.zeros((2, angles.size));
-        Z[0,:] = scipy.cos(angles);
-        Z[1,:] = scipy.sin(angles);
-
-        return Z;
-
-    def RearrangeBoundary(self, objectivePoint=None):
-        septalIndex = None;
-        septalPoint = None;
-        closestPoint = None;
-
-        if objectivePoint is None:
-            if self.__septum is None:
-                raise Exception("No septal point provided in function call and no septal point provided in constructor. Aborting arrangement. ");
-            else:
-                septalIndex = self.__septum;
-        else:
-            print("Using provided septal point as rearranging point.");
-            self.__septum = objectivePoint;
-            septalIndex = objectivePoint;
-
-        if septalIndex in self.__boundary:
-            closestPoint = septalIndex;
-            closestPointIndex = scipy.where(self.__boundary==septalIndex);
-
-            if len(closestPointIndex) == 1:
-                if len(closestPointIndex[0]) == 1:
-                    closestPointIndex = closestPointIndex[0][0];
+                    scalars     = aux;
                 else:
-                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
-            else:
-                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
+                    scalars     = self.__join_struct_arrays(scalars, aux)
 
-            self.__boundary = scipy.roll(self.__boundary, -closestPointIndex);
-        else:
-            try:
-                septalPoint = self.__pointData[:, septalIndex];
-            except:
-                raise Exception("Septal point provided out of data bounds; the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.");
+        self.__nscalars         = nscalars;
+        self.__scalars          = scalars;
+        self.__scalars_names    = scalars.dtype.names;
 
-            if len(self.__boundary.shape) == 1:
-                septalPoint = numpy.matlib.repmat(septalPoint,
-                             self.__boundary.size, 1);
-                septalPoint = septalPoint .transpose();
-            else:
-                raise Exception("It seems you have multiple boundaries. Contact the package maintainer.");
+    def __join_struct_arrays(array1, array2, *args):
+        new_dtype = [];
 
-            distanceToObjectivePoint = (self.__pointData[:, self.__boundary] - septalPoint);
-            distanceToObjectivePoint = scipy.sqrt((distanceToObjectivePoint**2).sum(0));
-            closestPointIndex = scipy.where(distanceToObjectivePoint == distanceToObjectivePoint.min());
-            if len(closestPointIndex) == 1:
-                if len(closestPointIndex[0]) == 1:
-                    closestPointIndex = closestPointIndex[0][0];
-                else:
-                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
-            else:
-                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.");
+        descriptor = [];
+        for field in array1.dtype.names:
+            (typ, _) = array1.dtype.fields[field];
+            descriptor.append((field, typ));
+        new_dtype.extend(tuple(descriptor));
 
-            self.__boundary = scipy.roll(self.__boundary, 
-                             -closestPointIndex);
+        descriptor = [];
+        for field in array2.dtype.names:
+            (typ, _) = array2.dtype.fields[field];
+            descriptor.append((field, typ));
+        new_dtype.extend(tuple(descriptor));
+        
+        for arr in args:
+            descriptor = [];
+            for field in arr.dtype.names:
+                (typ, _) = arr.dtype.fields[field];
+                descriptor.append((field, typ));
+            new_dtype.extend(tuple(descriptor));
 
-    # def flattening(self):
+        new_rec_array = np.zeros(len(arrays[0]), dtype = new_dtype);
 
+        for name in array1.dtype.names:
+            new_rec_array[name] = array1[name];
 
-# print(time.time() - start);
+        for name in array2.dtype.names:
+            new_rec_array[name] = array2[name];
+
+        for arr in args:
+            for name in arr.dtype.names:
+                new_rec_array[name] = arr[name];
+
+        return new_rec_array;
+
+    def __str__(self):
+        s = "'" + self.__class__.__name__ + "' object at '" + self.path + "'.\n";
+        s = s + "Number of dimensions: " + str(self.ndim) + "\n";
+        s = s + "Number of points: " + str(self.npoints) + "\n";
+        s = s + "Number of polygons: " + str(self.npolygons) + "\n";
+        s = s + "Number of edges of the polygons: " + str(self.nedges_mesh) + "\n";
+        s = s + "Scalar information: " + str(self.scalars_names);
+        return s;
+

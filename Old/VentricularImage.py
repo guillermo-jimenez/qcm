@@ -281,8 +281,8 @@ class VentricularQCM(BaseImage):
         self.__calc_boundary();
         self.__rearrange();
         self.__calc_laplacian();
-        self.__calc_QCM_points();
-        self.__write_QCM_polydata();
+        # self.__calc_QCM_points();
+        # self.__write_QCM_polydata();
 
     @property
     def QCM_path(self):

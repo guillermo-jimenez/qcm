@@ -1,0 +1,56 @@
+        while(selected):
+            if self.septum is None:
+                if self.apex is None:
+                    print("Apical and septal points not selected. Click inside "  + \
+                          "the visualization, direct your pointer to the apical " + \
+                          "point and press 'p'. The apex will be highlighted as " + \
+                          "a red point. Afterwards, direct your pointer to the "  + \
+                          "septal point and press 'p', which will be highlighted "+ \
+                          "as a green point. If you missplaced any of the "       + \
+                          "points, select a third point in a random position and "+ \
+                          "start anew by pressing 'q'. Once those points are "    + \
+                          "selected, press 'q' and the execution will continue.")
+
+                    ps = PointSelector()
+                    ps.DoSelection(self.polydata)
+
+                    if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
+                        selected = False
+
+                        self.__apex     = ps.GetSelectedPointIds().GetId(1)
+                        self.__septum   = ps.GetSelectedPointIds().GetId(0)
+
+                else:
+                    print("The septal point is not provided. Click inside "       + \
+                          "the visualization, direct your pointer to the septal " + \
+                          "point and press 'p'. The septum will be highlighted "  + \
+                          "as a red point. If you missplaced the "                + \
+                          "point, select a second point in a random position and "+ \
+                          "start anew by pressing 'q'. Once those points are "    + \
+                          "selected, press 'q' and the execution will continue.")
+
+                    ps = PointSelector()
+                    ps.DoSelection(self.polydata)
+
+                    if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
+                        selected = False
+
+                        self.__septum   = ps.GetSelectedPointIds().GetId(0)
+
+            else:
+                if self.apex is None:
+                    print("The apical point is not provided. Click inside "       + \
+                          "the visualization, direct your pointer to the apical " + \
+                          "point and press 'p'. The apex will be highlighted "    + \
+                          "as a red point. If you missplaced the "                + \
+                          "point, select a second point in a random position and "+ \
+                          "start anew by pressing 'q'. Once those points are "    + \
+                          "selected, press 'q' and the execution will continue.")
+                    ps = PointSelector()
+                    ps.DoSelection(self.polydata)
+
+                    if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
+                        selected = False
+
+                        self.__apex     = ps.GetSelectedPointIds().GetId(0)
+

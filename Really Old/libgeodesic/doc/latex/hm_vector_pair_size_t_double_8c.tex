@@ -1,0 +1,71 @@
+\hypertarget{hm_vector_pair_size_t_double_8c}{\subsection{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/hm\-Vector\-Pair\-Size\-T\-Double.c File Reference}
+\label{hm_vector_pair_size_t_double_8c}\index{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/hm\-Vector\-Pair\-Size\-T\-Double.\-c@{/\-Users/keenan/\-Desktop/libgeodesic\-\_\-prerelease/src/hm\-Vector\-Pair\-Size\-T\-Double.\-c}}
+}
+{\ttfamily \#include \char`\"{}hm\-Vector\-Pair\-Size\-T\-Double.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hm\-Utility.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hm\-Constants.\-h\char`\"{}}\\*
+{\ttfamily \#include $<$stdlib.\-h$>$}\\*
+{\ttfamily \#include $<$string.\-h$>$}\\*
+{\ttfamily \#include $<$math.\-h$>$}\\*
+\subsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{hm_vector_pair_size_t_double_8c_adc7db0d27a3303f101280d5cca849544}{hm\-Vector\-Pair\-Size\-T\-Double\-Initialize} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector)
+\item 
+void \hyperlink{hm_vector_pair_size_t_double_8c_aa43cd0f2f6952dc98be353c0d78015ba}{hm\-Vector\-Pair\-Size\-T\-Double\-Destroy} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector)
+\item 
+void \hyperlink{hm_vector_pair_size_t_double_8c_a2f6cb58029369bad2a0b4f9d3792e77a}{hm\-Vector\-Pair\-Size\-T\-Double\-Resize} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector, size\-\_\-t size)
+\item 
+void \hyperlink{hm_vector_pair_size_t_double_8c_a30b058623bd848f4f5c1c320cbb494f1}{hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector, \hyperlink{structhm_pair_size_t_double}{hm\-Pair\-Size\-T\-Double} value)
+\item 
+\hyperlink{structhm_pair_size_t_double}{hm\-Pair\-Size\-T\-Double} \hyperlink{hm_vector_pair_size_t_double_8c_a7852d46a9a74998d8e1087e97adf0043}{hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector)
+\item 
+void \hyperlink{hm_vector_pair_size_t_double_8c_accc85d682163cd80e24353b58cd8347d}{hm\-Vector\-Pair\-Size\-T\-Double\-Sort} (\hyperlink{structhm_vector_pair_size_t_double}{hm\-Vector\-Pair\-Size\-T\-Double} $\ast$vector)
+\end{DoxyCompactItemize}
+
+
+\subsubsection{Function Documentation}
+\hypertarget{hm_vector_pair_size_t_double_8c_aa43cd0f2f6952dc98be353c0d78015ba}{\index{hm\-Vector\-Pair\-Size\-T\-Double.\-c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}!hm\-Vector\-Pair\-Size\-T\-Double\-Destroy@{hm\-Vector\-Pair\-Size\-T\-Double\-Destroy}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Destroy@{hm\-Vector\-Pair\-Size\-T\-Double\-Destroy}!hmVectorPairSizeTDouble.c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Destroy}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Pair\-Size\-T\-Double\-Destroy (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{hm_vector_pair_size_t_double_8c_aa43cd0f2f6952dc98be353c0d78015ba}
+\hypertarget{hm_vector_pair_size_t_double_8c_adc7db0d27a3303f101280d5cca849544}{\index{hm\-Vector\-Pair\-Size\-T\-Double.\-c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}!hm\-Vector\-Pair\-Size\-T\-Double\-Initialize@{hm\-Vector\-Pair\-Size\-T\-Double\-Initialize}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Initialize@{hm\-Vector\-Pair\-Size\-T\-Double\-Initialize}!hmVectorPairSizeTDouble.c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Initialize}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Pair\-Size\-T\-Double\-Initialize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{hm_vector_pair_size_t_double_8c_adc7db0d27a3303f101280d5cca849544}
+\hypertarget{hm_vector_pair_size_t_double_8c_a7852d46a9a74998d8e1087e97adf0043}{\index{hm\-Vector\-Pair\-Size\-T\-Double.\-c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}!hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back@{hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back@{hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back}!hmVectorPairSizeTDouble.c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back}]{\setlength{\rightskip}{0pt plus 5cm}{\bf hm\-Pair\-Size\-T\-Double} hm\-Vector\-Pair\-Size\-T\-Double\-Pop\-Back (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{hm_vector_pair_size_t_double_8c_a7852d46a9a74998d8e1087e97adf0043}
+\hypertarget{hm_vector_pair_size_t_double_8c_a30b058623bd848f4f5c1c320cbb494f1}{\index{hm\-Vector\-Pair\-Size\-T\-Double.\-c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}!hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back@{hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back@{hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back}!hmVectorPairSizeTDouble.c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Pair\-Size\-T\-Double\-Push\-Back (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector, }
+\item[{{\bf hm\-Pair\-Size\-T\-Double}}]{value}
+\end{DoxyParamCaption}
+)}}\label{hm_vector_pair_size_t_double_8c_a30b058623bd848f4f5c1c320cbb494f1}
+\hypertarget{hm_vector_pair_size_t_double_8c_a2f6cb58029369bad2a0b4f9d3792e77a}{\index{hm\-Vector\-Pair\-Size\-T\-Double.\-c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}!hm\-Vector\-Pair\-Size\-T\-Double\-Resize@{hm\-Vector\-Pair\-Size\-T\-Double\-Resize}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Resize@{hm\-Vector\-Pair\-Size\-T\-Double\-Resize}!hmVectorPairSizeTDouble.c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Resize}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Pair\-Size\-T\-Double\-Resize (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector, }
+\item[{size\-\_\-t}]{size}
+\end{DoxyParamCaption}
+)}}\label{hm_vector_pair_size_t_double_8c_a2f6cb58029369bad2a0b4f9d3792e77a}
+\hypertarget{hm_vector_pair_size_t_double_8c_accc85d682163cd80e24353b58cd8347d}{\index{hm\-Vector\-Pair\-Size\-T\-Double.\-c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}!hm\-Vector\-Pair\-Size\-T\-Double\-Sort@{hm\-Vector\-Pair\-Size\-T\-Double\-Sort}}
+\index{hm\-Vector\-Pair\-Size\-T\-Double\-Sort@{hm\-Vector\-Pair\-Size\-T\-Double\-Sort}!hmVectorPairSizeTDouble.c@{hm\-Vector\-Pair\-Size\-T\-Double.\-c}}
+\paragraph[{hm\-Vector\-Pair\-Size\-T\-Double\-Sort}]{\setlength{\rightskip}{0pt plus 5cm}void hm\-Vector\-Pair\-Size\-T\-Double\-Sort (
+\begin{DoxyParamCaption}
+\item[{{\bf hm\-Vector\-Pair\-Size\-T\-Double} $\ast$}]{vector}
+\end{DoxyParamCaption}
+)}}\label{hm_vector_pair_size_t_double_8c_accc85d682163cd80e24353b58cd8347d}

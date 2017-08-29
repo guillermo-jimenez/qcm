@@ -60,11 +60,15 @@ from vtk import vtkPolyData
 from vtk import vtkPolyDataWriter
 from vtk import vtkPoints
 from vtk import vtkIdList
+from vtk import vtkPlane
+from vtk import vtkClipPolyData
 
 from scipy.sparse.linalg import spsolve
 from mvpoly.rbf import RBFThinPlateSpline
 
 from PointPicker import PointSelector
+
+import utils
 
 
 class EpiQCM(object):
@@ -74,46 +78,42 @@ class EpiQCM(object):
     __points                        = None
     __polygons                      = None
 
-    __scalars                       = None
-    __normals                       = None
-
-    __npoints                       = None
-    __npolygons                     = None
-    __ndim                          = None
-    __nscalars                      = None
-    __nedges_mesh                   = None
-    __scalars_names                 = None
-
+    __boundary                      = None
     __anterior                      = None
     __posterior                     = None
     __apex                          = None
-    __laplacian                     = None
-    __boundary                      = None
-    # __output_polydata               = None
-    __polydata_LV                   = None
-    __polydata_RV                   = None
-    __homeomorphism                 = None
+
+    __LV_laplacian                  = None
+    __LV_boundary                   = None
+    __LV_polydata                   = None
+    __LV_homeomorphism              = None
+    __LV_apex                       = None
+    __LV_anterior                   = None
+    __LV_posterior                  = None
+
+    __RV_boundary                   = None
+    __RV_laplacian                  = None
+    __RV_polydata                   = None
+    __RV_homeomorphism              = None
+    __RV_apex                       = None
+    __RV_anterior                   = None
+    __RV_posterior                  = None
+
     __output_path                   = None
 
 
     def __init__(self, path, anterior=None, posterior=None, apex=None, output_path=None):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         self.__anterior             = anterior
         self.__posterior            = posterior
         self.__apex                 = apex
 
         # Reading the input VTK file
-        if ((path is not None) and (self.polydata is None)):
-            if isfile(path):
-                self.__path         = path
-            else:
-                raise RuntimeError("File does not exist")
-
-            reader                  = vtkPolyDataReader()
-            reader.SetFileName(self.path)
-            reader.Update()
-
-            self.__polydata         = reader.GetOutput()
-            self.__polydata.BuildLinks()
+        if self.polydata is None:
+            self.__polydata = utils.polydataReader(path)
 
         # Establishing an output path
         if output_path is None:
@@ -127,138 +127,59 @@ class EpiQCM(object):
             else:
                 self.__output_path  = output_path
 
-        # If no landmark is provided, graphically select the points.
-        selected = False
-        
-        while(not selected):
-            if self.anterior is None:
-                if self.posterior is None:
-                    if self.apex is None:
-                        print("DESCRIPTION")
-
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 3:
-                            selected            = True
-
-                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
-                            self.__apex         = ps.GetSelectedPointIds().GetId(1)
-                            self.__posterior    = ps.GetSelectedPointIds().GetId(2)
-
-                    else:
-                        print("DESCRIPTION")
-
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
-                            selected            = True
-
-                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
-                            self.__posterior    = ps.GetSelectedPointIds().GetId(1)
-
-                else:
-                    if self.apex is None:
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
-                            selected            = True
-
-                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
-                            self.__apex         = ps.GetSelectedPointIds().GetId(1)
-
-                    else:
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
-                            selected            = True
-
-                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
-
-            else:
-                if self.posterior is None:
-                    if self.apex is None:
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
-                            selected            = True
-
-                            self.__apex         = ps.GetSelectedPointIds().GetId(0)
-                            self.__posterior    = ps.GetSelectedPointIds().GetId(1)
-
-                    else:
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
-                            selected            = True
-
-                            self.__posterior    = ps.GetSelectedPointIds().GetId(0)
-
-                else:
-                    if self.apex is None:
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
-                            selected            = True
-
-                            self.__apex         = ps.GetSelectedPointIds().GetId(0)
-
-                    else:
-                        selected            = True
-
         ######################################################################
         # ¿¿ELIMINAR??
         ######################################################################
 
-        # Exporting VTK points to numpy for a more efficient manipulation
-        pointVector                 = self.polydata.GetPoints()
+        # # Exporting VTK points to numpy for a more efficient manipulation
+        # pointVector                 = self.polydata.GetPoints()
 
-        try:
-            rows                    = len(pointVector.GetPoint(0))
-            cols                    = pointVector.GetNumberOfPoints()
-            points                  = zeros((rows,cols))
-        except:
-            raise Exception("The VTK file provided does not contain any points")
+        # try:
+        #     rows                    = len(pointVector.GetPoint(0))
+        #     cols                    = pointVector.GetNumberOfPoints()
+        #     points                  = zeros((rows,cols))
+        # except:
+        #     raise Exception("The VTK file provided does not contain any points")
 
-        if pointVector:
-            for i in range(0, pointVector.GetNumberOfPoints()):
-                point_tuple         = pointVector.GetPoint(i)
+        # if pointVector:
+        #     for i in range(0, pointVector.GetNumberOfPoints()):
+        #         point_tuple         = pointVector.GetPoint(i)
 
-                points[0,i]         = point_tuple[0]
-                points[1,i]         = point_tuple[1]
-                points[2,i]         = point_tuple[2]
+        #         points[0,i]         = point_tuple[0]
+        #         points[1,i]         = point_tuple[1]
+        #         points[2,i]         = point_tuple[2]
 
         ######################################################################
         # ¿¿ELIMINAR??
         ######################################################################
 
         # Exporting VTK triangles to numpy for a more efficient manipulation
-        polygons                    = None
+        # polygons                    = None
 
-        for i in xrange(self.polydata.GetNumberOfCells()):
-            pointIds                = self.polydata.GetCell(i).GetPointIds()
+        # for i in xrange(self.polydata.GetNumberOfCells()):
+        #     pointIds                = self.polydata.GetCell(i).GetPointIds()
 
-            if polygons is None:
-                try:
-                    rows            = pointIds.GetNumberOfIds()
-                    cols            = self.polydata.GetNumberOfCells()
-                    polygons        = zeros((rows,cols), dtype=int)
-                except:
-                    raise Exception("The VTK file provided does not contain a triangulation")
+        #     if polygons is None:
+        #         try:
+        #             rows            = pointIds.GetNumberOfIds()
+        #             cols            = self.polydata.GetNumberOfCells()
+        #             polygons        = zeros((rows,cols), dtype=int)
+        #         except:
+        #             raise Exception("The VTK file provided does not contain a triangulation")
 
-            polygons[0,i]           = pointIds.GetId(0)
-            polygons[1,i]           = pointIds.GetId(1)
-            polygons[2,i]           = pointIds.GetId(2)
+        #     polygons[0,i]           = pointIds.GetId(0)
+        #     polygons[1,i]           = pointIds.GetId(1)
+        #     polygons[2,i]           = pointIds.GetId(2)
 
-        self.__points               = points
-        self.__polygons             = polygons
+        # self.__points               = points
+        # self.__points               = polygons
 
+        self.__points               = utils.vtkPointsToNumpy(self.polydata)
+        self.__polygons             = utils.vtkCellsToNumpy(self.polydata)
+
+        # Calculate landmarks if not provided
+        self.__calc_landmarks()
+        self.__closest_boundary_point()
         self.__calc_boundary()
         self.__rearrange()
         self.__calc_laplacian()
@@ -268,26 +189,53 @@ class EpiQCM(object):
 
     @property
     def path(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__path
 
     @property
     def output_path(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__output_path
 
     @property
     def polydata(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__polydata
 
     @property
     def points(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__points
 
     @property
     def polygons(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__polygons
 
+    ##########################################################################
+    # ¿¿ELIMINAR??
+    ##########################################################################
     @output_path.setter
     def output_path(self, output_path):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         if output_path is self.path:
             print(" *  Warning! Overwriting the input file is not permitted.\n"
                   "    Aborting...\n")
@@ -302,50 +250,264 @@ class EpiQCM(object):
 
         self.__output_path      = output_path
         self.__write_output()
+    ##########################################################################
+    # ¿¿ELIMINAR??
+    ##########################################################################
 
 
     @property
     def anterior(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__anterior
 
     @property
     def posterior(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__posterior
 
     @property
     def apex(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__apex
 
+    ##########################################################################
+    # ¿¿ELIMINAR??
+    ##########################################################################
     @apex.setter
     def apex(self, apex):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         if apex >= self.polydata.GetNumberOfPoints():
             raise RuntimeError("Apical point provided is out of bounds")
 
         self.__apex             = apex
         self.__calc_homeomorphism()
         self.__write_output()
+    ##########################################################################
+    # ¿¿ELIMINAR??
+    ##########################################################################
 
     @property
     def laplacian(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__laplacian
 
     @property
     def boundary(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__boundary
 
     @property
     def boundary_points(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.points[:, self.boundary]
 
     @property
     def homeomorphism(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__homeomorphism
 
     @property
     def output_polydata(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         return self.__output_polydata
 
+    ##########################################################################
+    ##########################################################################
+    def __calc_landmarks(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+        print("TO-DO: DESCRIPTORS TO KNOW HOW TO INTRODUCE LANDMARKS")
+
+        selected = False
+
+        while(not selected):
+            if self.anterior is None:
+                if self.posterior is None:
+                    if self.apex is None:
+                        # print("DESCRIPTION")
+
+                        ps = PointSelector()
+                        ps.DoSelection(self.polydata)
+
+                        if ps.GetSelectedPoints().GetNumberOfPoints() == 3:
+                            selected            = True
+
+                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
+                            self.__apex         = ps.GetSelectedPointIds().GetId(1)
+                            self.__posterior    = ps.GetSelectedPointIds().GetId(2)
+
+                    else:
+                        # print("DESCRIPTION")
+
+                        ps = PointSelector()
+                        ps.DoSelection(self.polydata)
+
+                        if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
+                            selected            = True
+
+                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
+                            self.__posterior    = ps.GetSelectedPointIds().GetId(1)
+
+                else:
+                    if self.apex is None:
+                        # print("DESCRIPTION")
+
+                        ps = PointSelector()
+                        ps.DoSelection(self.polydata)
+
+                        if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
+                            selected            = True
+
+                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
+                            self.__apex         = ps.GetSelectedPointIds().GetId(1)
+
+                    else:
+                        ps = PointSelector()
+                        ps.DoSelection(self.polydata)
+
+                        if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
+                            selected            = True
+
+                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
+
+            else:
+                if self.posterior is None:
+                    if self.apex is None:
+                        # print("DESCRIPTION")
+
+                        ps = PointSelector()
+                        ps.DoSelection(self.polydata)
+
+                        if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
+                            selected            = True
+
+                            self.__apex         = ps.GetSelectedPointIds().GetId(0)
+                            self.__posterior    = ps.GetSelectedPointIds().GetId(1)
+
+                    else:
+                        # print("DESCRIPTION")
+
+                        ps = PointSelector()
+                        ps.DoSelection(self.polydata)
+
+                        if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
+                            selected            = True
+
+                            self.__posterior    = ps.GetSelectedPointIds().GetId(0)
+
+                else:
+                    if self.apex is None:
+                        # print("DESCRIPTION")
+
+                        ps = PointSelector()
+                        ps.DoSelection(self.polydata)
+
+                        if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
+                            selected            = True
+
+                            self.__apex         = ps.GetSelectedPointIds().GetId(0)
+
+                    else:
+                        selected            = True
+
+
+    ##########################################################################
+    ## CLOSEST BOUNDARY FUNCTION
+    ##########################################################################
+    
+    def __closest_boundary_point(self, point):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
+
+
+
+
+    ##########################################################################
+    ## CLOSEST BOUNDARY FUNCTION
+    ##########################################################################
+
+
+    def __divide(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+        print("TO-DO: COMPROBAR LV Y RV, QUE SEAN ESAS LAS PARTES DEL CLIPPING PLANE")
+
+        # if self.anterior is None or self.posterior is None or self.apex is None:
+        #     self.__calc_landmarks()
+
+        clip = vtk.vtkClipPolyData()
+        plane = vtk.vtkPlane()
+
+        anterior    = self.anterior
+        posterior   = self.posterior
+        apex        = self.apex
+
+        O = asarray(self.polydata.GetPoint(self.apex))
+        A = asarray(self.polydata.GetPoint(self.anterior))
+        B = asarray(self.polydata.GetPoint(self.posterior))
+
+        OA = A - O
+        OB = B - O
+
+        # Clipping plane 1
+        normal = cross(OA,OB)/norm(cross(OA,OB))
+
+        plane.SetOrigin(self.polydata.GetPoint(self.apex))
+        plane.SetNormal((normal[0], normal[1], normal[2]))
+
+        clip.SetClipFunction(plane)
+        clip.SetInputData(self.polydata)
+        clip.Update()
+        self.__RV_polydata = clip.GetOutput()
+
+        # Clipping plane 2
+        normal = cross(OB,OA)/norm(cross(OB,OA))
+
+        plane.SetOrigin(self.polydata.GetPoint(self.apex))
+        plane.SetNormal((normal[0], normal[1], normal[2]))
+
+        clip.SetClipFunction(plane)
+        clip.SetInputData(self.polydata)
+        clip.Update()
+        self.__LV_polydata = clip.GetOutput()
+
+
     def __calc_boundary(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         startingPoint           = None
         currentPoint            = None
         foundBoundary           = False
@@ -460,16 +622,11 @@ class EpiQCM(object):
         self.__boundary         = boundary
 
 
-    ##########################################################################
-    ## DIVIDE FUNCTION
-    ##########################################################################
-    
-
-    ##########################################################################
-    ## DIVIDE FUNCTION
-    ##########################################################################
-
     def __calc_laplacian(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         numPoints           = self.polydata.GetNumberOfPoints()
         numPolygons         = self.polydata.GetNumberOfPolys()
         numDims             = self.polydata.GetPoints().GetData().GetNumberOfComponents()
@@ -502,16 +659,25 @@ class EpiQCM(object):
 
             sparseMatrix    = sparseMatrix + iterData1 + iterData2
 
-        diagonal            = sparseMatrix.sum(0)
-        diagonalSparse      = spdiags(diagonal, 0, numPoints, numPoints)
-        self.__laplacian    = diagonalSparse - sparseMatrix
+        # diagonal            = sparseMatrix.sum(0)
+        # diagonalSparse      = spdiags(diagonal, 0, numPoints, numPoints)
+        # self.__laplacian    = diagonalSparse - sparseMatrix
+        self.__laplacian    = sparseMatrix
 
     
     def __calc_homeomorphism(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         if (self.laplacian is not None) and (self.boundary is not None):
+            numPoints               = self.polydata.GetNumberOfPoints()
+            diagonal                = self.laplacian.sum(0)
+            diagonalSparse          = spdiags(diagonal, 0, numPoints, numPoints)
+            homeomorphism_laplacian = diagonalSparse - self.laplacian
+
             # Finds non-zero elements in the laplacian matrix
             (nzi, nzj)      = find(self.laplacian)[0:2]
-            homeomorphism_laplacian = self.laplacian
 
             for point in self.boundary:
                 positions   = where(nzi==point)[0]
@@ -545,6 +711,10 @@ class EpiQCM(object):
                                               boundaryConstrain.transpose()).transpose()
 
     def __calc_thin_plate_splines(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         if (self.homeomorphism is not None) and (self.apex is not None):
             boundaryPoints  = self.homeomorphism[:,self.boundary]
             source          = zeros((boundaryPoints.shape[0],
@@ -576,10 +746,106 @@ class EpiQCM(object):
             self.__homeomorphism[1,:] = result.imag
 
     def flip_boundary(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         self.__boundary         = flipud(self.boundary)
         self.__boundary         = roll(self.boundary, 1)
 
+
+
+
+    ##########################################################################
+    ##########################################################################
+    def __closest_point(self, objectivePoint):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
+        try:
+            dimensions = len(anterior)
+        except:
+            dimensions = 0
+
+
+
+
+        if objectivePoint == self.septum:
+            return
+
+        if objectivePoint in self.boundary:
+            septalIndex         = objectivePoint
+            closestPoint        = objectivePoint
+            closestPointIndex   = where(self.boundary==objectivePoint)
+
+            if len(closestPointIndex) == 1:
+                if len(closestPointIndex[0]) == 1:
+                    closestPointIndex = closestPointIndex[0][0]
+                else:
+                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+            else:
+                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+
+        else:
+            print(" *  Provided point not found in the boundary. Selecting \n"
+                  "    closest point available...")
+
+            try:
+                searched_point  = self.points[:, objectivePoint]
+            except:
+                raise Exception("Septal point provided out of data bounds the point does not exist (it is out of bounds) or a point identifier beyond the total amount of points has been provided. Check input.")
+
+            if len(self.boundary.shape) == 1:
+                searched_point  = repmat(searched_point, self.boundary.size, 1)
+                searched_point  = searched_point.transpose()
+            else:
+                raise Exception("It seems you have multiple boundaries. Contact the package maintainer.")
+
+            distanceToObjectivePoint    = (self.points[:, self.boundary] - searched_point)
+            distanceToObjectivePoint    = sqrt((distanceToObjectivePoint**2).sum(0))
+            closestPointIndex           = where(distanceToObjectivePoint == distanceToObjectivePoint.min())
+
+            if len(closestPointIndex) == 1:
+                if len(closestPointIndex[0]) == 1:
+                    closestPointIndex   = closestPointIndex[0][0]
+                else:
+                    raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+            else:
+                raise Exception("It seems your vtk file has more than one point ID associated to the objective point. Check your input data or contact the maintainer.")
+
+            septalIndex                 = self.boundary[closestPointIndex]
+
+        self.__boundary                 = roll(self.boundary, -closestPointIndex)
+
+        center  = asarray([0, 0]) # The center of the disk will always be a 
+        vector1 = asarray([1, 0]) # point (0,0) and the septum a vector (1,0), 
+                                   # as induced by the boundary conditions
+        vector2 = self.homeomorphism[:, septalIndex] - center
+
+        angle   = arccos(dot(vector1, vector2)/(norm(vector1)*norm(vector2)))
+
+        # If the y coordinate of the vector w.r.t. the rotation will take place
+        # is negative, the rotation must be done counterclock-wise
+        if vector2[1] > 0:
+            angle = -angle
+
+        rotation_matrix                 = asarray([[cos(angle), -sin(angle)],
+                                                   [sin(angle), cos(angle)]])
+
+        self.__septum                   = septalIndex
+        self.__homeomorphism               = rotation_matrix.dot(self.homeomorphism)
+
+        self.__write_output()
+    ##########################################################################
+    ##########################################################################
+
+
     def __rearrange(self, objectivePoint=None):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         septalIndex             = None
         septalPoint             = None
         closestPoint            = None
@@ -710,6 +976,10 @@ class EpiQCM(object):
 
 
     def closest_boundary_point(self, objectivePoint=None):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         if objectivePoint is None:
             selected = True
             
@@ -767,6 +1037,10 @@ class EpiQCM(object):
 
 
     def __write_output(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
         if ((self.homeomorphism is not None)
             and (self.points is not None)
             and (self.polygons is not None)):
