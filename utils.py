@@ -2,8 +2,8 @@
 
 """
     Copyright (C) 2017 - Universitat Pompeu Fabra
-    Authors - Guillermo Jimenez-Perez <guillermo.jim.per@gmail.com>
-            - Constantine Butakoff 
+    Author       - Guillermo Jimenez-Perez <guillermo.jim.per@gmail.com>
+    Contributors - Constantine Butakoff
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,17 +19,36 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 from __future__ import division
 
 from os import system
 from os import mkdir
-
 from os.path import isfile
 from os.path import splitext
 from os.path import split
 from os.path import isdir
 from os.path import join
+
+from numpy import asarray
+from numpy import zeros
+from numpy import ones
+from numpy import mean
+from numpy import cross
+from numpy import dot
+from numpy import where
+from numpy.matlib import repmat
+
+from scipy import sqrt
+from scipy import arccos
+from scipy import tan
+from scipy import flipud
+from scipy import roll
+from scipy.linalg import norm
+from scipy.sparse import csr_matrix
+from scipy.sparse import triu
+from scipy.sparse import find
+
+from sklearn.neighbors import NearestNeighbors
 
 from vtk import vtkPolyData
 from vtk import vtkPolyDataReader
@@ -40,38 +59,12 @@ from vtk import vtkTriangle
 from vtk import vtkIdList
 from vtk import vtkClipPolyData
 from vtk import vtkPlane
-
-from numpy import asarray
-from numpy import zeros
-from numpy import ones
-from numpy import mean
-from numpy import cross
-from numpy import dot
-from numpy import where
-
-from scipy import sqrt
-from scipy import arccos
-from scipy import tan
-from scipy import flipud
-from scipy import roll
-
-from scipy.linalg import norm
-
-from scipy.sparse import csr_matrix
-from scipy.sparse import triu
-from scipy.sparse import find
-
-from numpy.matlib import repmat
-
-import vtk
-import time
-import numpy
-
 from vtk import vtkCommand
 from vtk import vtkSphereSource
 from vtk import vtkPolyDataMapper
 from vtk import vtkActor
 from vtk import vtkPoints
+from vtk import vtkFloatArray
 from vtk import vtkIdList
 from vtk import vtkPolyDataMapper
 from vtk import vtkRenderer
@@ -79,7 +72,8 @@ from vtk import vtkRenderWindow
 from vtk import vtkRenderWindowInteractor
 from vtk import vtkInteractorStyleTrackballCamera
 from vtk import vtkPointPicker
-
+from vtk import vtkScalarBarActor
+from vtk import vtkLookupTable
 
 
 class PointPicker(vtkPointPicker):
@@ -97,16 +91,16 @@ class PointPicker(vtkPointPicker):
     def EndPickEvent(self,obj,event):
         rnd = self.GetRenderer()  
 
-        n_points = self.selected_points.GetNumberOfPoints();
+        n_points = self.selected_points.GetNumberOfPoints()
         
         #check if anything was picked
         pt_id = self.GetPointId()
         if pt_id >= 0:
             if n_points < len(self.marker_colors):
                 #create a sphere to mark the location
-                sphereSource = vtkSphereSource();
-                sphereSource.SetRadius(self.marker_radius); 
-                sphereSource.SetCenter(self.GetPickPosition());        
+                sphereSource = vtkSphereSource()
+                sphereSource.SetRadius(self.marker_radius)
+                sphereSource.SetCenter(self.GetPickPosition())
                 
                 mapper = vtkPolyDataMapper()
                 mapper.SetInputConnection(sphereSource.GetOutputPort())
@@ -129,7 +123,6 @@ class PointSelector:
     def __init__(self, pointIds=None): #initialize variables
         self.marker_radius      = 1
         self.marker_colors      = [(1,0,0), (0,1,0), (1,1,0), (0,0,0), (0.5,0.5,0.5), (0.5,0,0)] #different colors for different markers
-        # self.marker_colors      = [(1,0,0), (0,1,0), (1,1,0), (0,0,0), (0.5,1,0.5)] #different colors for different markers
         self.selected_points    = vtkPoints()
         self.selected_point_ids = vtkIdList()
         self.window_size        = (800,600)
@@ -141,7 +134,7 @@ class PointSelector:
     def GetSelectedPoints(self): #returns vtkPoints in the order of clicks
         return self.selected_points
         
-    def DoSelection(self, shape): #open rendering window and start 
+    def DoSelection(self, polydata): #open rendering window and start 
         if self.pointIds is None:
             self.selected_points.Reset()
             self.selected_point_ids.Reset()
@@ -149,19 +142,19 @@ class PointSelector:
             try:
                 for i in range(0, len(self.pointIds)):
                     self.selected_point_ids.InsertNextId(self.pointIds[i])
-                    self.selected_points.InsertNextPoint(shape.GetPoint(self.pointIds[i]))
+                    self.selected_points.InsertNextPoint(polydata.GetPoint(self.pointIds[i]))
             except:
                 raise Exception("pointIds has to be iterable")
 
-            renderer = vtkRenderer();
+            renderer = vtkRenderer()
 
             #check if anything was picked
             for i in range(0, self.selected_points.GetNumberOfPoints()):
                 if i < len(self.marker_colors):
                     #create a sphere to mark the location
-                    sphereSource = vtkSphereSource();
-                    sphereSource.SetRadius(self.marker_radius); 
-                    sphereSource.SetCenter(self.selected_points.GetPoint(i));
+                    sphereSource = vtkSphereSource()
+                    sphereSource.SetRadius(self.marker_radius)
+                    sphereSource.SetCenter(self.selected_points.GetPoint(i))
                     
                     mapper = vtkPolyDataMapper()
                     mapper.SetInputConnection(sphereSource.GetOutputPort())
@@ -174,12 +167,31 @@ class PointSelector:
 
                     renderer.AddActor(actor)
 
+        if polydata.GetPointData().GetScalars() is None:
+            if polydata.GetPointData().GetNumberOfArrays() != 0:
+                polydata.GetPointData().SetActiveScalars(polydata.GetPointData().GetArray(0).GetName())
+
         mapper = vtkPolyDataMapper()
-        mapper.SetInputData(shape)
+        mapper.SetInputData(polydata)
+        mapper.SetScalarRange(polydata.GetPointData().GetScalars().GetValueRange())
+        mapper.ScalarVisibilityOn()
+        mapper.SetScalarModeToUsePointData()
+        mapper.SetColorModeToMapScalars()
 
         actor = vtkActor()
         actor.SetMapper(mapper)
         actor.GetProperty().SetPointSize(1)
+
+        scalarBar = vtkScalarBarActor()
+        scalarBar.SetLookupTable(mapper.GetLookupTable())
+        scalarBar.SetTitle(polydata.GetPointData().GetScalars().GetName())
+        scalarBar.SetNumberOfLabels(4)
+
+        hueLut = vtkLookupTable()
+        hueLut.Build()
+
+        mapper.SetLookupTable(hueLut);
+        scalarBar.SetLookupTable(hueLut);
 
         pointPicker = PointPicker()
         pointPicker.AddPickList(actor)
@@ -190,22 +202,24 @@ class PointSelector:
         try:
             renderer.AddActor(actor)
         except:
-            renderer = vtkRenderer();
+            renderer = vtkRenderer()
             renderer.AddActor(actor)
 
-        window = vtkRenderWindow();
-        window.AddRenderer( renderer );
+        renderer.AddActor2D(scalarBar)
 
-        interactor = vtkRenderWindowInteractor();
-        interactor.SetRenderWindow( window );
+        window = vtkRenderWindow()
+        window.AddRenderer(renderer)
+
+        interactor = vtkRenderWindowInteractor()
+        interactor.SetRenderWindow(window)
 
         interactor_style = vtkInteractorStyleTrackballCamera() 
-        interactor.SetInteractorStyle( interactor_style )
-        interactor.SetPicker(pointPicker); 
+        interactor.SetInteractorStyle(interactor_style)
+        interactor.SetPicker(pointPicker)
 
         window.SetSize(self.window_size)
         window.Render()
-        interactor.Start();
+        interactor.Start()
 
         render_window = interactor.GetRenderWindow()
         render_window.Finalize()
@@ -681,6 +695,65 @@ def vtkClippingPlane(polydata, landmarks=None, reverse=False):
     return clip.GetOutput()    
 
 
+def vtkVisualize(polydata, activeArray=0, visualizationRange=None):
+    """ """
+
+    print("TO-DO: DOCUMENTATION")
+
+    if polydata.GetPointData().GetNumberOfArrays() > 0:
+        if activeArray < polydata.GetPointData().GetNumberOfArrays():
+            polydata.GetPointData().SetActiveScalars(polydata.GetPointData().GetArray(activeArray).GetName())
+        else:
+            print("Selected array is non-existent. Selecting first array")
+            polydata.GetPointData().SetActiveScalars(polydata.GetPointData().GetArray(0).GetName())
+
+    mapper = vtkPolyDataMapper()
+    mapper.SetInputData(polydata)
+    
+    try:
+        mapper.SetScalarRange(visualizationRange)
+    except:
+        mapper.SetScalarRange(polydata.GetPointData().GetScalars().GetValueRange())
+
+    mapper.ScalarVisibilityOn()
+    mapper.SetScalarModeToUsePointData()
+    mapper.SetColorModeToMapScalars()
+
+    actor = vtkActor()
+    actor.SetMapper(mapper)
+
+    scalarBar = vtkScalarBarActor()
+    scalarBar.SetLookupTable(mapper.GetLookupTable())
+    scalarBar.SetTitle(polydata.GetPointData().GetScalars().GetName())
+    scalarBar.SetNumberOfLabels(4)
+
+    hueLut = vtkLookupTable()
+    hueLut.Build()
+
+    mapper.SetLookupTable(hueLut);
+    scalarBar.SetLookupTable(hueLut);
+
+    renderer = vtkRenderer()
+    renderer.AddActor(actor)
+    renderer.AddActor2D(scalarBar)
+
+    window = vtkRenderWindow()
+    window.AddRenderer(renderer)
+
+    interactor = vtkRenderWindowInteractor()
+    interactor.SetRenderWindow(window)
+
+    interactor_style = vtkInteractorStyleTrackballCamera() 
+    interactor.SetInteractorStyle(interactor_style)
+
+    window.SetSize((800,600))
+    window.Render()
+    interactor.Start()
+
+    render_window = interactor.GetRenderWindow()
+    render_window.Finalize()
+
+
 def closestBoundaryId(polydata, objectivePointId, boundary=None, polygons=None, adjMatrix=None):
     """ """
 
@@ -690,7 +763,6 @@ def closestBoundaryId(polydata, objectivePointId, boundary=None, polygons=None, 
     boundaryVector          = []
     boundaryNumber          = []
     totalBoundaryPoints     = 0
-    # inBoundary              = False
 
     try:
         point               = polydata.GetPoint(objectivePointId)
@@ -725,12 +797,6 @@ def closestBoundaryId(polydata, objectivePointId, boundary=None, polygons=None, 
                     raise Exception("Mesh or boundary contains repeated point IDs")
             else:
                 raise Exception("Mesh or boundary contains repeated point IDs")
-
-        # else:
-        #     inBoundary              = inBoundary and False
-
-        # If not, calculate the distance of the point to every point of each 
-        # boundary. The index with the global lowest distance is selected
         else:
             # Calculate the distance to each point of each boundary
             for j in range(0, len(boundary[i])):
@@ -820,6 +886,75 @@ def vtkWriterSpanishLocale(path):
 
 
 
+def polydataWriter(path):
+    """ """
+
+    print("TO-DO: DOCUMENTATION")
+
+    # Reading the input VTK file
+    if (path is not None):
+        if not isfile(path):
+            raise RuntimeError("File does not exist")
+
+        reader                  = vtkPolyDataReader()
+        reader.SetFileName(path)
+        reader.Update()
+
+        polydata         = reader.GetOutput()
+        polydata.BuildLinks()
+
+    return polydata
 
 
+
+
+def vtkInterpolator(QCMHighRes, QCMLowRes, n_neighbors=3, radius=1.0, 
+                    algorithm='auto', leaf_size=30, metric='minkowski', 
+                    p=5, metric_params=None, n_jobs=1):
+    """ """
+
+    print("TO-DO: DOCUMENTATION")
+
+    # ¿Se podra hacer igual que con TPS?
+    kNN = NearestNeighbors(n_neighbors=3, radius=1.0, algorithm='auto', 
+                           leaf_size=30, metric='minkowski', p=5, 
+                           metric_params=None, n_jobs=1)
+    kNN.fit(QCMLowRes.homeomorphism.T, QCMHighRes.homeomorphism.T)
+    dist, indices   = kNN.kneighbors(QCMHighRes.homeomorphism.T)
+
+    # The new polydata will have the mesh of the high resolution polydata
+    newPolyData     = QCMHighRes.polydata
+    newDataArrays   = []
+
+    for i in range(0, QCMLowRes.polydata.GetPointData().GetNumberOfArrays()):
+        newDataArrays.append(vtkFloatArray())
+        newDataArrays[i].SetName(QCMLowRes.polydata.GetPointData().GetArray(i).GetName())
+
+    scalars_lr      = zeros((QCMLowRes.polydata.GetPointData().GetNumberOfArrays(), QCMLowRes.polydata.GetNumberOfPoints()))
+    BIPS            = zeros((QCMLowRes.polydata.GetPointData().GetNumberOfArrays(), QCMHighRes.polydata.GetNumberOfPoints()))
+
+    # Store the polydata scalars into a numpy array
+    for i in range(0, QCMLowRes.polydata.GetPointData().GetNumberOfArrays()):
+        for j in range(0, QCMLowRes.polydata.GetNumberOfPoints()):
+            scalars_lr[i,j] = QCMLowRes.polydata.GetPointData().GetArray(i).GetTuple1(j)
+
+    # If a zero value is found, replace it with the lowest possible number to
+    # avoid numerical errors
+    zeroIndex               = where(dist == 0.)
+    if zeroIndex[0].size > 0:
+        for j in range(0, zeroIndex[0].size):
+            dist[zeroIndex[0][j], zeroIndex[1][j]] = finfo(dist.dtype).eps
+
+    # Calculate the new scalar values for the low resolution QCM
+    for j in range(0, QCMLowRes.polydata.GetPointData().GetNumberOfArrays()):
+        for i in range(0, QCMHighRes.polydata.GetNumberOfPoints()):
+            dt                  = (1/dist[i,0]) + (1/dist[i,1]) + (1/dist[i,2])
+            BIPS[j, i]          = ((1/dist[i,:])*scalars_lr[j, indices[i,:]]).sum()/dt
+
+            newDataArrays[j].InsertNextValue(BIPS[j, i])
+
+    for dataArray in newDataArrays:
+        newPolyData.GetPointData().AddArray(dataArray)
+
+    return newPolyData
 

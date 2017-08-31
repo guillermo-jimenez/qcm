@@ -1,6 +1,6 @@
 """
     Copyright (C) 2017 - Universitat Pompeu Fabra
-    Author - Guillermo Jimenez-Perez  <guillermo.jim.per@gmail.com>
+    Author - Guillermo Jimenez-Perez <guillermo.jim.per@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

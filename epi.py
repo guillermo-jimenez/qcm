@@ -102,10 +102,93 @@ class EpiQCM(object):
     __output_path                   = None
 
 
-    def __init__(self, path, anterior=None, posterior=None, apex=None, output_path=None):
+    def __init__(self, path, anterior=None, posterior=None, apex=None, batch_size=1000, output_path=None):
         """ """
 
         print("TO-DO: DOCUMENTATION")
+
+        self.__path                 = path
+        self.__batch_size           = batch_size
+        self.__polydata             = utils.polydataReader(self.path)
+        self.__points               = utils.vtkPointsToNumpy(self.polydata)
+        self.__polygons             = utils.vtkCellsToNumpy(self.polydata)
+        self.__adjacency_matrix     = utils.adjacencyMatrix(self.polydata, self.polygons)
+        # self.__laplacian            = utils.cotangentWeightsLaplacianMatrix(self.polydata, self.points, self.polygons)
+        self.__boundary             = utils.boundaryExtractor(self.polydata, self.polygons, self.adjacency_matrix)
+        self.__output_path          = utils.outputLocation(self.path, self.output_path)
+
+        landmarks                   = []
+        # reverse                     = False
+        reverse                     = False
+        center                      = False
+
+        if anterior is None:
+            if apex is None:
+                if posterior is None:
+                    pass
+                else:
+                    landmarks.append(posterior)
+                    reverse             = True
+            else:
+                if posterior is None:
+                    landmarks.append(apex)
+                    center              = True
+                else:
+                    # Bien
+                    landmarks.append(posterior)
+                    landmarks.append(apex)
+                    reverse             = True
+        else:
+            if apex is None:
+                if posterior is None:
+                    pass
+                else:
+                    landmarks.append(posterior)
+                    reverse             = True
+            else:
+                if posterior is None:
+                    # Bien
+                    landmarks.append(anterior)
+                    landmarks.append(apex)
+                else:
+                    # Bien
+                    landmarks.append(anterior)
+                    landmarks.append(apex)
+                    landmarks.append(posterior)
+
+        landmarks           = utils.landmarkSelector(self.polydata, 3, landmarks)
+
+        if reverse is True:
+            landmarks.reverse()
+
+        posteriorNumber, posteriorId    = utils.closestBoundaryId(self.polydata, landmarks[0], boundary=self.boundary)
+        anteriorNumber, anteriorId      = utils.closestBoundaryId(self.polydata, landmarks[2], boundary=self.boundary)
+        self.__anterior                 = self.boundary[boundaryNumber][boundaryId]
+        self.__apex                     = landmarks[1]
+        self.__posterior                = self.boundary[boundaryNumber][boundaryId]
+
+        # A partir de aqui, especificar:
+        # * 1 unica boundary valida
+        if len(self.boundary) == 1:
+            self.__boundary         = self.boundary[0]
+            self.__boundary         = roll(self.boundary, -boundaryId)
+        else:
+            raise Exception("This mapping accepts meshes with only one boundary")
+
+        O           = mean(self.points[:, self.boundary], axis=1)
+        OA          = asarray(self.points[:, self.boundary[0]] - O)
+        OB          = asarray(self.points[:, self.boundary[1]] - O)
+        OC          = asarray(self.points[:, self.apex] - O)
+        normal      = cross(OA, OB)
+
+        if dot(OC, normal) < 0:
+            self.__boundary = flipud(self.boundary)
+            self.__boundary = roll(self.boundary, 1)
+
+        self.__calc_homeomorphism()
+        self.__calc_thin_plate_splines()
+        self.__write_output()
+        utils.vtkWriterSpanishLocale(self.output_path)
 
         self.__anterior             = anterior
         self.__posterior            = posterior
@@ -126,53 +209,6 @@ class EpiQCM(object):
                 self.__output_path  = self.path
             else:
                 self.__output_path  = output_path
-
-        ######################################################################
-        # ¿¿ELIMINAR??
-        ######################################################################
-
-        # # Exporting VTK points to numpy for a more efficient manipulation
-        # pointVector                 = self.polydata.GetPoints()
-
-        # try:
-        #     rows                    = len(pointVector.GetPoint(0))
-        #     cols                    = pointVector.GetNumberOfPoints()
-        #     points                  = zeros((rows,cols))
-        # except:
-        #     raise Exception("The VTK file provided does not contain any points")
-
-        # if pointVector:
-        #     for i in range(0, pointVector.GetNumberOfPoints()):
-        #         point_tuple         = pointVector.GetPoint(i)
-
-        #         points[0,i]         = point_tuple[0]
-        #         points[1,i]         = point_tuple[1]
-        #         points[2,i]         = point_tuple[2]
-
-        ######################################################################
-        # ¿¿ELIMINAR??
-        ######################################################################
-
-        # Exporting VTK triangles to numpy for a more efficient manipulation
-        # polygons                    = None
-
-        # for i in xrange(self.polydata.GetNumberOfCells()):
-        #     pointIds                = self.polydata.GetCell(i).GetPointIds()
-
-        #     if polygons is None:
-        #         try:
-        #             rows            = pointIds.GetNumberOfIds()
-        #             cols            = self.polydata.GetNumberOfCells()
-        #             polygons        = zeros((rows,cols), dtype=int)
-        #         except:
-        #             raise Exception("The VTK file provided does not contain a triangulation")
-
-        #     polygons[0,i]           = pointIds.GetId(0)
-        #     polygons[1,i]           = pointIds.GetId(1)
-        #     polygons[2,i]           = pointIds.GetId(2)
-
-        # self.__points               = points
-        # self.__points               = polygons
 
         self.__points               = utils.vtkPointsToNumpy(self.polydata)
         self.__polygons             = utils.vtkCellsToNumpy(self.polydata)
@@ -230,26 +266,26 @@ class EpiQCM(object):
     ##########################################################################
     # ¿¿ELIMINAR??
     ##########################################################################
-    @output_path.setter
-    def output_path(self, output_path):
-        """ """
+    # @output_path.setter
+    # def output_path(self, output_path):
+    #     """ """
 
-        print("TO-DO: DOCUMENTATION")
+    #     print("TO-DO: DOCUMENTATION")
 
-        if output_path is self.path:
-            print(" *  Warning! Overwriting the input file is not permitted.\n"
-                  "    Aborting...\n")
-            return
-        else:
-            if self.output_path == self.path:
-                print(" *  Warning! The file written to the default location will *not*\n"
-                      "    be deleted\n")
-            else:
-                print(" *  Warning! The file written to the previous working location will \n"
-                      "    *not* be deleted\n")
+    #     if output_path is self.path:
+    #         print(" *  Warning! Overwriting the input file is not permitted.\n"
+    #               "    Aborting...\n")
+    #         return
+    #     else:
+    #         if self.output_path == self.path:
+    #             print(" *  Warning! The file written to the default location will *not*\n"
+    #                   "    be deleted\n")
+    #         else:
+    #             print(" *  Warning! The file written to the previous working location will \n"
+    #                   "    *not* be deleted\n")
 
-        self.__output_path      = output_path
-        self.__write_output()
+    #     self.__output_path      = output_path
+    #     self.__write_output()
     ##########################################################################
     # ¿¿ELIMINAR??
     ##########################################################################
@@ -282,18 +318,18 @@ class EpiQCM(object):
     ##########################################################################
     # ¿¿ELIMINAR??
     ##########################################################################
-    @apex.setter
-    def apex(self, apex):
-        """ """
+    # @apex.setter
+    # def apex(self, apex):
+    #     """ """
 
-        print("TO-DO: DOCUMENTATION")
+    #     print("TO-DO: DOCUMENTATION")
 
-        if apex >= self.polydata.GetNumberOfPoints():
-            raise RuntimeError("Apical point provided is out of bounds")
+    #     if apex >= self.polydata.GetNumberOfPoints():
+    #         raise RuntimeError("Apical point provided is out of bounds")
 
-        self.__apex             = apex
-        self.__calc_homeomorphism()
-        self.__write_output()
+    #     self.__apex             = apex
+    #     self.__calc_homeomorphism()
+    #     self.__write_output()
     ##########################################################################
     # ¿¿ELIMINAR??
     ##########################################################################
@@ -337,124 +373,6 @@ class EpiQCM(object):
         print("TO-DO: DOCUMENTATION")
 
         return self.__output_polydata
-
-    ##########################################################################
-    ##########################################################################
-    def __calc_landmarks(self):
-        """ """
-
-        print("TO-DO: DOCUMENTATION")
-        print("TO-DO: DESCRIPTORS TO KNOW HOW TO INTRODUCE LANDMARKS")
-
-        selected = False
-
-        while(not selected):
-            if self.anterior is None:
-                if self.posterior is None:
-                    if self.apex is None:
-                        # print("DESCRIPTION")
-
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 3:
-                            selected            = True
-
-                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
-                            self.__apex         = ps.GetSelectedPointIds().GetId(1)
-                            self.__posterior    = ps.GetSelectedPointIds().GetId(2)
-
-                    else:
-                        # print("DESCRIPTION")
-
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
-                            selected            = True
-
-                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
-                            self.__posterior    = ps.GetSelectedPointIds().GetId(1)
-
-                else:
-                    if self.apex is None:
-                        # print("DESCRIPTION")
-
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
-                            selected            = True
-
-                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
-                            self.__apex         = ps.GetSelectedPointIds().GetId(1)
-
-                    else:
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
-                            selected            = True
-
-                            self.__anterior     = ps.GetSelectedPointIds().GetId(0)
-
-            else:
-                if self.posterior is None:
-                    if self.apex is None:
-                        # print("DESCRIPTION")
-
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 2:
-                            selected            = True
-
-                            self.__apex         = ps.GetSelectedPointIds().GetId(0)
-                            self.__posterior    = ps.GetSelectedPointIds().GetId(1)
-
-                    else:
-                        # print("DESCRIPTION")
-
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
-                            selected            = True
-
-                            self.__posterior    = ps.GetSelectedPointIds().GetId(0)
-
-                else:
-                    if self.apex is None:
-                        # print("DESCRIPTION")
-
-                        ps = PointSelector()
-                        ps.DoSelection(self.polydata)
-
-                        if ps.GetSelectedPoints().GetNumberOfPoints() == 1:
-                            selected            = True
-
-                            self.__apex         = ps.GetSelectedPointIds().GetId(0)
-
-                    else:
-                        selected            = True
-
-
-    ##########################################################################
-    ## CLOSEST BOUNDARY FUNCTION
-    ##########################################################################
-    
-    def __closest_boundary_point(self, point):
-        """ """
-
-        print("TO-DO: DOCUMENTATION")
-
-
-
-
-
-    ##########################################################################
-    ## CLOSEST BOUNDARY FUNCTION
-    ##########################################################################
 
 
     def __divide(self):
@@ -501,125 +419,6 @@ class EpiQCM(object):
         clip.SetInputData(self.polydata)
         clip.Update()
         self.__LV_polydata = clip.GetOutput()
-
-
-    def __calc_boundary(self):
-        """ """
-
-        print("TO-DO: DOCUMENTATION")
-
-        startingPoint           = None
-        currentPoint            = None
-        foundBoundary           = False
-        cellId                  = None
-        boundary                = []
-        visitedEdges            = []
-        visitedBoundaryEdges    = []
-
-        for cellId in xrange(self.polydata.GetNumberOfCells()):
-            cellPointIdList     = vtkIdList()
-            cellEdges           = []
-
-            self.polydata.GetCellPoints(cellId, cellPointIdList)
-
-            cellEdges           = [[cellPointIdList.GetId(0), 
-                                    cellPointIdList.GetId(1)], 
-                                   [cellPointIdList.GetId(1), 
-                                    cellPointIdList.GetId(2)], 
-                                   [cellPointIdList.GetId(2), 
-                                    cellPointIdList.GetId(0)]]
-
-            for i in xrange(len(cellEdges)):
-                if (cellEdges[i] in visitedEdges) == False:
-                    visitedEdges.append(cellEdges[i])
-
-                    edgeIdList  = vtkIdList()
-                    edgeIdList.InsertNextId(cellEdges[i][0])
-                    edgeIdList.InsertNextId(cellEdges[i][1])
-
-                    singleCellEdgeNeighborIds = vtkIdList()
-
-                    self.polydata.GetCellEdgeNeighbors(cellId, cellEdges[i][0], cellEdges[i][1], singleCellEdgeNeighborIds)
-
-                    if singleCellEdgeNeighborIds.GetNumberOfIds() == 0:
-                        foundBoundary   = True
-
-                        startingPoint   = cellEdges[i][0]
-                        currentPoint    = cellEdges[i][1]
-
-                        boundary.append(cellEdges[i][0])
-                        boundary.append(cellEdges[i][1])
-
-                        visitedBoundaryEdges.append([currentPoint,startingPoint])
-                        visitedBoundaryEdges.append([startingPoint,currentPoint])
-
-            if foundBoundary == True:
-                break
-
-        if foundBoundary == False:
-            raise Exception("The mesh provided has no boundary not possible to do Quasi-Conformal Mapping on this dataset.")
-
-        while currentPoint != startingPoint:
-            neighboringCells    = vtkIdList()
-
-            self.polydata.GetPointCells(currentPoint, neighboringCells)
-
-            for i in xrange(neighboringCells.GetNumberOfIds()):
-                cell = neighboringCells.GetId(i)
-                triangle = self.polydata.GetCell(cell)
-
-                for j in xrange(triangle.GetNumberOfPoints()):
-                    if triangle.GetPointId(j) == currentPoint:
-                        j1      = (j + 1) % 3
-                        j2      = (j + 2) % 3
-
-                        edge1   = [triangle.GetPointId(j),
-                             triangle.GetPointId(j1)]
-                        edge2   = [triangle.GetPointId(j),
-                             triangle.GetPointId(j2)]
-
-                edgeNeighbors1  = vtkIdList()
-                edgeNeighbors2  = vtkIdList()
-
-                self.polydata.GetCellEdgeNeighbors(cell, edge1[0], edge1[1], edgeNeighbors1)
-
-                self.polydata.GetCellEdgeNeighbors(cell, edge2[0], edge2[1], edgeNeighbors2)
-
-                if edgeNeighbors1.GetNumberOfIds() == 0:
-                    if ([edge1[1], edge1[0]] in visitedBoundaryEdges) == False:
-                        if (edge1[1] in boundary) == False:
-                            boundary.append(edge1[1])
-                        visitedBoundaryEdges.append([edge1[0], edge1[1]])
-                        visitedBoundaryEdges.append([edge1[1], edge1[0]])
-                        currentPoint = edge1[1]
-                        break
-
-                if edgeNeighbors2.GetNumberOfIds() == 0:
-                    if ([edge2[1], edge2[0]] in visitedBoundaryEdges) == False:
-                        if (edge2[1] in boundary) == False:
-                            boundary.append(edge2[1])
-                        visitedBoundaryEdges.append([edge2[0], edge2[1]])
-                        visitedBoundaryEdges.append([edge2[1], edge2[0]])
-                        currentPoint = edge2[1]
-                        break
-
-        boundary    = asarray(boundary, dtype=int)
-
-        center      = mean(self.points[:,boundary], axis=1)
-        vector1     = asarray(self.points[:,boundary[0]] - center)
-        vector2     = asarray(self.points[:,boundary[1]] - center)
-        vectorNormal= cross(vector1, vector2)
-        vectorApex  = self.points[:, self.apex] - center
-
-        if len(center.shape) is not 1:
-            if center.shape[0] is not 3:
-                raise Exception("Something went wrong. Probably forgot to transpose this. Contact maintainer.")
-
-        if dot(vectorApex, vectorNormal) < 0:
-            boundary            = flipud(boundary)
-            boundary            = roll(boundary, 1)
-
-        self.__boundary         = boundary
 
 
     def __calc_laplacian(self):
