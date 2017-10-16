@@ -75,6 +75,16 @@ from mvpoly.rbf import RBFThinPlateSpline
 import utils
 
 class PyQCM(object):
+    """
+    PyQCM - Extracts a quasi-conformal mapping (QCM) representation of a 3D mesh 
+    of an endocardial surface.
+
+    The QCM is performed so that the 3D mesh is fitted into a 2D disk of unit 
+    radius. The middle of the basal septum is constrained at the coordinates
+    (-1,0), and the apex at the (0,0). The rest of the boundary points are
+    linearly spaced to fit the external ring of the disk.
+    """
+
     __path                          = None
 
     __polydata                      = None
@@ -93,6 +103,17 @@ class PyQCM(object):
 
 
     def __init__(self, path, septum=None, apex=None, batch_size=1000, output_path=None):
+        """
+        Constructor of the object.
+
+        Args:
+            path (str): absolute path to the VTK file to be analyzed.
+            septum (int): vertex identificator of the middle of the basal septum
+            apex (int): vertex identificator of the apical point
+            batch_size (int): number of points analyzed at a time
+            output_path (str): absoukte path for the resulting VTK file
+        """
+
         self.__path                 = path
         self.__batch_size           = batch_size
         self.__polydata             = utils.polydataReader(self.path)
@@ -154,18 +175,26 @@ class PyQCM(object):
 
     @property
     def path(self):
+        """Absolute path to input
+        Type: str"""
         return self.__path
 
     @property
     def output_path(self):
+        """Absolute path to output
+        Type: str"""
         return self.__output_path
 
     @property
     def batch_size(self):
+        """Number of points analyzed at a time
+        Type: int"""
         return self.__batch_size
 
     @batch_size.setter
     def batch_size(self, batch_size):
+        """Number of points analyzed at a time
+        Type: int"""
         try:
             self.__batch_size = int(batch_size)
         except:
@@ -173,22 +202,33 @@ class PyQCM(object):
 
     @property
     def polydata(self):
+        """Number of points analyzed at a time
+        Type: vtk.vtkPolyData"""
         return self.__polydata
 
     @property
     def points(self):
+        """Points extracted from the vtk file
+        Type: numpy.ndarray"""
         return self.__points
 
     @property
     def polygons(self):
+        """Triplets of point identificators that define each triangle of the mesh
+        Type: numpy.ndarray"""
         return self.__polygons
 
     @property
     def adjacency_matrix(self):
+        """Adjacency matrix of the mesh
+        Type: scipy.sparse.csr.csr_matrix"""
         return self.__adjacency_matrix
 
     @output_path.setter
     def output_path(self, output_path):
+        """Absolute path to output
+        Type: str"""
+
         if output_path is self.path:
             print(" *  Warning! Overwriting the input file is not permitted.\n"
                   "    Aborting...\n")
@@ -207,47 +247,46 @@ class PyQCM(object):
 
     @property
     def septum(self):
+        """Point identificator of the middle point of the basal septum in the vtk mesh 
+        Type: int"""
         return self.__septum
 
     @property
     def apex(self):
+        """Point identificator of the apex in the vtk mesh 
+        Type: int"""
         return self.__apex
-
-    # @septum.setter
-    # def septum(self, septum):
-    #     if septum >= self.polydata.GetNumberOfPoints():
-    #         raise RuntimeError("Septal point provided is out of bounds")
-
-    #     self.rearrange_boundary(septum)
-
-    # @apex.setter
-    # def apex(self, apex):
-    #     if apex >= self.polydata.GetNumberOfPoints():
-    #         raise RuntimeError("Apical point provided is out of bounds")
-
-    #     self.__apex             = apex
-    #     self.__calc_homeomorphism()
-    #     self.__write_output()
 
     @property
     def laplacian(self):
+        """Laplacian matrix of the mesh
+        Type: scipy.sparse.csr.csr_matrix"""
         return self.__laplacian
 
     @property
     def boundary(self):
+        """Numpy array containing a list of the vertex identifiers of the boundary points in the vtk mesh
+        Type: numpy.ndarray"""
         return self.__boundary
 
     @property
     def homeomorphism(self):
+        """Numpy array containing a list of the vertex identifiers of the boundary points in the vtk mesh
+        Type: numpy.ndarray"""
         return self.__homeomorphism
 
     @property
     def output_polydata(self):
+        """Polydata containing the QCM of the calculated transformation
+        Type: vtk.vtkPolyData"""
         return self.__output_polydata
 
 
     def __calc_homeomorphism(self):
-        """ """
+        """Calculation of the conformal mapping between LV endocardial surfaces 
+        and a 2D disk. The approximation of the Laplacian computation is based 
+        on cotangent weights.
+        """
 
         start = time.time()
 
@@ -258,7 +297,6 @@ class PyQCM(object):
             homeomorphism_laplacian = diagonalSparse - self.laplacian
 
             # Finds non-zero elements in the laplacian matrix
-            # (nzj, nzi)              = find(self.laplacian)[0:2]
             (nzj, nzi)              = self.laplacian.nonzero()
 
             for point in self.boundary:
@@ -294,6 +332,10 @@ class PyQCM(object):
 
 
     def __calc_thin_plate_splines(self, batch_size=None):
+        """Correction of anatomical landmarks based on Thin-Plate Splines (TPS) 
+        that relaxes the established conformal mapping to quasi-conformal.
+        """
+
         if (self.homeomorphism is None) or (self.apex is None):
             raise Exception("The homeomorphic transformation could not be calculated")
 
@@ -342,10 +384,18 @@ class PyQCM(object):
 
 
     def flip_boundary(self):
+        """The method for extracting the boundaries can result in clockwise or 
+        counterclockwise boundaries. This method is used to flip the rotation 
+        direction if needed.
+        """
         self.__boundary         = flipud(self.boundary)
         self.__boundary         = roll(self.boundary, 1)
 
+
     def __write_output(self):
+        """Writes the vtkPolyData onject to file. The scalars from the original
+        vtk input file are reused.
+        """
         if ((self.homeomorphism is None) or (self.points is None) or (self.polygons is None)):
             raise Exception("Something went wrong. Check the input")
 
