@@ -396,6 +396,7 @@ class PyQCM(object):
         """Writes the vtkPolyData onject to file. The scalars from the original
         vtk input file are reused.
         """
+        
         if ((self.homeomorphism is None) or (self.points is None) or (self.polygons is None)):
             raise Exception("Something went wrong. Check the input")
 

@@ -56,195 +56,45 @@ from vtk import vtkPoints
 from vtk import vtkCellArray
 from vtk import vtkDoubleArray
 from vtk import vtkTriangle
-from vtk import vtkIdList
 from vtk import vtkClipPolyData
 from vtk import vtkPlane
-from vtk import vtkCommand
-from vtk import vtkSphereSource
-from vtk import vtkPolyDataMapper
 from vtk import vtkActor
-from vtk import vtkPoints
 from vtk import vtkFloatArray
-from vtk import vtkIdList
 from vtk import vtkPolyDataMapper
 from vtk import vtkRenderer
 from vtk import vtkRenderWindow
 from vtk import vtkRenderWindowInteractor
 from vtk import vtkInteractorStyleTrackballCamera
-from vtk import vtkPointPicker
 from vtk import vtkScalarBarActor
 from vtk import vtkLookupTable
 
-
-class PointPicker(vtkPointPicker):
-    def __init__(self,parent=None):
-        self.AddObserver(vtkCommand.EndPickEvent, self.EndPickEvent)
-
-    #these are the variables te user will set in the PointSelector class. Here we just take the pointers
-    def SetParameters(self, selected_points, selected_point_ids, marker_radius, marker_colors):
-        self.selected_points = selected_points
-        self.marker_radius = marker_radius
-        self.marker_colors = marker_colors
-        self.selected_point_ids = selected_point_ids
-        
-    #callback after every picking event    
-    def EndPickEvent(self,obj,event):
-        rnd = self.GetRenderer()  
-
-        n_points = self.selected_points.GetNumberOfPoints()
-        
-        #check if anything was picked
-        pt_id = self.GetPointId()
-        if pt_id >= 0:
-            if n_points < len(self.marker_colors):
-                #create a sphere to mark the location
-                sphereSource = vtkSphereSource()
-                sphereSource.SetRadius(self.marker_radius)
-                sphereSource.SetCenter(self.GetPickPosition())
-                
-                mapper = vtkPolyDataMapper()
-                mapper.SetInputConnection(sphereSource.GetOutputPort())
-
-                actor = vtkActor()
-                actor.SetMapper(mapper)
-
-                #define the color of the sphere (pick from the list)
-                actor.GetProperty().SetColor(self.marker_colors[n_points])
-                rnd.AddActor(actor)
-
-                #populate the list of ids and coordinates
-                self.selected_points.InsertNextPoint(self.GetPickPosition())
-                self.selected_point_ids.InsertNextId(pt_id)
-            
-
-#the main class
-class PointSelector:
-
-    def __init__(self, pointIds=None): #initialize variables
-        self.marker_radius      = 1
-        self.marker_colors      = [(1,0,0), (0,1,0), (1,1,0), (0,0,0), (0.5,0.5,0.5), (0.5,0,0)] #different colors for different markers
-        self.selected_points    = vtkPoints()
-        self.selected_point_ids = vtkIdList()
-        self.window_size        = (800,600)
-        self.pointIds           = pointIds
-
-    def GetSelectedPointIds(self): #returns vtkIdList in the order of clicks
-        return self.selected_point_ids
-        
-    def GetSelectedPoints(self): #returns vtkPoints in the order of clicks
-        return self.selected_points
-        
-    def DoSelection(self, polydata): #open rendering window and start 
-        if self.pointIds is None:
-            self.selected_points.Reset()
-            self.selected_point_ids.Reset()
-        else:
-            try:
-                for i in range(0, len(self.pointIds)):
-                    self.selected_point_ids.InsertNextId(self.pointIds[i])
-                    self.selected_points.InsertNextPoint(polydata.GetPoint(self.pointIds[i]))
-            except:
-                raise Exception("pointIds has to be iterable")
-
-            renderer = vtkRenderer()
-
-            #check if anything was picked
-            for i in range(0, self.selected_points.GetNumberOfPoints()):
-                if i < len(self.marker_colors):
-                    #create a sphere to mark the location
-                    sphereSource = vtkSphereSource()
-                    sphereSource.SetRadius(self.marker_radius)
-                    sphereSource.SetCenter(self.selected_points.GetPoint(i))
-                    
-                    mapper = vtkPolyDataMapper()
-                    mapper.SetInputConnection(sphereSource.GetOutputPort())
-
-                    actor = vtkActor()
-                    actor.SetMapper(mapper)
-
-                    #define the color of the sphere (pick from the list)
-                    actor.GetProperty().SetColor(self.marker_colors[i])
-
-                    renderer.AddActor(actor)
-
-        if polydata.GetPointData().GetScalars() is None:
-            if polydata.GetPointData().GetNumberOfArrays() != 0:
-                polydata.GetPointData().SetActiveScalars(polydata.GetPointData().GetArray(0).GetName())
-
-        mapper = vtkPolyDataMapper()
-        mapper.SetInputData(polydata)
-        mapper.SetScalarRange(polydata.GetPointData().GetScalars().GetValueRange())
-        mapper.ScalarVisibilityOn()
-        mapper.SetScalarModeToUsePointData()
-        mapper.SetColorModeToMapScalars()
-
-        actor = vtkActor()
-        actor.SetMapper(mapper)
-        actor.GetProperty().SetPointSize(1)
-
-        scalarBar = vtkScalarBarActor()
-        scalarBar.SetLookupTable(mapper.GetLookupTable())
-        scalarBar.SetTitle(polydata.GetPointData().GetScalars().GetName())
-        scalarBar.SetNumberOfLabels(4)
-
-        hueLut = vtkLookupTable()
-        hueLut.Build()
-
-        mapper.SetLookupTable(hueLut);
-        scalarBar.SetLookupTable(hueLut);
-
-        pointPicker = PointPicker()
-        pointPicker.AddPickList(actor)
-        pointPicker.PickFromListOn()
-
-        pointPicker.SetParameters(self.selected_points, self.selected_point_ids, self.marker_radius, self.marker_colors)
-
-        try:
-            renderer.AddActor(actor)
-        except:
-            renderer = vtkRenderer()
-            renderer.AddActor(actor)
-
-        renderer.AddActor2D(scalarBar)
-
-        window = vtkRenderWindow()
-        window.AddRenderer(renderer)
-
-        interactor = vtkRenderWindowInteractor()
-        interactor.SetRenderWindow(window)
-
-        interactor_style = vtkInteractorStyleTrackballCamera() 
-        interactor.SetInteractorStyle(interactor_style)
-        interactor.SetPicker(pointPicker)
-
-        window.SetSize(self.window_size)
-        window.Render()
-        interactor.Start()
-
-        render_window = interactor.GetRenderWindow()
-        render_window.Finalize()
+from PointPicker import PointPicker
+from PointPicker import PointSelector
 
 
 
 def cartoReader(path, output_path=None, tags=None, write=False):
-    """ returns a polydata.
+    """Returns a vtkPolyData object from a '.mesh' input file.
 
-    option write as True creates a .vtk file with the polydata
+    Notes:
+        Argument 'tags' needs to be in the shape of a dict of tags, equal to False:
+        tags                                = dict()
 
-    tags need to be in the shape of a dict of tags, equal to False:
-    tags                                = dict()
+        tags['[NameOfTheTag]']              = False
 
-    tags['[NameOfTheTag]']              = False
+        Example:
+        tags['[VerticesSection]']           = False
+        tags['[TrianglesSection]']          = False
+        tags['[VerticesColorsSection]']     = False
+        tags['[VerticesAttributesSection]'] = False
 
-    Example:
-    tags['[VerticesSection]']           = False
-    tags['[TrianglesSection]']          = False
-    tags['[VerticesColorsSection]']     = False
-    tags['[VerticesAttributesSection]'] = False
+
+    Args:
+        output_path (str): Absolute output path for writing a .vtk file.
+        write (bool): If True, creates a .vtk file with the polydata.
+        tags (dict): Tags employed in the .mesh file. See notes for correct specification.
 
     """
-
-    print("TO-DO: DOCUMENTATION")
 
     # Initializing auxiliary variables
     polydata        = vtkPolyData()
@@ -420,9 +270,14 @@ def cartoReader(path, output_path=None, tags=None, write=False):
 
 
 def polydataReader(path):
-    """ """
+    """Reads a '.vtk' file
 
-    print("TO-DO: DOCUMENTATION")
+    Return:
+        polydata (vtkPolyData): vtkPolyData object with the '.vtk' information.
+
+    Args:
+        path (str): Absolute path for the input '.vtk' file.
+    """
 
     # Reading the input VTK file
     if (path is not None):
@@ -440,9 +295,16 @@ def polydataReader(path):
 
 
 def vtkPointsToNumpy(polydata):
-    """ """
+    """Extracts the point information of a vtkPolyData object into a numpy array.
+    The extracted coordinates data is ordered sequentially: the first row in the 
+    array coincides with the first vertex in the polydata and so on.  
 
-    print("TO-DO: DOCUMENTATION")
+    Return:
+        points (numpy.ndarray): numpy.ndarray object with the coordinate information.
+
+    Args:
+        polydata (vtkPolyData): vtkPolyData object with information of the mesh
+    """
 
     try:
         pointVector             = polydata.GetPoints()
@@ -468,9 +330,16 @@ def vtkPointsToNumpy(polydata):
 
 
 def vtkCellsToNumpy(polydata):
-    """ """
+    """Extracts the vertices of each triangle of a vtkPolyData object into a 
+    numpy array. The extracted information is coded so that in every column, the 
+    identifiers of the vertices of each triangle is stored. 
 
-    print("TO-DO: DOCUMENTATION")
+    Return:
+        polygons (numpy.ndarray): numpy.ndarray object with the triangles information
+
+    Args:
+        polydata (vtkPolyData): vtkPolyData object with information of the mesh
+    """
 
     try:
         pointVector             = polydata.GetPoints()
@@ -498,9 +367,15 @@ def vtkCellsToNumpy(polydata):
 
 
 def adjacencyMatrix(polydata, polygons=None):
-    """ """
+    """Calculates the adjacency matrix of the triangulation.
 
-    print("TO-DO: DOCUMENTATION")
+    Return:
+        adjMatrix (scipy.sparse.csr.csr_matrix): adjacency matrix.
+
+    Args:
+        polydata (vtkPolyData): vtkPolyData object with information of the mesh
+        polygons (numpy.ndarray): information on the identifiers of every point in every triangle of the mesh
+    """
 
     if polygons is None:
         polygons        = vtkCellsToNumpy(polydata)
@@ -524,9 +399,16 @@ def adjacencyMatrix(polydata, polygons=None):
 
 
 def cotangentWeightsLaplacianMatrix(polydata, points=None, polygons=None):
-    """ """
+    """Calculates the laplacian matrix from the cotangent weights of the mesh.
 
-    print("TO-DO: DOCUMENTATION")
+    Return:
+        laplacianMatrix (scipy.sparse.csr.csr_matrix): laplacian matrix.
+
+    Args:
+        polydata (vtkPolyData): vtkPolyData object with information of the mesh
+        points (numpy.ndarray): information of the coordinates of each vertex
+        polygons (numpy.ndarray): information on the identifiers of every point in every triangle of the mesh
+    """
 
     if points is None:
         points          = vtkPointsToNumpy(polydata)
@@ -564,9 +446,28 @@ def cotangentWeightsLaplacianMatrix(polydata, points=None, polygons=None):
 
 
 def boundaryExtractor(polydata, polygons=None, adjMatrix=None):
-    """ """
+    """Extracts the boundary (sequences of vertices that are connected by edges
+    that are not shared by more than one triangle) from the polydata. Polygons 
+    and the adjacency matrix can be provided to accelerate calculations.
 
-    print("TO-DO: DOCUMENTATION")
+    The boundary is calculated with the adjacency matrix, searching for points
+    that are not shared by more than one cell. After a list of vertices that 
+    share that definition is extracted, it is further divided into its 
+    connected components.
+
+    Notes:
+        The boundary returned takes the shape of a list of lists. Each element
+        in the main list is a connected component, which is in turn a list of
+        the specific vertices that make that connected component.
+
+    Return:
+        boundary (list): list of connected components.
+
+    Args:
+        polydata (vtkPolyData): vtkPolyData object with information of the mesh.
+        polygons (numpy.ndarray): information on the identifiers of every point in every triangle of the mesh.
+        adjMatrix (scipy.sparse.csr.csr_matrix): adjacency matrix.
+    """
 
     if polygons is None:
         polygons    = vtkCellsToNumpy(polydata)
@@ -636,9 +537,27 @@ def boundaryExtractor(polydata, polygons=None, adjMatrix=None):
 
 
 def landmarkSelector(polydata, totalLandmarks, landmarks=None):
-    """ """
+    """Launches a visualization window that allows for the visualization of the
+    mesh and the selection of landmarks for their later usage.
 
-    print("TO-DO: DOCUMENTATION")
+    For selecting the points, click inside the visualization window once, then 
+    drag and drop until the point-to-be-selected is clearly visible. When the
+    point is clearly visualizable, hold the mouse still on top of the 
+    aforementioned point and, while not moving, press 'p' on the keyboard.
+
+    Repeat the operation as many times as needed, until the number of points
+    selected is equal to the input variable 'totalLandmarks'. If the number of
+    points provided is not equal to the number of landmarks, the point selection
+    will start over.
+
+    Return:
+        landmarks (list): list of IDs of the vertices in the input polydata.
+
+    Args:
+        polydata (vtkPolyData): vtkPolyData object with information of the mesh.
+        totalLandmarks (int): Number of landmarks to be extracted.
+        landmarks (list): List comprising any previously selected landmark.
+    """
 
     if landmarks is None:
         landmarks = []
@@ -663,9 +582,19 @@ def landmarkSelector(polydata, totalLandmarks, landmarks=None):
 
 
 def vtkClippingPlane(polydata, landmarks=None, reverse=False):
-    """ """
 
-    print("TO-DO: DOCUMENTATION")
+    """Produces a new vtkPolyData from clipping the provided polydata using a 
+    plane. If no points are provided to create the clipping plane (three points), 
+    the 'landmarkSelector' function will be executed to acquire them.
+
+    Return:
+        clip (vtkPolyData): clipped polydata
+
+    Args:
+        polydata (vtkPolyData): vtkPolyData object with information of the mesh.
+        landmarks (list): list of int consisting of the IDs of the vertices to be used for the clipping plane.
+        reverse (bool): Reverses the normal for the clipping plane, obtaining the opposite side of the clipping plane.
+    """
 
     plane       = vtkPlane()
     clip        = vtkClipPolyData()
@@ -696,9 +625,15 @@ def vtkClippingPlane(polydata, landmarks=None, reverse=False):
 
 
 def vtkVisualize(polydata, activeArray=0, visualizationRange=None):
-    """ """
+    """Launches a visualization window that allows for the visualization of the
+    mesh. The active scalar array visualized can be changed with the 
+    'activeArray' input variable.
 
-    print("TO-DO: DOCUMENTATION")
+    Args:
+        polydata (vtkPolyData): vtkPolyData object with information of the mesh.
+        activeArray (int): Identifier of the scalar vector to be visualized.
+        visualizationRange (tuple): Two-element tuple comprising the range of values to be visualized.
+    """
 
     if polydata.GetPointData().GetNumberOfArrays() > 0:
         if activeArray < polydata.GetPointData().GetNumberOfArrays():
@@ -755,9 +690,19 @@ def vtkVisualize(polydata, activeArray=0, visualizationRange=None):
 
 
 def closestBoundaryId(polydata, objectivePointId, boundary=None, polygons=None, adjMatrix=None):
-    """ """
+    """Given a vertex ID, calculate the point ID in any of the boundaries of the
+    mesh that is closest to it.
 
-    print("TO-DO: DOCUMENTATION")
+    Returns:
+        closesPoint (int): ID of the vertex in the polydata that is part of any boundary, which is closest to objectivePointId.
+
+    Args:
+        polydata (vtkPolyData): vtkPolyData object with information of the mesh.
+        objectivePointId (int): The point for which the closest boundary point attempts to be calculated.
+        boundary (list): List of connected components (boundaries) in the shape of lists.
+        polygons (numpy.ndarray): information on the identifiers of every point in every triangle of the mesh.
+        adjMatrix (scipy.sparse.csr.csr_matrix): adjacency matrix.
+    """
 
     closestPointIndex       = None
     boundaryVector          = []
@@ -824,9 +769,21 @@ def closestBoundaryId(polydata, objectivePointId, boundary=None, polygons=None, 
 
 
 def outputLocation(input_path, output_path=None, folder_name=None):
-    """ """
+    """Automated localizator for output location given an input path (where the
+    input file is). If the output path cannot be accessed or no file can be
+    created in the output folder, a location relative to the input location will
+    be used. If no output path is provided, a location relative to the input 
+    location will be used. If the output path is correctly established, it is
+    maintained.
 
-    print("TO-DO: DOCUMENTATION")
+    Returns:
+        path (int): Final output path.
+
+    Args:
+        input_path  (str): Path of the input file.
+        output_path (str): Initial output path.
+        folder_name (str): Folder to be used as container for the outputs.
+    """
 
     path                    = None
 
@@ -876,44 +833,39 @@ def outputLocation(input_path, output_path=None, folder_name=None):
 
 
 def vtkWriterSpanishLocale(path):
-    """ """
+    """Solves problems with Spanish locale when writing the output files. In 
+    Spanish operating systems, by default, the decimals of a real number are
+    specified with commas (,) instead of points (.), rendering the output file
+    unreadable for some software that uses '.vtk' files as their input format.
 
-    print("TO-DO: DOCUMENTATION")
+    Args:
+        path (str): path in which the substitution of (,) for (.) will take place.
+    """
 
-    # In case the host computer converts decimal points (.) to decimal
-    # commas (,), such as in Spanish locales.
     system("perl -pi -e 's/,/./g' %s " % path)
-
-
-
-def polydataWriter(path):
-    """ """
-
-    print("TO-DO: DOCUMENTATION")
-
-    # Reading the input VTK file
-    if (path is not None):
-        if not isfile(path):
-            raise RuntimeError("File does not exist")
-
-        reader                  = vtkPolyDataReader()
-        reader.SetFileName(path)
-        reader.Update()
-
-        polydata         = reader.GetOutput()
-        polydata.BuildLinks()
-
-    return polydata
-
 
 
 
 def vtkInterpolator(QCMHighRes, QCMLowRes, n_neighbors=3, radius=1.0, 
                     algorithm='auto', leaf_size=30, metric='minkowski', 
                     p=5, metric_params=None, n_jobs=1):
-    """ """
+    """Produces an interpolation from a low-resolution mesh to a high-resolution
+    mesh. The scalar points of the vectors are interpolated, whereas the 3D
+    structure of the high-resolution mesh is maintained.
 
-    print("TO-DO: DOCUMENTATION")
+    The interpolation uses K-Nearest Neighbors (from sklearn) using the common
+    QCM reference system to identify the closest points.
+
+    Return:
+        newPolyData (vtkPolyData): Interpolated vtkPolyData
+
+    Args:
+        QCMHighRes (vtkPolyData): high resolution QCM result of PyQCM.endo
+        QCMLowRes (vtkPolyData): low resolution QCM result of PyQCM.endo
+        n_neighbors, radius, algorithm, leaf_size, ...
+        ... metric, p, metric_params, n_jobs: Default sklearn.NearestNeighbors parameters
+
+    """
 
     # ¿Se podra hacer igual que con TPS?
     kNN = NearestNeighbors(n_neighbors=3, radius=1.0, algorithm='auto', 
@@ -957,4 +909,5 @@ def vtkInterpolator(QCMHighRes, QCMLowRes, n_neighbors=3, radius=1.0,
         newPolyData.GetPointData().AddArray(dataArray)
 
     return newPolyData
+
 
