@@ -110,12 +110,12 @@ class EpiQCM(object):
         self.__path                 = path
         self.__batch_size           = batch_size
         self.__polydata             = utils.polydataReader(self.path)
-        self.__points               = utils.vtkPointsToNumpy(self.polydata)
-        self.__polygons             = utils.vtkCellsToNumpy(self.polydata)
-        self.__adjacency_matrix     = utils.adjacencyMatrix(self.polydata, self.polygons)
+        # self.__points               = utils.vtkPointsToNumpy(self.polydata)
+        # self.__polygons             = utils.vtkCellsToNumpy(self.polydata)
+        # self.__adjacency_matrix     = utils.adjacencyMatrix(self.polydata, self.polygons)
         # self.__laplacian            = utils.cotangentWeightsLaplacianMatrix(self.polydata, self.points, self.polygons)
-        self.__boundary             = utils.boundaryExtractor(self.polydata, self.polygons, self.adjacency_matrix)
-        self.__output_path          = utils.outputLocation(self.path, self.output_path)
+        # self.__boundary             = utils.boundaryExtractor(self.polydata, self.polygons, self.adjacency_matrix)
+        # self.__output_path          = utils.outputLocation(self.path, self.output_path)
 
         landmarks                   = []
         # reverse                     = False
@@ -160,6 +160,12 @@ class EpiQCM(object):
 
         if reverse is True:
             landmarks.reverse()
+
+        # Divide polydata into two:
+        
+
+
+
 
         posteriorNumber, posteriorId    = utils.closestBoundaryId(self.polydata, landmarks[0], boundary=self.boundary)
         anteriorNumber, anteriorId      = utils.closestBoundaryId(self.polydata, landmarks[2], boundary=self.boundary)
@@ -365,6 +371,14 @@ class EpiQCM(object):
         print("TO-DO: DOCUMENTATION")
 
         return self.__homeomorphism
+
+    @property
+    def adjacency_matrix(self):
+        """ """
+
+        print("TO-DO: DOCUMENTATION")
+
+        return self.__adjacency_matrix
 
     @property
     def output_polydata(self):
