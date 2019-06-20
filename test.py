@@ -3,8 +3,8 @@ import endo, time, utils, numpy
 from os.path import abspath,join
 
 
-reload(endo)
-reload(utils)
+# reload(endo)
+# reload(utils)
 
 path = join(abspath(''), 'Test_data', 'pat1_MRI_Layer_6.vtk')
 
